@@ -15,6 +15,7 @@ import {
   buildPrdSystemPrompt,
   buildPrdUserPrompt,
 } from "@/lib/ai/prompts";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
 
 // Allow execution up to 60 seconds on Vercel
 export const maxDuration = 60;
@@ -36,15 +37,18 @@ export async function POST(req: NextRequest) {
       select: { tier: true, email: true },
     });
 
-    const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
-    const rl = await checkRateLimit({
-      userId: session.user.id,
-      scope: "generate:struktur",
-      limit: dailyLimit,
-      windowSeconds: RateLimitWindows.DAY,
-    });
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok.` }, { status: 429 });
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    if (!isCustomKeysActive) {
+      const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
+      const rl = await checkRateLimit({
+        userId: session.user.id,
+        scope: "generate:struktur",
+        limit: dailyLimit,
+        windowSeconds: RateLimitWindows.DAY,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.` }, { status: 429 });
+      }
     }
 
     // 1. Check Redis Cache
@@ -124,11 +128,13 @@ export async function POST(req: NextRequest) {
       generateText({
         systemPrompt: strukturSystemPrompt,
         userPrompt: strukturUserPrompt,
+        userId: session.user.id,
         jsonObject: true,
       }).catch((err) => { console.error("[Struktur] generation failed:", err); return null; }),
       generateText({
         systemPrompt: prdSystemPrompt,
         userPrompt: prdUserPrompt,
+        userId: session.user.id,
       }).catch((err) => { console.error("[PRD] generation failed:", err); return null; }),
     ]);
 

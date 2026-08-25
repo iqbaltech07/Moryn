@@ -10,6 +10,7 @@ import { getDailyAiCallLimit } from "@/lib/analytics/planQuota";
 import { parseBody, projectIdSchema } from "@/lib/utils/validation";
 import { fixMermaidBlocks } from "@/lib/utils/mermaidFix";
 import { buildPrdSystemPrompt, buildPrdUserPrompt } from "@/lib/ai/prompts";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
 
 export const maxDuration = 60;
 
@@ -30,15 +31,18 @@ export async function POST(req: NextRequest) {
       select: { tier: true, email: true },
     });
 
-    const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
-    const rl = await checkRateLimit({
-      userId: session.user.id,
-      scope: "generate:prd",
-      limit: dailyLimit,
-      windowSeconds: RateLimitWindows.DAY,
-    });
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok.` }, { status: 429 });
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    if (!isCustomKeysActive) {
+      const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
+      const rl = await checkRateLimit({
+        userId: session.user.id,
+        scope: "generate:prd",
+        limit: dailyLimit,
+        windowSeconds: RateLimitWindows.DAY,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.` }, { status: 429 });
+      }
     }
 
     // 1. Check Redis Cache
@@ -102,6 +106,7 @@ export async function POST(req: NextRequest) {
       response = await generateGemini({
         systemPrompt,
         userPrompt,
+        userId: session.user.id,
       });
       success = true;
     } catch (err: unknown) {

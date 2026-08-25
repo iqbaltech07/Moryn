@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { isAdminEmail } from "@/lib/analytics/planQuota";
 
 // Non-text/non-chat model keywords to exclude (audio, music, speech, image-only, embedding, etc.)
 const NON_CHAT_KEYWORDS = [
@@ -34,67 +33,73 @@ export async function GET() {
       headers: await headers(),
     });
 
-    if (!session || !session.user || !isAdminEmail(session.user.email)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (!session || !session.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const response = await fetch("https://openrouter.ai/api/v1/models");
+    const response = await fetch("https://openrouter.ai/api/v1/models", {
+      next: { revalidate: 3600 }, // Cache 1 hour
+    });
+
     if (!response.ok) {
       throw new Error(`OpenRouter API responded with status: ${response.status}`);
     }
 
     const data = await response.json();
+    const rawList = Array.isArray(data.data) ? data.data : [];
 
-    // Filter only free models that support text/chat I/O
-    const freeChatModels = data.data.filter((model: any) => {
-      // 1. Must be free
+    const freeChatModels: any[] = [];
+    const paidChatModels: any[] = [];
+
+    for (const model of rawList) {
+      const id = (model.id || "").toLowerCase();
+      const name = (model.name || "").toLowerCase();
+      const modality = (model.architecture?.modality || "").toLowerCase();
+
+      // Exclude non-chat keywords
+      const isNonChat = NON_CHAT_KEYWORDS.some(
+        (kw) => id.includes(kw) || name.includes(kw) || modality.includes(kw)
+      );
+      if (isNonChat) continue;
+
       const isFree =
         model.pricing &&
         model.pricing.prompt === "0" &&
         model.pricing.completion === "0";
-      if (!isFree) return false;
 
-      const id = (model.id || "").toLowerCase();
-      const name = (model.name || "").toLowerCase();
-      const modality = (model.architecture?.modality || "").toLowerCase();
-      const inputModalities = Array.isArray(model.architecture?.input_modalities)
-        ? model.architecture.input_modalities.map((m: string) => m.toLowerCase())
-        : [];
-      const outputModalities = Array.isArray(model.architecture?.output_modalities)
-        ? model.architecture.output_modalities.map((m: string) => m.toLowerCase())
-        : [];
+      const formatted = {
+        id: model.id,
+        name: model.name || model.id,
+        contextLength: model.context_length || 0,
+        isFree,
+      };
 
-      // 2. Exclude known non-text/non-chat keywords in ID, Name, or Modality
-      const isNonChat = NON_CHAT_KEYWORDS.some(
-        (kw) => id.includes(kw) || name.includes(kw) || modality.includes(kw)
-      );
-      if (isNonChat) return false;
-
-      // 3. Must support text output
-      if (outputModalities.length > 0 && !outputModalities.includes("text")) {
-        return false;
+      if (isFree) {
+        freeChatModels.push(formatted);
+      } else {
+        paidChatModels.push(formatted);
       }
+    }
 
-      // 4. Modality check if provided (must not be audio/music/image only)
-      if (modality && !modality.includes("text")) {
-        return false;
+    // Sort free models alphabetically by name
+    freeChatModels.sort((a, b) => a.name.localeCompare(b.name));
+
+    // Sort paid / flagship models dynamically by highest context length & capabilities, then cap to Top 10
+    paidChatModels.sort((a, b) => {
+      if (b.contextLength !== a.contextLength) {
+        return b.contextLength - a.contextLength; // Largest context window first
       }
-
-      return true;
+      return a.name.localeCompare(b.name);
     });
 
-    // Map to a cleaner format
-    const formattedModels = freeChatModels.map((model: any) => ({
-      id: model.id,
-      name: model.name,
-      contextLength: model.context_length,
-      architecture: model.architecture?.modality || "Text",
-    }));
+    const top10FlagshipModels = paidChatModels.slice(0, 10);
 
-    // Sort alphabetically by name
-    formattedModels.sort((a: any, b: any) => a.name.localeCompare(b.name));
-
-    return NextResponse.json({ models: formattedModels });
+    return NextResponse.json({
+      models: freeChatModels, // Backwards compatibility for existing consumers
+      freeModels: freeChatModels,
+      popularModels: top10FlagshipModels, // Dynamically fetched & capped to Top 10
+      allCount: freeChatModels.length + paidChatModels.length,
+    });
   } catch (error: any) {
     console.error("Error fetching OpenRouter models:", error);
     return NextResponse.json(

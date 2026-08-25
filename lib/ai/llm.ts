@@ -2,6 +2,7 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { redis } from "@/lib/db/redis";
 import { incrementUsage, AIProvider } from "@/lib/analytics/usageTracker";
 import { generateWithGeminiContextCache } from "@/lib/ai/geminiCache";
+import { getUserDecryptedKeys, markKeyCooldown } from "@/lib/ai/keyManager";
 
 /** Shared default fallback chain used across all AI routes. */
 export const GEMINI_FALLBACK_MODELS = [
@@ -41,7 +42,7 @@ export async function getAiSettings(): Promise<AiSettings> {
   }
 }
 
-export function getGeminiKeys(): string[] {
+export function getSystemGeminiKeys(): string[] {
   return [
     process.env.GEMINI_API_KEY,
     process.env.GEMINI_API_KEY_SECONDARY,
@@ -49,10 +50,10 @@ export function getGeminiKeys(): string[] {
 }
 
 export function hasGeminiKeys(): boolean {
-  return getGeminiKeys().length > 0;
+  return getSystemGeminiKeys().length > 0;
 }
 
-function pickProvider(apiKey: string): AIProvider {
+function pickSystemProvider(apiKey: string): AIProvider {
   return apiKey === process.env.GEMINI_API_KEY ? "gemini_key_1" : "gemini_key_2";
 }
 
@@ -61,19 +62,82 @@ function orderedModels(preferred?: string): string[] {
   return Array.from(new Set([preferred || "gemini-3.7-flash", ...GEMINI_FALLBACK_MODELS]));
 }
 
+export interface GeminiKeyCandidate {
+  apiKey: string;
+  isCustom: boolean;
+  id?: string;
+  label?: string;
+  preferredModel?: string;
+}
+
+/**
+ * Resolves all available Gemini keys in priority order:
+ * User Custom Key #1 -> User Custom Key #2 ... -> System Keys
+ */
+export async function resolveGeminiKeys(userId?: string): Promise<GeminiKeyCandidate[]> {
+  const candidates: GeminiKeyCandidate[] = [];
+
+  if (userId) {
+    try {
+      const userKeys = await getUserDecryptedKeys(userId, "gemini");
+      for (const k of userKeys) {
+        candidates.push({
+          apiKey: k.rawKey,
+          isCustom: true,
+          id: k.id,
+          label: k.label,
+          preferredModel: k.preferredModel,
+        });
+      }
+    } catch (err) {
+      console.warn("[resolveGeminiKeys] Error fetching user keys:", err);
+    }
+  }
+
+  // Append system fallback keys
+  for (const sysKey of getSystemGeminiKeys()) {
+    // Prevent duplicate if user added the exact same key
+    if (!candidates.some((c) => c.apiKey === sysKey)) {
+      candidates.push({
+        apiKey: sysKey,
+        isCustom: false,
+        label: "System Gemini Key",
+      });
+    }
+  }
+
+  return candidates;
+}
+
 export interface GeminiGenerateResult {
   text: string;
   model: string;
   provider: AIProvider;
+  keyLabel?: string;
+}
+
+function isRateLimitError(err: unknown): boolean {
+  if (!err) return false;
+  const msg = err instanceof Error ? err.message : String(err);
+  const status = (err as { status?: number })?.status;
+  return (
+    status === 429 ||
+    msg.includes("429") ||
+    msg.includes("RESOURCE_EXHAUSTED") ||
+    msg.includes("QuotaExceeded") ||
+    msg.includes("quota") ||
+    msg.includes("rate limit")
+  );
 }
 
 /**
- * Runs a prompt through Gemini using every configured key × fallback model.
+ * Runs a prompt through Gemini using every configured user/system key × fallback model.
  * Returns the first successful result or throws the last error.
  */
 export async function generateGemini(opts: {
   systemPrompt: string;
   userPrompt: string;
+  userId?: string;
   preferredModel?: string;
   jsonObject?: boolean;
   /** Extra per-request Gemini config, e.g. responseMimeType/responseSchema. */
@@ -82,12 +146,11 @@ export async function generateGemini(opts: {
     responseSchema?: { type?: string; items?: unknown; properties?: Record<string, unknown>; enum?: string[]; required?: string[] };
   };
 }): Promise<GeminiGenerateResult> {
-  const keys = getGeminiKeys();
-  if (keys.length === 0) {
-    throw new Error("Gemini API Keys not configured");
+  const keyCandidates = await resolveGeminiKeys(opts.userId);
+  if (keyCandidates.length === 0) {
+    throw new Error("No Gemini API Keys configured. Please add an API Key in your Profile or configure server ENV.");
   }
 
-  const models = orderedModels(opts.preferredModel);
   let lastError: Error | unknown = null;
 
   const geminiConfig = {
@@ -95,7 +158,10 @@ export async function generateGemini(opts: {
     ...(opts.jsonObject ? { responseMimeType: "application/json" } : {}),
   };
 
-  for (const apiKey of keys) {
+  for (const candidate of keyCandidates) {
+    const { apiKey, isCustom, id: keyId, label: keyLabel, preferredModel } = candidate;
+    const models = orderedModels(opts.preferredModel || preferredModel);
+
     for (const model of models) {
       try {
         const ai = new GoogleGenAI({ apiKey });
@@ -108,12 +174,28 @@ export async function generateGemini(opts: {
         });
         const text = response.text ?? "";
         if (text.length === 0) throw new Error("Empty Gemini response");
-        await incrementUsage(pickProvider(apiKey));
-        return { text, model, provider: pickProvider(apiKey) };
+
+        const provider: AIProvider = isCustom ? "custom_key" : pickSystemProvider(apiKey);
+        await incrementUsage(provider);
+
+        return {
+          text,
+          model,
+          provider,
+          keyLabel,
+        };
       } catch (err: unknown) {
         lastError = err;
         const msg = err instanceof Error ? err.message : String(err);
-        console.warn(`[Gemini] key=...${apiKey.slice(-6)} model=${model}:`, msg);
+        const masked = `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}`;
+        console.warn(`[Gemini] key=${masked} (${keyLabel || "unnamed"}) model=${model}:`, msg);
+
+        // If rate limit encountered on a custom key, mark it in cooldown (5 mins) and skip directly to next key
+        if (isRateLimitError(err) && isCustom && keyId && opts.userId) {
+          console.warn(`[Gemini] Rate limit hit on user key ${keyId}. Setting cooldown and falling back to next key...`);
+          await markKeyCooldown(opts.userId, keyId, 300);
+          break; // Break model loop for this key, move to next key
+        }
       }
     }
   }
@@ -123,64 +205,112 @@ export async function generateGemini(opts: {
 }
 
 /**
- * Runs a prompt through a single configured OpenRouter model.
+ * Runs a prompt through OpenRouter (user custom keys first, then system fallback).
  */
 export async function generateOpenRouter(opts: {
   systemPrompt: string;
   userPrompt: string;
+  userId?: string;
   model?: string;
   /** When true, requests JSON output and retries without json_object if unsupported. */
   jsonObject?: boolean;
-}): Promise<{ text: string; model: string; provider: AIProvider }> {
-  if (!process.env.OPENROUTER_API_KEY) {
+}): Promise<{ text: string; model: string; provider: AIProvider; keyLabel?: string }> {
+  // Check user custom OpenRouter keys
+  let openRouterKeys: Array<{ key: string; isCustom: boolean; id?: string; label?: string; preferredModel?: string }> = [];
+
+  if (opts.userId) {
+    try {
+      const customOrKeys = await getUserDecryptedKeys(opts.userId, "openrouter");
+      for (const k of customOrKeys) {
+        openRouterKeys.push({
+          key: k.rawKey,
+          isCustom: true,
+          id: k.id,
+          label: k.label,
+          preferredModel: k.preferredModel,
+        });
+      }
+    } catch (e) {
+      console.warn("[generateOpenRouter] Failed to fetch custom keys:", e);
+    }
+  }
+
+  if (process.env.OPENROUTER_API_KEY) {
+    openRouterKeys.push({
+      key: process.env.OPENROUTER_API_KEY,
+      isCustom: false,
+      label: "System OpenRouter Key",
+    });
+  }
+
+  if (openRouterKeys.length === 0) {
     throw new Error("OpenRouter API Key not configured");
   }
 
   const { default: OpenAI } = await import("openai");
-  const openai = new OpenAI({
-    baseURL: "https://openrouter.ai/api/v1",
-    apiKey: process.env.OPENROUTER_API_KEY,
-  });
+  let lastError: unknown = null;
 
-  const model = opts.model || DEFAULT_OPENROUTER_MODEL;
-  const messages: Array<{ role: "system" | "user"; content: string }> = [
-    { role: "system", content: opts.systemPrompt },
-    { role: "user", content: opts.userPrompt },
-  ];
+  for (const item of openRouterKeys) {
+    const model = opts.model || item.preferredModel || DEFAULT_OPENROUTER_MODEL;
+    const messages: Array<{ role: "system" | "user"; content: string }> = [
+      { role: "system", content: opts.systemPrompt },
+      { role: "user", content: opts.userPrompt },
+    ];
 
-  let completion: unknown;
-  try {
-    completion = await openai.chat.completions.create({
-      model,
-      messages,
-      ...(opts.jsonObject ? { response_format: { type: "json_object" as const } } : {}),
-    });
-  } catch (e: unknown) {
-    const errObj = e as { status?: number; message?: string };
-    if (opts.jsonObject && (errObj.status === 400 || errObj.message?.includes("json_object"))) {
-      console.log("Model doesn't support json_object, retrying without it...");
-      completion = await openai.chat.completions.create({ model, messages });
-    } else {
-      throw e;
+    try {
+      const openai = new OpenAI({
+        baseURL: "https://openrouter.ai/api/v1",
+        apiKey: item.key,
+      });
+
+      let completion: unknown;
+      try {
+        completion = await openai.chat.completions.create({
+          model,
+          messages,
+          ...(opts.jsonObject ? { response_format: { type: "json_object" as const } } : {}),
+        });
+      } catch (e: unknown) {
+        const errObj = e as { status?: number; message?: string };
+        if (opts.jsonObject && (errObj.status === 400 || errObj.message?.includes("json_object"))) {
+          console.log("Model doesn't support json_object, retrying without it...");
+          completion = await openai.chat.completions.create({ model, messages });
+        } else {
+          throw e;
+        }
+      }
+
+      const comp = completion as { choices?: Array<{ message?: { content?: string } }> };
+      const text = comp?.choices?.[0]?.message?.content?.trim() ?? "";
+      if (!text) throw new Error("Empty response from OpenRouter");
+
+      const provider: AIProvider = item.isCustom ? "custom_key" : "openrouter";
+      await incrementUsage(provider);
+      return { text, model, provider, keyLabel: item.label };
+    } catch (err: unknown) {
+      lastError = err;
+      const msg = err instanceof Error ? err.message : String(err);
+      console.warn(`[OpenRouter] key (${item.label}) failed:`, msg);
+
+      if (isRateLimitError(err) && item.isCustom && item.id && opts.userId) {
+        await markKeyCooldown(opts.userId, item.id, 300);
+      }
     }
   }
 
-  const comp = completion as { choices?: Array<{ message?: { content?: string } }> };
-  const text = comp?.choices?.[0]?.message?.content?.trim() ?? "";
-  if (!text) throw new Error("Empty response from OpenRouter");
-
-  await incrementUsage("openrouter");
-  return { text, model, provider: "openrouter" };
+  const errMsg = lastError instanceof Error ? lastError.message : "OpenRouter call failed";
+  throw new Error(errMsg);
 }
 
 export interface GenerateResult {
   text: string;
-  provider: "gemini_key_1" | "gemini_key_2" | "openrouter";
+  provider: AIProvider;
   model: string;
+  keyLabel?: string;
 }
 
 /**
- * High-level unified generation with priority ordering.
+ * High-level unified generation with multi-key pool and fallback ordering.
  * - `priority: "gemini"` (default) → Gemini keys/models first, OpenRouter fallback.
  * - `priority: "openrouter"` → OpenRouter first, Gemini fallback.
  * Always returns text on success; throws a descriptive error if everything fails.
@@ -188,12 +318,13 @@ export interface GenerateResult {
 export async function generateText(opts: {
   systemPrompt: string;
   userPrompt: string;
+  userId?: string;
   preferredModel?: string;
   openRouterModel?: string;
   priority?: "gemini" | "openrouter";
   jsonObject?: boolean;
 }): Promise<GenerateResult> {
-  const { priority = "gemini" } = opts;
+  const { priority = "gemini", userId } = opts;
   const settings = await getAiSettings();
   const geminiModel = opts.preferredModel || settings.geminiModel;
   const orModel = opts.openRouterModel || settings.openRouterModel;
@@ -201,15 +332,15 @@ export async function generateText(opts: {
   let lastError: Error | unknown = null;
 
   const tryGemini = async (): Promise<GenerateResult | null> => {
-    if (!hasGeminiKeys()) return null;
     try {
       const res = await generateGemini({
         systemPrompt: opts.systemPrompt,
         userPrompt: opts.userPrompt,
+        userId,
         preferredModel: geminiModel,
         jsonObject: opts.jsonObject,
       });
-      return { text: res.text, provider: res.provider, model: res.model };
+      return { text: res.text, provider: res.provider, model: res.model, keyLabel: res.keyLabel };
     } catch (err: unknown) {
       lastError = err;
       const msg = err instanceof Error ? err.message : String(err);
@@ -219,15 +350,15 @@ export async function generateText(opts: {
   };
 
   const tryOpenRouter = async (): Promise<GenerateResult | null> => {
-    if (!process.env.OPENROUTER_API_KEY) return null;
     try {
       const res = await generateOpenRouter({
         systemPrompt: opts.systemPrompt,
         userPrompt: opts.userPrompt,
+        userId,
         model: orModel,
         jsonObject: opts.jsonObject,
       });
-      return { text: res.text, provider: res.provider, model: res.model };
+      return { text: res.text, provider: res.provider, model: res.model, keyLabel: res.keyLabel };
     } catch (err: unknown) {
       lastError = err;
       const msg = err instanceof Error ? err.message : String(err);
@@ -270,7 +401,6 @@ export function parseAndRepairJson<T = unknown>(raw: string, options?: ParseJson
     try {
       return JSON.parse(str);
     } catch {
-      // Try stripping trailing commas: e.g. ", }" or ", ]" -> "}" or "]"
       const cleanedCommas = str.replace(/,\s*([\}\]])/g, "$1");
       try {
         return JSON.parse(cleanedCommas);
@@ -390,10 +520,6 @@ export function extractJson(raw: string): string | null {
   return null;
 }
 
-/**
- * Narrows the provided-ish Gemini JSON schema into the shape GoogleGenAI
- * expects, deriving enum/type from the shorthand object.
- */
 export function toGeminiSchema(schema: unknown) {
   return schema;
 }

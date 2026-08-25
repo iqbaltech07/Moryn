@@ -11,6 +11,7 @@ import {
   QUESTIONS_RETRY_SYSTEM_PROMPT,
   buildQuestionsUserPrompt,
 } from "@/lib/ai/prompts";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
 
 export const maxDuration = 60;
 
@@ -41,15 +42,18 @@ export async function POST(req: NextRequest) {
       select: { tier: true, email: true },
     });
 
-    const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
-    const rl = await checkRateLimit({
-      userId: session.user.id,
-      scope: "generate:questions",
-      limit: dailyLimit,
-      windowSeconds: RateLimitWindows.DAY,
-    });
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok.` }, { status: 429 });
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    if (!isCustomKeysActive) {
+      const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
+      const rl = await checkRateLimit({
+        userId: session.user.id,
+        scope: "generate:questions",
+        limit: dailyLimit,
+        windowSeconds: RateLimitWindows.DAY,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.` }, { status: 429 });
+      }
     }
 
     const body = await req.json().catch(() => ({}));
@@ -65,12 +69,13 @@ export async function POST(req: NextRequest) {
 
     const userPrompt = buildQuestionsUserPrompt({ appName, appIdea, stacks });
 
-    // OpenRouter first (this endpoint historically preferred it), Gemini fallback.
+    // OpenRouter first, Gemini fallback (with user multi-key pool).
     let result: Awaited<ReturnType<typeof generateText>> | null = null;
     try {
       result = await generateText({
         systemPrompt: QUESTIONS_SYSTEM_PROMPT,
         userPrompt,
+        userId: session.user.id,
         priority: "openrouter",
         jsonObject: true,
       });
@@ -88,6 +93,7 @@ export async function POST(req: NextRequest) {
         const retryResult = await generateText({
           systemPrompt: QUESTIONS_RETRY_SYSTEM_PROMPT,
           userPrompt,
+          userId: session.user.id,
           priority: "openrouter",
           jsonObject: true,
         });

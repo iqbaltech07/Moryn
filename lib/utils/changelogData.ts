@@ -22,10 +22,47 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v2.14.0",
+    date: "24 Agustus 2026",
+    title: "Custom Multi-API Key Pool & Intelligent Fallback Cascade (BYOK)",
+    badge: "Latest Release",
+    summary:
+      "Dukungan kustomisasi Bring Your Own Key (BYOK) yang memungkinkan pengguna memasukkan lebih dari satu API Key (Google Gemini & OpenRouter) dengan sistem Multi-Tier Fallback Cascade otomatis untuk mencegah kegagalan akibat limit kuota / rate limits.",
+    highlights: [
+      {
+        type: "feat",
+        title: "Multi-API Key Pool & Fallback Cascade",
+        description:
+          "Pengguna dapat mendaftarkan beberapa API Key dengan urutan prioritas fallback (#1, #2, #3...). Jika Key #1 terkena 429 atau kuota habis, sistem secara instan dan mulus beralih ke Key #2 dan seterusnya.",
+        tags: ["BYOK", "AI Engine", "Fault Tolerance", "Multi-Key"],
+      },
+      {
+        type: "feat",
+        title: "Automatic 429 Rate-Limit Cooldown & Recovery",
+        description:
+          "Sistem mendeteksi error kuota / rate limit dan otomatis menandai key dalam status cooldown 5 menit di Redis agar request berikutnya langsung melompati key yang limit tanpa membuang latency.",
+        tags: ["Redis", "Performance", "Optimization"],
+      },
+      {
+        type: "feat",
+        title: "Zero-Leak AES-256-GCM Military Grade Encryption",
+        description:
+          "Seluruh secret key pengguna dienkripsi di level aplikasi sebelum disimpan ke database, dengan sensor tampilan masked di UI.",
+        tags: ["Security", "Cryptography", "AES-256-GCM"],
+      },
+      {
+        type: "feat",
+        title: "BYOK Unlimited Quota Bypass",
+        description:
+          "Pengguna yang menggunakan Custom API Key miliknya sendiri otomatis dibebaskan dari batas kuota harian platform Moryn.",
+        tags: ["Fair Use", "Quota Waiver"],
+      },
+    ],
+  },
+  {
     version: "v2.13.0",
     date: "16 Agustus 2026",
     title: "Lossless Context Densification, Dedicated Frontend Design Skill, & Pro Export Protection",
-    badge: "Latest Release",
     summary:
       "Pembaruan arsitektur untuk densifikasi konteks lossless (~65% token reduction), penambahan skill pemikiran desain frontend terdedikasi (frontend-design), proteksi ekspor dokumen Pro-only, transisi instan 0ms dengan streaming skeletons, dan resolusi API key real-time.",
     highlights: [

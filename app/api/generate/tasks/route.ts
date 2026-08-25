@@ -15,6 +15,7 @@ import {
   buildTasksSyncUserPrompt,
   buildTasksRetryPrompt,
 } from "@/lib/ai/prompts";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
 
 export const maxDuration = 120;
 
@@ -35,15 +36,18 @@ export async function POST(req: NextRequest) {
       select: { tier: true, email: true },
     });
 
-    const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
-    const rl = await checkRateLimit({
-      userId: session.user.id,
-      scope: "generate:tasks",
-      limit: dailyLimit,
-      windowSeconds: RateLimitWindows.DAY,
-    });
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok.` }, { status: 429 });
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    if (!isCustomKeysActive) {
+      const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
+      const rl = await checkRateLimit({
+        userId: session.user.id,
+        scope: "generate:tasks",
+        limit: dailyLimit,
+        windowSeconds: RateLimitWindows.DAY,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.` }, { status: 429 });
+      }
     }
 
     // 1. Check Redis Cache (Bypassed if forceSync or tasksOutdated)
@@ -146,6 +150,7 @@ export async function POST(req: NextRequest) {
       result = await generateText({
         systemPrompt,
         userPrompt,
+        userId: session.user.id,
         jsonObject: true,
       });
     } catch (err: unknown) {
@@ -165,6 +170,7 @@ export async function POST(req: NextRequest) {
         const retry = await generateText({
           systemPrompt,
           userPrompt: retryPrompt,
+          userId: session.user.id,
           jsonObject: true,
         });
         const retryParsed = parseAndValidateTasks(retry.text);

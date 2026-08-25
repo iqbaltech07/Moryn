@@ -206,6 +206,69 @@ export const apiClient = {
       }>("/api/user/me"),
     getApiKey: () => request<{ hasApiKey: boolean; apiKey: string | null }>("/api/user/api-key"),
     generateApiKey: () => request<{ apiKey: string }>("/api/user/api-key", { method: "POST" }),
+    getCustomAiKeys: () =>
+      request<{
+        keys: Array<{
+          id: string;
+          provider: "gemini" | "openrouter";
+          label: string;
+          maskedKey: string;
+          isActive: boolean;
+          priority: number;
+          preferredModel?: string;
+          createdAt: string;
+          lastUsedAt?: string;
+          inCooldown?: boolean;
+        }>;
+      }>("/api/user/custom-keys"),
+    addCustomAiKey: (payload: {
+      provider: "gemini" | "openrouter";
+      apiKey: string;
+      label?: string;
+      preferredModel?: string;
+      skipValidation?: boolean;
+    }) =>
+      request<{
+        success: boolean;
+        keys: Array<any>;
+        addedId: string;
+      }>("/api/user/custom-keys", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    updateCustomAiKeys: (payload: {
+      updates?: Array<{ id: string; label?: string; isActive?: boolean; priority?: number; preferredModel?: string }>;
+      toggleId?: string;
+      reorder?: Array<{ id: string; priority: number }>;
+      updateModel?: { id: string; preferredModel: string };
+    }) =>
+      request<{
+        success: boolean;
+        keys: Array<any>;
+      }>("/api/user/custom-keys", {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      }),
+    deleteCustomAiKey: (id: string) =>
+      request<{
+        success: boolean;
+        keys: Array<any>;
+      }>(`/api/user/custom-keys?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      }),
+    testCustomAiKey: (payload: {
+      provider?: "gemini" | "openrouter";
+      apiKey?: string;
+      keyId?: string;
+    }) =>
+      request<{
+        success: boolean;
+        message?: string;
+        error?: string;
+      }>("/api/user/custom-keys/test", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
   },
 
   leaderboard: {
@@ -224,7 +287,12 @@ export const apiClient = {
   },
 
   openrouter: {
-    getModels: () => request<{ models: string[] }>("/api/openrouter/models"),
+    getModels: () =>
+      request<{
+        models: Array<{ id: string; name: string; contextLength?: number; isFree?: boolean }>;
+        freeModels?: Array<{ id: string; name: string; contextLength?: number; isFree?: boolean }>;
+        popularModels?: Array<{ id: string; name: string; isFree?: boolean }>;
+      }>("/api/openrouter/models"),
   },
 
   admin: {

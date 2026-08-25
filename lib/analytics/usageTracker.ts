@@ -1,6 +1,6 @@
 import { redis } from "@/lib/db/redis";
 
-export type AIProvider = "gemini_key_1" | "gemini_key_2" | "openrouter";
+export type AIProvider = "gemini_key_1" | "gemini_key_2" | "openrouter" | "custom_key";
 
 /**
  * Gets the Redis key for a specific provider for today

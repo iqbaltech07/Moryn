@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
       const res = await generateGemini({
         systemPrompt,
         userPrompt,
+        userId: session.user.id,
         preferredModel: modelToUse,
       });
       rawText = res.text;
@@ -43,6 +44,7 @@ export async function POST(req: NextRequest) {
       const res = await generateOpenRouter({
         systemPrompt,
         userPrompt,
+        userId: session.user.id,
         model: modelToUse,
         jsonObject: true,
       });

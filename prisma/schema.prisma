@@ -23,6 +23,7 @@ model User {
   tier          String    @default("FREE") // "FREE" or "PRO"
   prdCount      Int       @default(0)
   apiKey        String?   @unique
+  customAiKeys  String?   // JSON array of encrypted user custom AI keys
 
   // Gamification
   exp           Int       @default(0)

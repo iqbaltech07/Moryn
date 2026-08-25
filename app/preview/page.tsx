@@ -48,18 +48,26 @@ function PreviewPageContent() {
   const { updateProjectLocally } = useProjectStore();
   const { setShowUpgradeModal } = useUiStore();
 
+  const [popularModels, setPopularModels] = useState<any[]>([]);
+
   const GEMINI_MODELS = [
-    { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash" },
+    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Default)" },
     { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash" },
     { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
     { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash Lite" },
     { id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite" },
     { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
   ];
 
   useEffect(() => {
-    apiClient.openrouter.getModels().then(d => setFreeModels(d.models || [])).catch(() => {});
+    apiClient.openrouter
+      .getModels()
+      .then((d) => {
+        setFreeModels(d.freeModels || d.models || []);
+        setPopularModels(d.popularModels || []);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages, isAiEditing]);
@@ -390,9 +398,14 @@ function PreviewPageContent() {
                 <optgroup label="Google Gemini">
                   {GEMINI_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </optgroup>
-                <optgroup label="OpenRouter (Free)">
+                <optgroup label="OpenRouter (Free Tier $0)">
                   {freeModels.length > 0 ? freeModels.map(m => <option key={m.id} value={m.id}>{m.name || m.id}</option>) : <option value="loading">Loading…</option>}
                 </optgroup>
+                {popularModels.length > 0 && (
+                  <optgroup label="OpenRouter (Flagship / Paid)">
+                    {popularModels.map(m => <option key={m.id} value={m.id}>{m.name || m.id}</option>)}
+                  </optgroup>
+                )}
               </select>
             </div>
             {/* Textarea + send */}

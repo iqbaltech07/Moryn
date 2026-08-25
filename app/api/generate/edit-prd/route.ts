@@ -8,6 +8,7 @@ import { getAiChatLimit } from "@/lib/analytics/planQuota";
 import { parseBody, editPrdSchema } from "@/lib/utils/validation";
 import { fixMermaidBlocks } from "@/lib/utils/mermaidFix";
 import { EDIT_PRD_SYSTEM_PROMPT, buildEditPrdUserPrompt } from "@/lib/ai/prompts";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
 
 export const maxDuration = 60;
 
@@ -32,7 +33,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const chatLimit = getAiChatLimit(user.tier, user.email);
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    const chatLimit = isCustomKeysActive ? Infinity : getAiChatLimit(user.tier, user.email);
 
     // Track chat count per project in Redis
     const chatKey = projectId ? `project:${projectId}:chats:${session.user.id}` : `user:${session.user.id}:chats`;
@@ -44,9 +46,9 @@ export async function POST(req: NextRequest) {
       console.warn("Redis get chat count warn:", e);
     }
 
-    if (currentChats >= chatLimit) {
+    if (!isCustomKeysActive && currentChats >= chatLimit) {
       return NextResponse.json({
-        error: `Batas chat tercapai (${currentChats}/${chatLimit}). User ${user.tier} hanya mendapatkan ${chatLimit === Infinity ? "unlimited" : chatLimit}x chat AI. Upgrade ke ${user.tier === "FREE" ? "PRO" : "unlimited"} untuk menambah kuota chat!`,
+        error: `Batas chat tercapai (${currentChats}/${chatLimit}). User ${user.tier} hanya mendapatkan ${chatLimit === Infinity ? "unlimited" : chatLimit}x chat AI. Masukkan Custom API Key sendiri di Profile untuk akses unlimited!`,
         chatLimitReached: true,
         chatCount: currentChats,
         chatLimit,
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
       const res = await generateGemini({
         systemPrompt,
         userPrompt,
+        userId: session.user.id,
         preferredModel: modelToUse,
       });
       rawText = res.text;
@@ -74,6 +77,7 @@ export async function POST(req: NextRequest) {
       const res = await generateOpenRouter({
         systemPrompt,
         userPrompt,
+        userId: session.user.id,
         model: modelToUse,
         jsonObject: false,
       });

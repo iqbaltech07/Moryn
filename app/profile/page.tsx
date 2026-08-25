@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import { Navbar } from "../components/layout";
 import ProfileProjects from "./ProfileProjects";
 import ApiKeySection from "./ApiKeySection";
+import CustomAiKeysSection from "./CustomAiKeysSection";
 import { getRank, getNextRank, getRankProgress, getExpToNextRank, RANKS } from "@/lib/analytics/gamification";
 import { getMonthlyProjectLimit } from "@/lib/analytics/planQuota";
 import {
@@ -364,7 +365,10 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        {/* ── API Key Management ── */}
+        {/* ── Custom AI API Keys (Multi-Key Fallback Pool) ── */}
+        <CustomAiKeysSection />
+
+        {/* ── CLI Token Integration Key ── */}
         <ApiKeySection />
 
         {/* ── Projects ── */}
