@@ -140,10 +140,11 @@ export async function generateGemini(opts: {
   userId?: string;
   preferredModel?: string;
   jsonObject?: boolean;
-  /** Extra per-request Gemini config, e.g. responseMimeType/responseSchema. */
+  /** Extra per-request Gemini config, e.g. responseMimeType/responseJsonSchema/responseSchema. */
   geminiConfig?: {
     responseMimeType?: string;
-    responseSchema?: { type?: string; items?: unknown; properties?: Record<string, unknown>; enum?: string[]; required?: string[] };
+    responseJsonSchema?: unknown;
+    responseSchema?: unknown;
   };
 }): Promise<GeminiGenerateResult> {
   const keyCandidates = await resolveGeminiKeys(opts.userId);
@@ -214,6 +215,8 @@ export async function generateOpenRouter(opts: {
   model?: string;
   /** When true, requests JSON output and retries without json_object if unsupported. */
   jsonObject?: boolean;
+  /** Timeout in milliseconds (e.g. 4000ms). If exceeded, throws timeout error. */
+  timeoutMs?: number;
 }): Promise<{ text: string; model: string; provider: AIProvider; keyLabel?: string }> {
   // Check user custom OpenRouter keys
   let openRouterKeys: Array<{ key: string; isCustom: boolean; id?: string; label?: string; preferredModel?: string }> = [];
@@ -261,23 +264,42 @@ export async function generateOpenRouter(opts: {
       const openai = new OpenAI({
         baseURL: "https://openrouter.ai/api/v1",
         apiKey: item.key,
+        timeout: opts.timeoutMs,
       });
 
-      let completion: unknown;
-      try {
-        completion = await openai.chat.completions.create({
-          model,
-          messages,
-          ...(opts.jsonObject ? { response_format: { type: "json_object" as const } } : {}),
-        });
-      } catch (e: unknown) {
-        const errObj = e as { status?: number; message?: string };
-        if (opts.jsonObject && (errObj.status === 400 || errObj.message?.includes("json_object"))) {
-          console.log("Model doesn't support json_object, retrying without it...");
-          completion = await openai.chat.completions.create({ model, messages });
-        } else {
+      const executeCall = async () => {
+        try {
+          return await openai.chat.completions.create({
+            model,
+            messages,
+            ...(opts.jsonObject ? { response_format: { type: "json_object" as const } } : {}),
+          });
+        } catch (e: unknown) {
+          const errObj = e as { status?: number; message?: string };
+          if (opts.jsonObject && (errObj.status === 400 || errObj.message?.includes("json_object"))) {
+            console.log("Model doesn't support json_object, retrying without it...");
+            return await openai.chat.completions.create({ model, messages });
+          }
           throw e;
         }
+      };
+
+      let completion: unknown;
+      if (opts.timeoutMs && opts.timeoutMs > 0) {
+        let timeoutHandle: NodeJS.Timeout | null = null;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutHandle = setTimeout(() => {
+            reject(new Error(`OpenRouter timeout after ${opts.timeoutMs}ms`));
+          }, opts.timeoutMs);
+        });
+
+        try {
+          completion = await Promise.race([executeCall(), timeoutPromise]);
+        } finally {
+          if (timeoutHandle) clearTimeout(timeoutHandle);
+        }
+      } else {
+        completion = await executeCall();
       }
 
       const comp = completion as { choices?: Array<{ message?: { content?: string } }> };
@@ -323,10 +345,16 @@ export async function generateText(opts: {
   openRouterModel?: string;
   priority?: "gemini" | "openrouter";
   jsonObject?: boolean;
+  openRouterTimeoutMs?: number;
+  geminiConfig?: {
+    responseMimeType?: string;
+    responseJsonSchema?: unknown;
+    responseSchema?: unknown;
+  };
 }): Promise<GenerateResult> {
   const { priority = "gemini", userId } = opts;
   const settings = await getAiSettings();
-  const geminiModel = opts.preferredModel || settings.geminiModel;
+  const geminiModel = opts.preferredModel || settings.geminiModel || "gemini-3.7-flash";
   const orModel = opts.openRouterModel || settings.openRouterModel;
 
   let lastError: Error | unknown = null;
@@ -339,6 +367,7 @@ export async function generateText(opts: {
         userId,
         preferredModel: geminiModel,
         jsonObject: opts.jsonObject,
+        geminiConfig: opts.geminiConfig,
       });
       return { text: res.text, provider: res.provider, model: res.model, keyLabel: res.keyLabel };
     } catch (err: unknown) {
@@ -357,6 +386,7 @@ export async function generateText(opts: {
         userId,
         model: orModel,
         jsonObject: opts.jsonObject,
+        timeoutMs: opts.openRouterTimeoutMs,
       });
       return { text: res.text, provider: res.provider, model: res.model, keyLabel: res.keyLabel };
     } catch (err: unknown) {

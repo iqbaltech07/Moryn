@@ -11,6 +11,7 @@ export interface GenerateWithCacheParams {
   ttlSeconds?: number;
   geminiConfig?: {
     responseMimeType?: string;
+    responseJsonSchema?: unknown;
     responseSchema?: unknown;
   };
 }
@@ -78,6 +79,12 @@ export async function generateWithGeminiContextCache({
   const extraConfig: Record<string, unknown> = {};
   if (geminiConfig?.responseMimeType) {
     extraConfig.responseMimeType = geminiConfig.responseMimeType;
+  }
+  if (geminiConfig?.responseJsonSchema) {
+    extraConfig.responseJsonSchema = geminiConfig.responseJsonSchema;
+  }
+  if (geminiConfig?.responseSchema) {
+    extraConfig.responseSchema = geminiConfig.responseSchema;
   }
 
   // 3. Generate content using cachedContent if available
