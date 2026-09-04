@@ -3,23 +3,33 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut } from "lucide-react";
+import { User, LogOut, Menu, X, Sparkles } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
   { label: "Features", href: "/#features" },
-  { label: "Components", href: "/components" },
+  { label: "Showcase", href: "/#showcase" },
   { label: "How it Works", href: "/#how-it-works" },
+  { label: "Leaderboard", href: "/#leaderboard" },
   { label: "Pricing", href: "/#pricing" },
-  { label: "Changelog", href: "/changelog" },
 ];
 
 export default function Navbar() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLogout = async () => {
     await signOut();
@@ -28,70 +38,36 @@ export default function Navbar() {
 
   return (
     <header
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 50,
-        borderBottom: "1px solid var(--border-hairline)",
-        background: "rgba(16, 24, 43, 0.92)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-      }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        scrolled
+          ? "bg-[#fcfbf8]/90 backdrop-blur-md border-b border-[#141817]/8 shadow-[0_4px_20px_rgba(20,24,23,0.03)]"
+          : "bg-[#fcfbf8]/70 backdrop-blur-sm border-b border-transparent"
+      }`}
     >
-      <nav
-        style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "0 32px",
-          height: "60px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
+      <nav className="max-w-[1240px] mx-auto px-6 md:px-8 h-18 flex items-center justify-between">
         {/* Logo */}
         <Link
           href="/"
           id="nav-logo"
-          style={{ display: "flex", alignItems: "center", textDecoration: "none" }}
+          className="flex items-center gap-2 group transition-transform duration-200 active:scale-98"
         >
           <Image
             src="/logo/Moryn-Light-Mode.webp"
             alt="Moryn"
             width={800}
             height={200}
-            style={{ height: "32px", width: "auto" }}
+            className="h-8 md:h-9 w-auto object-contain"
             priority
           />
         </Link>
 
-        {/* Nav Links */}
-        <ul
-          className="hidden md:flex items-center gap-8"
-          style={{ listStyle: "none", margin: 0, padding: 0 }}
-        >
+        {/* Desktop Navigation Links */}
+        <ul className="hidden md:flex items-center gap-7 list-none m-0 p-0">
           {NAV_LINKS.map((link) => (
             <li key={link.label}>
               <Link
                 href={link.href}
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  letterSpacing: "0.1em",
-                  textTransform: "uppercase",
-                  color: "var(--color-mist)",
-                  textDecoration: "none",
-                  transition: "color 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  ((e.target as HTMLElement).style.color = "var(--fg-primary)")
-                }
-                onMouseLeave={(e) =>
-                  ((e.target as HTMLElement).style.color = "var(--color-mist)")
-                }
+                className="text-[14px] font-medium text-[#4d5552] hover:text-[#141817] transition-colors tracking-[-0.01em]"
               >
                 {link.label}
               </Link>
@@ -99,50 +75,20 @@ export default function Navbar() {
           ))}
         </ul>
 
-        {/* Auth / CTA */}
-        <div className="flex items-center gap-3">
+        {/* Desktop Auth / Action Buttons */}
+        <div className="hidden md:flex items-center gap-4">
           {!isPending && !session ? (
             <div className="flex items-center gap-3">
               <Link
                 href="/login"
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "11px",
-                  fontWeight: 500,
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  color: "var(--color-mist)",
-                  textDecoration: "none",
-                  transition: "color 0.15s",
-                }}
+                className="text-[14px] font-medium text-[#4d5552] hover:text-[#141817] px-3 py-2 transition-colors"
               >
-                Sign In
+                Log in
               </Link>
               <Link
-                href="/login"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--color-signal)",
-                  background: "var(--color-signal)",
-                  color: "var(--color-graphite)",
-                  fontFamily: "var(--font-mono)",
-                  fontWeight: 700,
-                  fontSize: "11px",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  textDecoration: "none",
-                  transition: "opacity 0.15s",
-                }}
-                onMouseEnter={(e) =>
-                  ((e.currentTarget as HTMLElement).style.opacity = "0.88")
-                }
-                onMouseLeave={(e) =>
-                  ((e.currentTarget as HTMLElement).style.opacity = "1")
-                }
+                href="/generate"
+                id="nav-cta-get-started"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] active:bg-[#c93e21] text-white text-[13.5px] font-semibold tracking-[-0.01em] shadow-[0_2px_8px_rgba(232,93,63,0.25)] hover:shadow-[0_4px_16px_rgba(232,93,63,0.32)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150"
               >
                 Get Started
               </Link>
@@ -151,30 +97,17 @@ export default function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 href="/generate"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  padding: "8px 16px",
-                  borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--color-signal)",
-                  background: "var(--color-signal)",
-                  color: "var(--color-graphite)",
-                  fontFamily: "var(--font-mono)",
-                  fontWeight: 700,
-                  fontSize: "11px",
-                  letterSpacing: "0.08em",
-                  textTransform: "uppercase",
-                  textDecoration: "none",
-                }}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] text-white text-[13px] font-semibold tracking-[-0.01em] shadow-sm transition-all"
               >
-                Generate PRD
+                <Sparkles size={14} className="opacity-90" />
+                <span>Create PRD</span>
               </Link>
+
+              {/* User Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2"
-                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                  className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-[#141817]/10 transition"
                   aria-label="User menu"
                   aria-expanded={dropdownOpen}
                 >
@@ -182,141 +115,47 @@ export default function Navbar() {
                     <img
                       src={session.user.image}
                       alt="Avatar"
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "var(--radius-md)",
-                        border: "1px solid var(--border-hairline)",
-                        objectFit: "cover",
-                      }}
+                      className="w-8 h-8 rounded-full border border-[#141817]/10 object-cover"
                     />
                   ) : (
-                    <div
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "var(--radius-md)",
-                        border: "1px solid var(--border-hairline)",
-                        background: "var(--bg-elevated)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "var(--color-signal)",
-                        fontFamily: "var(--font-mono)",
-                        fontWeight: 700,
-                        fontSize: "12px",
-                      }}
-                    >
+                    <div className="w-8 h-8 rounded-full bg-[#f5f2ea] border border-[#141817]/10 flex items-center justify-center text-[#e85d3f] font-bold text-xs">
                       {session.user.name?.charAt(0) || "U"}
                     </div>
                   )}
                 </button>
+
                 <AnimatePresence>
                   {dropdownOpen && (
                     <motion.div
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
+                      initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 6, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      style={{
-                        position: "absolute",
-                        right: 0,
-                        top: "calc(100% + 8px)",
-                        width: "220px",
-                        background: "var(--bg-surface)",
-                        border: "1px solid var(--border-hairline)",
-                        borderRadius: "var(--radius-lg)",
-                        overflow: "hidden",
-                        zIndex: 50,
-                      }}
+                      className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-[#141817]/8 shadow-[0_12px_36px_rgba(20,24,23,0.08)] overflow-hidden z-50"
                     >
-                      <div
-                        style={{
-                          padding: "12px 16px",
-                          borderBottom: "1px solid var(--border-hairline)",
-                        }}
-                      >
-                        <p
-                          style={{
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "11px",
-                            fontWeight: 700,
-                            color: "var(--fg-primary)",
-                            margin: 0,
-                            letterSpacing: "0.04em",
-                          }}
-                        >
+                      <div className="p-4 border-b border-[#141817]/6 bg-[#fcfbf8]">
+                        <p className="text-xs font-semibold text-[#141817] truncate m-0">
                           {session.user.name}
                         </p>
-                        <p
-                          style={{
-                            fontFamily: "var(--font-mono)",
-                            fontSize: "10px",
-                            color: "var(--color-mist)",
-                            margin: "2px 0 0",
-                            letterSpacing: "0.02em",
-                          }}
-                        >
+                        <p className="text-[11px] text-[#737b78] truncate mt-0.5 mb-0">
                           {session.user.email}
                         </p>
                       </div>
 
-                      <div style={{ padding: "6px" }}>
+                      <div className="p-1.5">
                         <Link
                           href="/profile"
                           onClick={() => setDropdownOpen(false)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            padding: "8px 12px",
-                            borderRadius: "var(--radius-md)",
-                            fontSize: "13px",
-                            fontWeight: 500,
-                            color: "var(--fg-secondary)",
-                            textDecoration: "none",
-                            transition: "background 0.1s, color 0.1s",
-                          }}
-                          onMouseEnter={(e) => {
-                            const el = e.currentTarget as HTMLElement;
-                            el.style.background = "var(--bg-elevated)";
-                            el.style.color = "var(--fg-primary)";
-                          }}
-                          onMouseLeave={(e) => {
-                            const el = e.currentTarget as HTMLElement;
-                            el.style.background = "transparent";
-                            el.style.color = "var(--fg-secondary)";
-                          }}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-[#4d5552] hover:bg-[#f5f2ea] hover:text-[#141817] transition"
                         >
-                          <User size={14} strokeWidth={2} />
-                          Profile
+                          <User size={14} />
+                          Profile & Projects
                         </Link>
                         <button
                           onClick={handleLogout}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "10px",
-                            width: "100%",
-                            padding: "8px 12px",
-                            borderRadius: "var(--radius-md)",
-                            fontSize: "13px",
-                            fontWeight: 500,
-                            color: "#f87171",
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            transition: "background 0.1s",
-                          }}
-                          onMouseEnter={(e) =>
-                          ((e.currentTarget as HTMLElement).style.background =
-                            "rgba(248, 113, 113, 0.08)")
-                          }
-                          onMouseLeave={(e) =>
-                            ((e.currentTarget as HTMLElement).style.background = "transparent")
-                          }
+                          className="flex items-center gap-2.5 w-full text-left px-3 py-2 rounded-xl text-xs font-medium text-red-600 hover:bg-red-50 transition"
                         >
-                          <LogOut size={14} strokeWidth={2.5} />
+                          <LogOut size={14} />
                           Sign Out
                         </button>
                       </div>
@@ -326,18 +165,82 @@ export default function Navbar() {
               </div>
             </div>
           ) : (
-            <div
-              style={{
-                width: "88px",
-                height: "32px",
-                borderRadius: "var(--radius-md)",
-                background: "var(--bg-elevated)",
-                animation: "pulse 2s ease-in-out infinite",
-              }}
-            />
+            <div className="w-24 h-8 rounded-full bg-[#f5f2ea] animate-pulse" />
           )}
         </div>
+
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden p-2 rounded-lg text-[#141817] hover:bg-[#f5f2ea] transition"
+          aria-label="Toggle menu"
+        >
+          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+        </button>
       </nav>
+
+      {/* Mobile Drawer Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden bg-[#fcfbf8] border-b border-[#141817]/8 px-6 py-5 shadow-lg overflow-hidden"
+          >
+            <ul className="flex flex-col gap-3 list-none p-0 m-0">
+              {NAV_LINKS.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block py-2 text-sm font-medium text-[#4d5552] hover:text-[#141817]"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li className="pt-3 border-t border-[#141817]/6 flex flex-col gap-2">
+                {!session ? (
+                  <>
+                    <Link
+                      href="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full text-center py-2.5 text-sm font-medium text-[#141817] rounded-xl hover:bg-[#f5f2ea]"
+                    >
+                      Log in
+                    </Link>
+                    <Link
+                      href="/generate"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full text-center py-2.5 text-sm font-semibold text-white bg-[#e85d3f] rounded-full shadow-sm"
+                    >
+                      Get Started
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/generate"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full text-center py-2.5 text-sm font-semibold text-white bg-[#e85d3f] rounded-full shadow-sm"
+                    >
+                      Create PRD
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="w-full text-center py-2 text-xs text-[#737b78] hover:text-[#141817]"
+                    >
+                      View Profile
+                    </Link>
+                  </>
+                )}
+              </li>
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
