@@ -45,7 +45,7 @@ export function TopbarSkeleton() {
         height: 52,
         flexShrink: 0,
         borderBottom: "1px solid var(--border-hairline)",
-        background: "rgba(16, 24, 43, 0.96)",
+        background: "rgba(252, 251, 248, 0.92)",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -71,7 +71,7 @@ export function TopbarSkeleton() {
  */
 export function StructureSkeleton() {
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-ink)" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-background)" }}>
       <TopbarSkeleton />
       <div
         className="bg-grid"
@@ -117,7 +117,7 @@ export function StructureSkeleton() {
  */
 export function PrdPreviewSkeleton() {
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-ink)" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-background)" }}>
       <TopbarSkeleton />
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* TOC Sidebar */}
@@ -170,7 +170,7 @@ export function PrdPreviewSkeleton() {
  */
 export function ProjectDetailSkeleton() {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--color-ink)" }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--color-background)" }}>
       <TopbarSkeleton />
       <main style={{ maxWidth: 1200, margin: "0 auto", width: "100%", padding: "32px 24px" }}>
         {/* Header card skeleton */}
@@ -218,7 +218,7 @@ export function ProjectDetailSkeleton() {
  */
 export function TaskKanbanSkeleton() {
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-ink)" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-background)" }}>
       <TopbarSkeleton />
       {/* Phase Tabs */}
       <div style={{ display: "flex", gap: 12, padding: "12px 24px", borderBottom: "1px solid var(--border-hairline)", background: "var(--bg-surface)" }}>
@@ -262,7 +262,7 @@ export function TaskKanbanSkeleton() {
  */
 export function UserProfileSkeleton() {
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-ink)", color: "var(--fg-primary)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--color-background)", color: "var(--fg-primary)" }}>
       {/* Navbar Skeleton */}
       <header
         style={{

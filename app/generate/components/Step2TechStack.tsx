@@ -451,47 +451,51 @@ export default function Step2TechStack({
 
   return (
     <div>
+      {/* Step badge */}
       <div
         style={{
           display: "inline-flex",
           alignItems: "center",
           gap: 6,
           padding: "3px 10px",
-          border: "1px solid var(--border-hairline)",
           borderRadius: "var(--radius-xs)",
+          background: "rgba(65,107,141,0.1)",
+          border: "1px solid rgba(65,107,141,0.2)",
           fontFamily: "var(--font-mono)",
           fontSize: "9px",
           fontWeight: 700,
           letterSpacing: "0.14em",
           textTransform: "uppercase",
-          color: "var(--color-circuit)",
-          marginBottom: 14,
+          color: "var(--color-info)",
+          marginBottom: 16,
         }}
       >
-        Step 02 / Tech Stack & Design
+        02. Tech Stack & Architecture
       </div>
       <h2
         style={{
           fontFamily: "var(--font-display)",
-          fontSize: "1.75rem",
+          fontSize: "1.6rem",
           fontWeight: 800,
-          color: "var(--fg-primary)",
-          marginBottom: 8,
+          color: "var(--color-foreground)",
+          marginBottom: 6,
           letterSpacing: "-0.02em",
+          lineHeight: 1.25,
         }}
       >
-        Choose your tech stack & design
+        Tech Stack & Architecture
       </h2>
       <p
         style={{
           fontFamily: "var(--font-body)",
           fontSize: "13px",
-          color: "var(--color-mist)",
+          color: "var(--color-foreground-muted)",
           marginBottom: 24,
           lineHeight: 1.6,
         }}
       >
-        Pick a popular stack preset or customize your technology layers & color system.
+        Configure the tools to visualize, title, search, and configure your system for
+        Product Architecture.
       </p>
 
       {/* Mode selector */}
@@ -519,7 +523,7 @@ export default function Step2TechStack({
               textTransform: "uppercase",
               cursor: "pointer",
               background: stackMode === mode ? "var(--color-signal)" : "var(--bg-elevated)",
-              color: stackMode === mode ? "var(--color-graphite)" : "var(--fg-muted)",
+              color: stackMode === mode ? "#ffffff" : "var(--fg-muted)",
               border: "none",
               borderLeft: i > 0 ? "1px solid var(--border-hairline)" : "none",
               display: "inline-flex",
@@ -589,7 +593,7 @@ export default function Step2TechStack({
                         padding: "1px 6px",
                         borderRadius: "var(--radius-xs)",
                         background: isSelected ? "var(--color-signal)" : "rgba(255, 255, 255, 0.05)",
-                        color: isSelected ? "var(--color-graphite)" : "var(--fg-muted)",
+                        color: isSelected ? "#ffffff" : "var(--fg-muted)",
                         letterSpacing: "0.06em",
                         textTransform: "uppercase",
                       }}
@@ -1103,7 +1107,7 @@ export default function Step2TechStack({
                   borderRadius: "var(--radius-md)",
                   border: "1px solid var(--color-signal)",
                   background: "var(--color-signal)",
-                  color: "var(--color-graphite)",
+                  color: "#ffffff",
                   fontFamily: "var(--font-mono)",
                   fontSize: "11px",
                   fontWeight: 700,

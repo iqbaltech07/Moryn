@@ -423,3 +423,61 @@ button { font-family: inherit; }
     background-position: -200% 0;
   }
 }
+
+/* ==============================
+   SONNER TOAST — MORYN THEME
+   ============================== */
+
+/* Override Sonner light-theme success/error/warning/info variables
+   to match Moryn's color palette instead of the default green/red Sonner colors */
+[data-sonner-toaster][data-sonner-theme="light"] {
+  --success-bg: #f0faf5;
+  --success-border: #b8dece;
+  --success-text: #1e5c41;
+  --error-bg: #fff1f1;
+  --error-border: #f0bcbc;
+  --error-text: #9b2c2c;
+  --warning-bg: #fffbf0;
+  --warning-border: #e8d5a0;
+  --warning-text: #8a5c1a;
+  --info-bg: #f0f6ff;
+  --info-border: #b8cef0;
+  --info-text: #2a4e7a;
+}
+
+/* Base toast styling — all variants */
+[data-sonner-toaster] [data-sonner-toast] {
+  font-family: var(--font-body, var(--font-ibm-plex-sans), Arial, sans-serif) !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(20, 24, 23, 0.08), 0 1px 4px rgba(20, 24, 23, 0.04) !important;
+}
+
+/* Normal/default toast — white background */
+[data-sonner-toaster][data-sonner-theme="light"] [data-sonner-toast][data-type="default"],
+[data-sonner-toaster][data-sonner-theme="light"] [data-sonner-toast]:not([data-type]) {
+  background: #ffffff !important;
+  border: 1px solid var(--color-border-subtle, #e8ebe8) !important;
+  color: var(--color-foreground, #141817) !important;
+}
+
+/* Title */
+[data-sonner-toaster] [data-sonner-toast] [data-title] {
+  color: inherit !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Description */
+[data-sonner-toaster] [data-sonner-toast] [data-description] {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* Close button — match toast background */
+[data-sonner-toaster] [data-sonner-toast] [data-close-button] {
+  background: inherit !important;
+  color: var(--color-foreground-muted, #737b78) !important;
+}
+

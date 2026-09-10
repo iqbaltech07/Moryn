@@ -624,7 +624,7 @@ export default function ProjectHeaderBrand({
                       cursor: isSaving || !editName.trim() ? "not-allowed" : "pointer",
                       border: "1px solid var(--color-signal)",
                       background: "var(--color-signal)",
-                      color: "var(--color-graphite)",
+                      color: "#ffffff",
                       display: "inline-flex",
                       alignItems: "center",
                       gap: 6,

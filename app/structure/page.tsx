@@ -67,10 +67,50 @@ function StrukturPageContent() {
 
   const handleNodeDelete = useCallback(
     (id: string) => {
-      setNodes((nds) => nds.filter((n) => n.id !== id));
-      setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+      setEdges((currentEdges) => {
+        // Collect direct downstream targets (e.g. SubFeature node)
+        const directTargets = currentEdges.filter((e) => e.source === id).map((e) => e.target);
+        // Collect indirect downstream targets (e.g. Tasks node from SubFeature)
+        const indirectTargets = currentEdges
+          .filter((e) => directTargets.includes(e.source))
+          .map((e) => e.target);
+
+        // Pattern-based fallback (e.g. cat-0 -> sub-0, task-node-0 or cat-new-X -> sub-new-X)
+        const patternSubId = id.startsWith("cat-") ? id.replace(/^cat-/, "sub-") : null;
+        const patternTaskId = id.startsWith("cat-") ? id.replace(/^cat-/, "task-node-") : null;
+
+        const allIdsToDelete = new Set([
+          id,
+          ...directTargets,
+          ...indirectTargets,
+          ...(patternSubId ? [patternSubId] : []),
+          ...(patternTaskId ? [patternTaskId] : []),
+        ]);
+
+        // Remove all associated nodes from canvas
+        setNodes((nds) => nds.filter((n) => !allIdsToDelete.has(n.id)));
+
+        // Remove all edges connected to any deleted node
+        return currentEdges.filter(
+          (e) => !allIdsToDelete.has(e.source) && !allIdsToDelete.has(e.target)
+        );
+      });
     },
     [setNodes, setEdges]
+  );
+
+  const customOnNodesChange = useCallback(
+    (changes: any) => {
+      const removedCategory = changes.find(
+        (c: any) => c.type === "remove" && nodes.some((n) => n.id === c.id && n.type === "category")
+      );
+      if (removedCategory) {
+        handleNodeDelete(removedCategory.id);
+        return;
+      }
+      onNodesChange(changes);
+    },
+    [nodes, onNodesChange, handleNodeDelete]
   );
 
   const toggleEditMode = (mode: boolean) => {
@@ -89,14 +129,17 @@ function StrukturPageContent() {
   };
 
   const handleAddCategory = () => {
-    const id = `cat-new-${Date.now()}`;
-    const subId = `sub-new-${Date.now()}`;
+    const timestamp = Date.now();
+    const id = `cat-new-${timestamp}`;
+    const subId = `sub-new-${timestamp}`;
+    const newY = 40 + Math.random() * 200;
+
     setNodes((nds) => [
       ...nds,
       {
         id,
         type: "category",
-        position: { x: 360, y: Math.random() * 300 },
+        position: { x: 360, y: newY },
         data: {
           label: "New Category",
           phase: 1,
@@ -108,10 +151,28 @@ function StrukturPageContent() {
       {
         id: subId,
         type: "subfeature",
-        position: { x: 670, y: Math.random() * 300 },
+        position: { x: 670, y: newY },
         data: {
-          children: [{ id: "c1", label: "New Capability" }],
+          children: [{ id: `c-${timestamp}-1`, label: "New Capability" }],
         },
+      },
+    ]);
+
+    setEdges((eds) => [
+      ...eds,
+      {
+        id: `e-root-${id}`,
+        source: "root",
+        target: id,
+        type: "colored",
+        style: { stroke: "var(--color-signal)", strokeWidth: 1.5, opacity: 0.6 },
+      },
+      {
+        id: `e-${id}-${subId}`,
+        source: id,
+        target: subId,
+        type: "colored",
+        style: { stroke: "var(--color-circuit)", strokeWidth: 1.5, opacity: 0.5 },
       },
     ]);
   };
@@ -290,7 +351,7 @@ function StrukturPageContent() {
     if (!projectId) return;
     const rootNode = nodes.find((n) => n.type === "root");
     if (!rootNode) {
-      alert("Root node is missing!");
+      toast.error("Root node is missing!");
       return;
     }
     const categoryNodes = nodes.filter((n) => n.type === "category");
@@ -298,7 +359,13 @@ function StrukturPageContent() {
       title: String(rootNode.data.label || ""),
       description: String(rootNode.data.description || ""),
       nodes: categoryNodes.map((cat, idx): StrukturNode => {
-        const subNode = nodes.find((n) => n.type === "subfeature" && n.id === `sub-${idx}`);
+        const subEdge = edges.find((e) => e.source === cat.id);
+        const subNodeFromEdge = subEdge ? nodes.find((n) => n.id === subEdge.target && n.type === "subfeature") : null;
+        const subIdFromPattern = cat.id.startsWith("cat-") ? cat.id.replace(/^cat-/, "sub-") : null;
+        const subNodeFromPattern = subIdFromPattern ? nodes.find((n) => n.id === subIdFromPattern && n.type === "subfeature") : null;
+        const subNodeFromIndex = nodes.find((n) => n.type === "subfeature" && n.id === `sub-${idx}`);
+
+        const subNode = subNodeFromEdge || subNodeFromPattern || subNodeFromIndex;
         const children = (Array.isArray(subNode?.data?.children) ? subNode.data.children : []) as StrukturChild[];
         return {
           id: cat.id,
@@ -351,7 +418,7 @@ function StrukturPageContent() {
   };
 
   return (
-    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-ink)", color: "var(--fg-primary)" }}>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-background)", color: "var(--fg-primary)" }}>
       {/* ── Topbar ── */}
       <header
         style={{
@@ -362,7 +429,7 @@ function StrukturPageContent() {
           height: 52,
           flexShrink: 0,
           borderBottom: "1px solid var(--border-hairline)",
-          background: "rgba(16,24,43,0.96)",
+          background: "rgba(252, 251, 248, 0.92)",
           backdropFilter: "blur(12px)",
           zIndex: 50,
           position: "relative",
@@ -407,7 +474,7 @@ function StrukturPageContent() {
             style={{
               ...btn,
               background: "var(--color-signal)",
-              color: "var(--color-graphite)",
+              color: "#ffffff",
               borderColor: "var(--color-signal)",
               opacity: isLoading || !projectId || isEditing ? 0.4 : 1,
               cursor: isLoading || !projectId || isEditing ? "not-allowed" : "pointer",
@@ -431,7 +498,7 @@ function StrukturPageContent() {
               alignItems: "center",
               justifyContent: "center",
               zIndex: 10,
-              background: "var(--color-ink)",
+              background: "var(--color-background)",
             }}
           >
             <div
@@ -477,10 +544,11 @@ function StrukturPageContent() {
               display: "flex",
               gap: 8,
               zIndex: 10,
-              background: "rgba(16,24,43,0.95)",
+              background: "var(--bg-elevated)",
               padding: "10px 16px",
               border: "1px solid var(--border-hairline)",
               borderRadius: "var(--radius-lg, 8px)",
+              boxShadow: "var(--shadow-raised)",
               backdropFilter: "blur(8px)",
             }}
           >
@@ -512,7 +580,7 @@ function StrukturPageContent() {
           <ReactFlow
             nodes={nodes}
             edges={edges}
-            onNodesChange={onNodesChange}
+            onNodesChange={customOnNodesChange}
             onEdgesChange={onEdgesChange}
             onConnect={onConnect}
             nodeTypes={nodeTypes}
@@ -524,7 +592,7 @@ function StrukturPageContent() {
             deleteKeyCode={["Backspace", "Delete"]}
           >
             {/* Original Blueprint dot grid */}
-            <Background variant={BackgroundVariant.Dots} gap={40} size={1.5} color="rgba(139,147,167,0.2)" />
+            <Background variant={BackgroundVariant.Dots} gap={40} size={1.5} color="rgba(20, 24, 23, 0.12)" />
             <Controls style={{ background: "var(--bg-elevated)", border: "1px solid var(--border-hairline)" }} />
           </ReactFlow>
         )}

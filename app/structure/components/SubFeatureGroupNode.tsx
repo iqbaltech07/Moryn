@@ -18,7 +18,7 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
         isConnectable={data.isEditing}
         style={{
           background: color,
-          border: "2px solid #10182B",
+          border: "2px solid var(--bg-elevated)",
           width: 8,
           height: 8,
           left: -4,
@@ -28,13 +28,13 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
 
       <div
         style={{
-          background: "#10182B",
+          background: "var(--bg-elevated)",
           border: "1px solid var(--border-hairline)",
           borderRadius: 8,
           padding: "14px 16px",
           minWidth: 220,
           maxWidth: 260,
-          boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+          boxShadow: "var(--shadow-raised)",
           position: "relative",
         }}
       >
@@ -53,8 +53,8 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
             textTransform: "uppercase",
           }}
         >
-          <LayoutGrid size={11} strokeWidth={2.2} color="var(--color-mist)" />
-          <span>SUB FITUR</span>
+          <LayoutGrid size={11} strokeWidth={2.2} color="var(--color-circuit)" />
+          <span style={{ color: "var(--fg-secondary)" }}>SUB FITUR</span>
         </div>
 
         {/* Stacked Sub-features list */}
@@ -63,23 +63,23 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
             <div
               key={child.id || cIdx}
               style={{
-                background: "#141C30",
+                background: "var(--bg-surface)",
                 border: "1px solid var(--border-hairline)",
-                borderRadius: 5,
-                padding: "6px 10px",
+                borderRadius: "var(--radius-sm)",
+                padding: "7px 10px",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
               }}
             >
-              <div style={{ width: 4, height: 4, borderRadius: "50%", background: color, flexShrink: 0, opacity: 0.9 }} />
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: color, flexShrink: 0, opacity: 0.9 }} />
               <span
                 style={{
                   fontFamily: "var(--font-body)",
-                  fontSize: 11,
-                  color: "var(--fg-secondary)",
+                  fontSize: 11.5,
+                  color: "var(--fg-primary)",
                   fontWeight: 500,
-                  lineHeight: 1.3,
+                  lineHeight: 1.35,
                   whiteSpace: "nowrap",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -100,10 +100,10 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
               marginTop: 8,
               background: "transparent",
               border: "none",
-              color: "var(--color-mist)",
+              color: "var(--color-circuit)",
               fontFamily: "var(--font-mono)",
               fontSize: 9,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -125,7 +125,7 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
         isConnectable={data.isEditing}
         style={{
           background: color,
-          border: "2px solid #10182B",
+          border: "2px solid var(--bg-elevated)",
           width: 8,
           height: 8,
           right: -4,

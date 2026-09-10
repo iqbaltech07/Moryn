@@ -16,7 +16,7 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
         position={Position.Left}
         style={{
           background: "var(--color-circuit)",
-          border: "2px solid #10182B",
+          border: "2px solid var(--bg-elevated)",
           width: 8,
           height: 8,
           left: -4,
@@ -25,13 +25,13 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
 
       <div
         style={{
-          background: "#10182B",
+          background: "var(--bg-elevated)",
           border: "1px solid rgba(79, 209, 197, 0.4)",
           borderRadius: 8,
           padding: "14px 16px",
           minWidth: 230,
           maxWidth: 280,
-          boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+          boxShadow: "var(--shadow-raised)",
           position: "relative",
         }}
       >
@@ -66,21 +66,21 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
                 key={t.id || tIdx}
                 style={{
                   background: isDone
-                    ? "rgba(16, 185, 129, 0.1)"
+                    ? "rgba(16, 185, 129, 0.08)"
                     : isInProgress
-                    ? "rgba(255, 182, 39, 0.1)"
-                    : "#141C30",
+                    ? "rgba(232, 93, 63, 0.08)"
+                    : "var(--bg-surface)",
                   border: isDone
-                    ? "1px solid rgba(16, 185, 129, 0.35)"
+                    ? "1px solid rgba(16, 185, 129, 0.3)"
                     : isInProgress
-                    ? "1px solid rgba(255, 182, 39, 0.35)"
+                    ? "1px solid rgba(232, 93, 63, 0.3)"
                     : "1px solid var(--border-hairline)",
-                  borderRadius: 5,
-                  padding: "6px 9px",
+                  borderRadius: "var(--radius-sm)",
+                  padding: "7px 10px",
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  transition: "all 0.2s ease",
+                  transition: "all 0.15s ease",
                 }}
               >
                 {/* Status Checkbox Icon */}
@@ -107,7 +107,7 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
                       height: 14,
                       borderRadius: 3,
                       border: "1.5px solid var(--color-signal)",
-                      background: "rgba(255, 182, 39, 0.15)",
+                      background: "rgba(232, 93, 63, 0.15)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
@@ -123,8 +123,8 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
                       width: 14,
                       height: 14,
                       borderRadius: 3,
-                      border: "1.5px solid var(--color-mist)",
-                      background: "transparent",
+                      border: "1.5px solid var(--border-strong)",
+                      background: "var(--bg-elevated)",
                       flexShrink: 0,
                     }}
                     title="Belum Dikerjakan (TODO)"
@@ -135,10 +135,10 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
                 <span
                   style={{
                     fontFamily: "var(--font-body)",
-                    fontSize: 11,
-                    color: isDone ? "var(--fg-secondary)" : isInProgress ? "var(--color-signal)" : "var(--fg-muted)",
+                    fontSize: 11.5,
+                    color: isDone ? "var(--fg-muted)" : isInProgress ? "var(--color-signal)" : "var(--fg-primary)",
                     fontWeight: isInProgress ? 600 : 500,
-                    lineHeight: 1.3,
+                    lineHeight: 1.35,
                     whiteSpace: "nowrap",
                     overflow: "hidden",
                     textOverflow: "ellipsis",
@@ -160,10 +160,10 @@ export function TasksGroupNode({ id, data }: { id: string; data: any }) {
               marginTop: 8,
               background: "transparent",
               border: "none",
-              color: "var(--color-mist)",
+              color: "var(--color-circuit)",
               fontFamily: "var(--font-mono)",
               fontSize: 9,
-              fontWeight: 600,
+              fontWeight: 700,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
