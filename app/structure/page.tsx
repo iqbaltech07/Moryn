@@ -205,12 +205,19 @@ function StrukturPageContent() {
     initData();
   }, [hasStarted, projectId, setNodes, setEdges]);
 
-  // Real-Time Live Sync Polling (Sync task status dynamically)
+  // Real-Time Live Sync Polling (Smart adaptive polling to prevent log flooding)
   useEffect(() => {
     if (!projectId || isEditing) return;
 
-    const interval = setInterval(async () => {
-      if (document.hidden) return;
+    let timeoutId: NodeJS.Timeout;
+    let currentInterval = 30000; // Start at 30s instead of aggressive 4s
+    let isSubscribed = true;
+
+    const pollDetail = async () => {
+      if (document.hidden || isEditing) {
+        scheduleNext(currentInterval);
+        return;
+      }
 
       try {
         const detailRes = await apiClient.projects.getDetail(projectId);
@@ -228,12 +235,39 @@ function StrukturPageContent() {
             });
           }
         }
+        currentInterval = Math.min(currentInterval + 10000, 60000);
       } catch {
         // Background sync error suppression
+        currentInterval = Math.min(currentInterval + 15000, 60000);
       }
-    }, 4000);
 
-    return () => clearInterval(interval);
+      if (isSubscribed) {
+        scheduleNext(currentInterval);
+      }
+    };
+
+    const scheduleNext = (delay: number) => {
+      clearTimeout(timeoutId);
+      if (isSubscribed) {
+        timeoutId = setTimeout(pollDetail, delay);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden && !isEditing) {
+        currentInterval = 30000;
+        pollDetail();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    scheduleNext(currentInterval);
+
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [projectId, isEditing, setNodes]);
 
   // Handle project title updates

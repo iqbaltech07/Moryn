@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { redis } from "@/lib/db/redis";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { generateGemini } from "@/lib/ai/llm";
 import { getOwnedProject } from "@/lib/utils/projectHelpers";
 import { checkRateLimit, RateLimitWindows } from "@/lib/db/rateLimit";
 import { getDailyAiCallLimit } from "@/lib/analytics/planQuota";
 import { parseBody, projectIdSchema } from "@/lib/utils/validation";
 import { fixMermaidBlocks } from "@/lib/utils/mermaidFix";
-import { buildPrdSystemPrompt, buildPrdUserPrompt } from "@/lib/ai/prompts";
 import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
+import { FastApiClient } from "@/lib/ai/fastapiClient";
+import { waitForStageResult, formatStructureSummary, runSequentialGenerationPipeline } from "@/lib/ai/pipeline";
 
 export const maxDuration = 60;
 
@@ -41,7 +41,13 @@ export async function POST(req: NextRequest) {
         windowSeconds: RateLimitWindows.DAY,
       });
       if (!rl.allowed) {
-        return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.` }, { status: 429 });
+        return NextResponse.json(
+          {
+            error: "DAILY_LIMIT_REACHED",
+            message: "Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.",
+          },
+          { status: 429 }
+        );
       }
     }
 
@@ -56,7 +62,7 @@ export async function POST(req: NextRequest) {
       console.warn("Redis Cache Miss/Error:", err);
     }
 
-    // 2. Check Database (typed ownership)
+    // 2. Check Database
     const project = await getOwnedProject(session.user.id, projectId, {
       id: true,
       userId: true,
@@ -72,55 +78,50 @@ export async function POST(req: NextRequest) {
     }
 
     if (project.prdData) {
-      try { await redis.set(cacheKey, project.prdData); } catch { }
+      try {
+        await redis.set(cacheKey, project.prdData);
+      } catch {}
       return NextResponse.json({ markdown: project.prdData });
     }
 
-    const formInputs = project.formInputs ? JSON.parse(project.formInputs) : {};
+    // 3. Smart-wait for background pipeline if currently executing
+    const awaitedPrd = await waitForStageResult(
+      projectId,
+      cacheKey,
+      async () => {
+        const p = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { prdData: true },
+        });
+        return p?.prdData ? { markdown: p.prdData } : null;
+      },
+      15000,
+      1000
+    );
 
-    const systemPrompt = buildPrdSystemPrompt();
-    const userPrompt = buildPrdUserPrompt({
+    if (awaitedPrd) {
+      return NextResponse.json(awaitedPrd);
+    }
+
+    // 4. Fallback / Direct Generation with Structure Context
+    const formInputs = project.formInputs ? JSON.parse(project.formInputs) : {};
+    const structureSummary = project.strukturData ? formatStructureSummary(project.strukturData) : undefined;
+
+    // Call FastAPI AI Engine (Single Source of Truth)
+    const fastApiRes = await FastApiClient.generatePrd({
       appName: project.appName,
       appIdea: project.appIdea,
       stacks: formInputs.stacks,
-      dynamicQuestions: formInputs.dynamicQuestions,
       dynamicAnswers: formInputs.dynamicAnswers,
-      fallbackAnswers: {
-        targetUser: formInputs.targetUser,
-        platform: formInputs.platform,
-        coreFeatures: formInputs.coreFeatures,
-        monetization: formInputs.monetization,
-        appScale: formInputs.appScale,
-        integrations: formInputs.integrations,
-        designPreference: formInputs.designPreference,
-      },
-      integrations: formInputs.integrations,
-      strukturData: project.strukturData,
+      designPreference: formInputs.designPreference,
+      structureContext: structureSummary,
     });
 
-    let response: { text: string } | null = null;
-    let success = false;
-    let lastError: unknown = null;
-
-    try {
-      response = await generateGemini({
-        systemPrompt,
-        userPrompt,
-        userId: session.user.id,
-      });
-      success = true;
-    } catch (err: unknown) {
-      lastError = err;
-      const msg = err instanceof Error ? err.message : String(err);
-      console.warn("[PRD] All Gemini fallback combinations failed:", msg);
+    if (!fastApiRes?.markdown) {
+      return NextResponse.json({ error: "Failed to generate PRD from AI Engine" }, { status: 500 });
     }
 
-    if (!success || !response) {
-      console.error("All fallback combinations failed:", lastError);
-      return NextResponse.json({ error: "Failed to generate PRD due to API limits or errors" }, { status: 500 });
-    }
-
-    let cleanMarkdown = response.text;
+    let cleanMarkdown = fastApiRes.markdown;
     cleanMarkdown = await fixMermaidBlocks(cleanMarkdown);
 
     // Save to Database
@@ -142,10 +143,15 @@ export async function POST(req: NextRequest) {
       console.warn("Failed to set Redis cache:", err);
     }
 
+    // Continue background pipeline for Tasks if not yet generated
+    after(async () => {
+      await runSequentialGenerationPipeline(projectId);
+    });
+
     return NextResponse.json({ markdown: cleanMarkdown });
   } catch (error: unknown) {
+    console.error("Error generating PRD:", error);
     const msg = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("PRD Generation API Error:", error);
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

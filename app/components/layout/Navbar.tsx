@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, Menu, X, Sparkles } from "lucide-react";
+import { User, LogOut, Menu, X, Sparkles, LayoutGrid } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -96,6 +96,14 @@ export default function Navbar() {
           ) : session ? (
             <div className="flex items-center gap-3">
               <Link
+                href="/dashboard"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#18181B] hover:bg-neutral-800 text-white text-[13px] font-medium tracking-[-0.01em] shadow-sm transition-all"
+              >
+                <LayoutGrid size={14} className="opacity-90" />
+                <span>Dashboard</span>
+              </Link>
+
+              <Link
                 href="/generate"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] text-white text-[13px] font-semibold tracking-[-0.01em] shadow-sm transition-all"
               >
@@ -144,12 +152,20 @@ export default function Navbar() {
 
                       <div className="p-1.5">
                         <Link
-                          href="/profile"
+                          href="/dashboard"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-[#4d5552] hover:bg-[#f5f2ea] hover:text-[#141817] transition"
+                        >
+                          <LayoutGrid size={14} />
+                          Dashboard Workspace
+                        </Link>
+                        <Link
+                          href="/dashboard/settings?tab=account"
                           onClick={() => setDropdownOpen(false)}
                           className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-[#4d5552] hover:bg-[#f5f2ea] hover:text-[#141817] transition"
                         >
                           <User size={14} />
-                          Profile & Projects
+                          Account & Settings
                         </Link>
                         <button
                           onClick={handleLogout}
@@ -228,11 +244,11 @@ export default function Navbar() {
                       Create PRD
                     </Link>
                     <Link
-                      href="/profile"
+                      href="/dashboard/settings?tab=account"
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full text-center py-2 text-xs text-[#737b78] hover:text-[#141817]"
                     >
-                      View Profile
+                      Account & Settings
                     </Link>
                   </>
                 )}

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db/prisma";
 import { headers } from "next/headers";
@@ -6,6 +6,7 @@ import { generateDefaultDesignData } from "@/lib/design/defaultDesignTemplate";
 import { parseDesignMarkdown } from "@/lib/design/designParser";
 import { getMonthlyProjectLimit } from "@/lib/analytics/planQuota";
 import { parseBody, createProjectSchema } from "@/lib/utils/validation";
+import { runSequentialGenerationPipeline } from "@/lib/ai/pipeline";
 
 export async function POST(req: NextRequest) {
   try {
@@ -70,9 +71,13 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     });
 
+    // Trigger background sequential cascade pipeline (Structure -> PRD -> Tasks)
+    after(async () => {
+      await runSequentialGenerationPipeline(project.id);
+    });
 
     return NextResponse.json({ projectId: project.id });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Project Create Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

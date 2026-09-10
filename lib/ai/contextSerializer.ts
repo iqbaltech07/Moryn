@@ -251,8 +251,8 @@ interface RawPhaseItem {
 function renderTaskList(tasks: unknown, taskStatuses: Record<string, string>): string {
   const statuses = taskStatuses || {};
 
-  let phasesSummary: Array<{ id: number | string; name: string; total: number; done: number }> = [];
-  let activeWindow: Array<{
+  const phasesSummary: Array<{ id: number | string; name: string; total: number; done: number }> = [];
+  const activeWindow: Array<{
     id: string;
     phaseName: string;
     title: string;

@@ -1,0 +1,32 @@
+.byokSection {
+  position: relative;
+}
+
+.keyRow {
+  animation: key-row-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.keyRow:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.keyRow:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+@keyframes key-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .keyRow {
+    animation: none;
+  }
+}

@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db/prisma";
 import { redis } from "@/lib/db/redis";
-import { encryptText, decryptText, maskApiKey } from "@/lib/utils/encryption";
-import { GoogleGenAI } from "@google/genai";
+import { decryptText } from "@/lib/utils/encryption";
 
 export type AIKeyProvider = "gemini" | "openrouter";
 
@@ -232,18 +231,14 @@ export async function testApiKey(
 
   if (provider === "gemini") {
     try {
-      const ai = new GoogleGenAI({ apiKey: trimmedKey });
-      // Ping with lightweight model and minimal prompt
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: "Say 'OK' in 1 word",
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${trimmedKey}`, {
+        signal: AbortSignal.timeout(6000),
       });
-
-      const text = response.text?.trim();
-      if (text) {
+      if (res.ok) {
         return { success: true };
       }
-      return { success: false, error: "No response received from Gemini API" };
+      const errData = await res.json().catch(() => ({}));
+      return { success: false, error: errData.error?.message || "Invalid Gemini API Key" };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       return { success: false, error: msg };
@@ -252,18 +247,15 @@ export async function testApiKey(
 
   if (provider === "openrouter") {
     try {
-      const { default: OpenAI } = await import("openai");
-      const openai = new OpenAI({
-        baseURL: "https://openrouter.ai/api/v1",
-        apiKey: trimmedKey,
+      const res = await fetch("https://openrouter.ai/api/v1/auth/key", {
+        headers: { Authorization: `Bearer ${trimmedKey}` },
+        signal: AbortSignal.timeout(6000),
       });
-
-      // Quick models list verification
-      const list = await openai.models.list();
-      if (list && list.data && list.data.length > 0) {
+      if (res.ok) {
         return { success: true };
       }
-      return { success: false, error: "Could not list OpenRouter models" };
+      const errData = await res.json().catch(() => ({}));
+      return { success: false, error: errData.error?.message || "Invalid OpenRouter API Key" };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       return { success: false, error: msg };

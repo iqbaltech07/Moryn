@@ -286,6 +286,15 @@ export const apiClient = {
       }>("/api/leaderboard"),
   },
 
+  gemini: {
+    getModels: (apiKey?: string) =>
+      request<{
+        models: Array<{ id: string; name: string; description?: string; inputTokenLimit?: number }>;
+        count: number;
+        isFallback?: boolean;
+      }>(`/api/gemini/models${apiKey ? `?key=${encodeURIComponent(apiKey)}` : ""}`),
+  },
+
   openrouter: {
     getModels: () =>
       request<{

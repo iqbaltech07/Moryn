@@ -97,6 +97,9 @@ model Project {
   checkedTasks String?  // JSON: Record<taskId, boolean>
   finishedAt   DateTime?
 
+  // Knowledge Base & RAG Chunks
+  knowledgeChunks ProjectKnowledgeChunk[]
+
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -105,4 +108,21 @@ model Project {
   @@index([userId, createdAt(sort: Desc)])
   @@index([userId, status])
   @@map("project")
+}
+
+model ProjectKnowledgeChunk {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  category    String   // "user_input" | "structure" | "prd" | "task"
+  title       String
+  content     String
+  embedding   String   // JSON array of 768-dim floats
+  metadata    String?  // JSON metadata (e.g. phase, sectionNumber, tags)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId, category])
+  @@index([projectId])
+  @@map("project_knowledge_chunk")
 }

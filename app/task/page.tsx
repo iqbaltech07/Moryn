@@ -322,8 +322,8 @@ function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: 
             <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
               Tutup
             </button>
-            <Link href="/profile" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              Lihat Profil <ArrowRight size={12} />
+            <Link href="/dashboard/settings?tab=account" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+              Lihat Akun <ArrowRight size={12} />
             </Link>
           </div>
         </div>
@@ -414,48 +414,87 @@ function TaskPageContent() {
   const isDirtyRef = useRef(false);
   latestTaskStatusRef.current = taskStatus;
 
-  // 🔄 Real-Time Auto-Sync: Poll MCP/Server status every 3s without page reload
+  // 🔄 Smart Real-Time Auto-Sync: Adaptive polling to prevent log flooding and conserve server resources
   useEffect(() => {
     if (!projectId || !data) return;
 
-    const intervalId = setInterval(async () => {
+    let timeoutId: NodeJS.Timeout;
+    let currentInterval = 15000; // Start at a polite 15s interval instead of flooding at 3s
+    let isSubscribed = true;
+
+    const pollTaskStatus = async () => {
       // Don't poll/update if user is on another tab or actively dragging tasks
-      if (document.visibilityState !== "visible" || isDirtyRef.current) return;
+      if (document.visibilityState !== "visible" || isDirtyRef.current) {
+        scheduleNext(currentInterval);
+        return;
+      }
 
       try {
         const json = await apiClient.projects.getStatus(projectId);
         const serverStatuses: Record<string, ColumnId> = (json.taskStatus as any) || {};
 
-          let hasChange = false;
-          const updated = { ...latestTaskStatusRef.current };
+        let hasChange = false;
+        const updated = { ...latestTaskStatusRef.current };
 
-          Object.keys(serverStatuses).forEach((taskId) => {
-            const rawStatus = serverStatuses[taskId];
-            const normStatus: ColumnId =
-              typeof rawStatus === "string"
-                ? (rawStatus as ColumnId)
-                : rawStatus === true
-                ? "done"
-                : "todo";
+        Object.keys(serverStatuses).forEach((taskId) => {
+          const rawStatus = serverStatuses[taskId];
+          const normStatus: ColumnId =
+            typeof rawStatus === "string"
+              ? (rawStatus as ColumnId)
+              : rawStatus === true
+              ? "done"
+              : "todo";
 
-            if (updated[taskId] !== normStatus) {
-              updated[taskId] = normStatus;
-              hasChange = true;
-            }
-          });
-
-          if (hasChange) {
-            setTaskStatus(updated);
-            try {
-              localStorage.setItem(`kanban_status_${projectId}`, JSON.stringify(updated));
-            } catch (e) {}
+          if (updated[taskId] !== normStatus) {
+            updated[taskId] = normStatus;
+            hasChange = true;
           }
+        });
+
+        if (hasChange) {
+          setTaskStatus(updated);
+          try {
+            localStorage.setItem(`kanban_status_${projectId}`, JSON.stringify(updated));
+          } catch (e) {}
+          // When change detected: reset to standard 15s cadence
+          currentInterval = 15000;
+        } else {
+          // When idle: gradually back off up to 45s to keep terminal clean & save DB/Redis bandwidth
+          currentInterval = Math.min(currentInterval + 5000, 45000);
+        }
       } catch (err) {
         // Silent error handling for background polling
+        currentInterval = Math.min(currentInterval + 10000, 60000);
       }
-    }, 3000);
 
-    return () => clearInterval(intervalId);
+      if (isSubscribed) {
+        scheduleNext(currentInterval);
+      }
+    };
+
+    const scheduleNext = (delay: number) => {
+      clearTimeout(timeoutId);
+      if (isSubscribed) {
+        timeoutId = setTimeout(pollTaskStatus, delay);
+      }
+    };
+
+    // Instant sync when user switches back to this tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        currentInterval = 15000;
+        pollTaskStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    scheduleNext(currentInterval);
+
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [projectId, data]);
 
   // Sync to database only when user leaves page or closes tab

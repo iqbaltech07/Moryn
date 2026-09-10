@@ -46,3 +46,10 @@ next-env.d.ts
 
 certificates
 *.tgz
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/

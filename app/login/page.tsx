@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { signIn } from "@/lib/auth/auth-client";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { signIn, useSession } from "@/lib/auth/auth-client";
 import { Loader2, ArrowLeft, FileText, Gauge, Target, Download, Bot, Gift } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
@@ -14,14 +15,22 @@ const FEATURES = [
 ];
 
 export default function LoginPage() {
+  const router = useRouter();
+  const { data: session, isPending } = useSession();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session) {
+      router.replace("/dashboard");
+    }
+  }, [session, router]);
 
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     setError(null);
     try {
-      await signIn.social({ provider: "google", callbackURL: "/generate" });
+      await signIn.social({ provider: "google", callbackURL: "/dashboard" });
     } catch (err) {
       setError("Sign-in failed. Please try again.");
       setIsLoading(false);

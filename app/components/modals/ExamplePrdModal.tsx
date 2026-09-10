@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { X, FileText } from "lucide-react";
 import MarkdownRenderer, { TocItem } from "../shared/MarkdownRenderer";
-import { PRD_TEMPLATE } from "@/lib/ai/prompts";
+import { PRD_TEMPLATE } from "./examplePrdTemplate";
 
 export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
   const [toc, setToc] = useState<TocItem[]>([]);
