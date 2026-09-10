@@ -51,7 +51,7 @@ export default function StepNavbar({
                 fontSize: "9px", fontWeight: 700,
                 flexShrink: 0,
                 background: isActive ? "var(--color-signal)" : isDone ? "rgba(255,182,39,0.2)" : "transparent",
-                color: isActive ? "var(--color-graphite)" : isDone ? "var(--color-signal)" : "var(--fg-muted)",
+                color: isActive ? "#ffffff" : isDone ? "var(--color-signal)" : "var(--fg-muted)",
                 border: isActive ? "none" : isDone ? "1px solid var(--color-signal)" : "1px solid var(--border-hairline)",
                 boxSizing: "border-box",
               }}>

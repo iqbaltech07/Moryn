@@ -307,7 +307,7 @@ export default async function ProfilePage() {
                           <span style={{
                             fontFamily: "var(--font-mono)", fontSize: 7, fontWeight: 800,
                             letterSpacing: "0.1em", textTransform: "uppercase",
-                            color: "var(--color-graphite)",
+                            color: "#ffffff",
                             background: "var(--color-signal)",
                             padding: "1px 5px",
                             borderRadius: "var(--radius-xs)",

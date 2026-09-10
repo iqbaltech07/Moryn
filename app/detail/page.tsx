@@ -141,7 +141,7 @@ function ProjectDetailContent() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-ink)", color: "var(--fg-primary)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--color-background)", color: "var(--fg-primary)" }}>
       {showMcpModal && projectId && (
         <McpConnectModal projectId={projectId} appName={project?.appName} onClose={() => setShowMcpModal(false)} />
       )}
@@ -160,7 +160,7 @@ function ProjectDetailContent() {
           padding: "0 20px",
           height: 52,
           borderBottom: "1px solid var(--border-hairline)",
-          background: "rgba(16,24,43,0.96)",
+          background: "rgba(252, 251, 248, 0.92)",
           backdropFilter: "blur(12px)",
         }}
       >
@@ -172,7 +172,7 @@ function ProjectDetailContent() {
             style={{
               ...btn,
               background: "var(--color-signal)",
-              color: "var(--color-graphite)",
+              color: "#ffffff",
               borderColor: "var(--color-signal)",
               textDecoration: "none",
             }}

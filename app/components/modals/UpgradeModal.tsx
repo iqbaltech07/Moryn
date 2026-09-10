@@ -196,7 +196,7 @@ export default function UpgradeModal() {
                 borderRadius: "var(--radius-md)",
                 border: "1px solid var(--color-signal)",
                 background: "var(--color-signal)",
-                color: "var(--color-graphite)",
+                color: "#ffffff",
                 fontFamily: "var(--font-mono)",
                 fontSize: "11px",
                 fontWeight: 700,

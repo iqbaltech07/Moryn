@@ -55,7 +55,7 @@ export default function ProfileProjects({ projects }: { projects: Project[] }) {
           borderRadius: "var(--radius-md)",
           border: "1px solid var(--color-signal)",
           background: "var(--color-signal)",
-          color: "var(--color-graphite)",
+          color: "#ffffff",
           fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700,
           letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none",
         }}>
@@ -112,7 +112,7 @@ export default function ProfileProjects({ projects }: { projects: Project[] }) {
             display: "inline-flex", alignItems: "center", gap: 6,
             padding: "9px 18px", borderRadius: "var(--radius-md)",
             border: "1px solid var(--color-signal)", background: "var(--color-signal)",
-            color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10,
+            color: "#ffffff", fontFamily: "var(--font-mono)", fontSize: 10,
             fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none",
           }}>
             Generate PRD Now <ChevronRight size={11} />

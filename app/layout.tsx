@@ -45,7 +45,19 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col antialiased">
         {children}
-        <Toaster position="top-right" richColors theme="dark" />
+        <Toaster
+          position="top-right"
+          theme="light"
+          richColors
+          closeButton
+          toastOptions={{
+            style: {
+              fontFamily: "var(--font-body)",
+              fontSize: "13px",
+              borderRadius: "8px",
+            },
+          }}
+        />
       </body>
     </html>
   );

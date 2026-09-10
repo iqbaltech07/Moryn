@@ -2,9 +2,9 @@ import { Position, Handle } from "@xyflow/react";
 import { Trash2, LayoutGrid, Search, Users, Target, Bell, Shield, Zap, Layers } from "lucide-react";
 
 export const PHASE_COLORS: Record<number, { border: string; badge: string; text: string }> = {
-  1: { border: "var(--color-signal)",  badge: "FASE 1 · Core",   text: "var(--color-graphite)" },
-  2: { border: "var(--color-circuit)", badge: "FASE 2 · Growth", text: "var(--color-graphite)" },
-  3: { border: "#8B93A7",              badge: "FASE 3 · Future", text: "var(--color-graphite)" },
+  1: { border: "var(--color-signal)",  badge: "FASE 1 · Core",   text: "#ffffff" },
+  2: { border: "var(--color-circuit)", badge: "FASE 2 · Growth", text: "#ffffff" },
+  3: { border: "#6b7280",              badge: "FASE 3 · Future", text: "#ffffff" },
 };
 
 export function getCategoryIcon(label: string, idx: number) {
@@ -33,7 +33,7 @@ export function CategoryNode({ id, data }: { id: string; data: any }) {
         isConnectable={data.isEditing}
         style={{
           background: color,
-          border: "2px solid #10182B",
+          border: "2px solid var(--bg-elevated)",
           width: 9,
           height: 9,
           left: -4.5,
@@ -42,14 +42,14 @@ export function CategoryNode({ id, data }: { id: string; data: any }) {
       />
       <div
         style={{
-          background: "#141C30",
+          background: "var(--bg-elevated)",
           border: `1px solid ${color}`,
           borderRadius: 8,
           padding: "12px 16px",
           minWidth: 200,
           maxWidth: 240,
           position: "relative",
-          boxShadow: "0 6px 20px rgba(0,0,0,0.35)",
+          boxShadow: "var(--shadow-raised)",
         }}
       >
         {/* Phase annotation */}
@@ -176,7 +176,7 @@ export function CategoryNode({ id, data }: { id: string; data: any }) {
         isConnectable={data.isEditing}
         style={{
           background: color,
-          border: "2px solid #10182B",
+          border: "2px solid var(--bg-elevated)",
           width: 9,
           height: 9,
           right: -4.5,

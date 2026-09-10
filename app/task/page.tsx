@@ -322,7 +322,7 @@ function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: 
             <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
               Tutup
             </button>
-            <Link href="/profile" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <Link href="/profile" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               Lihat Profil <ArrowRight size={12} />
             </Link>
           </div>
@@ -606,14 +606,14 @@ function TaskPageContent() {
   const [showMcpModal, setShowMcpModal] = useState(false);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-ink)", color: "var(--fg-primary)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--color-background)", color: "var(--fg-primary)" }}>
       {celebration && <CelebrationModal result={celebration} onClose={() => setCelebration(null)} />}
       {showMcpModal && projectId && (
         <McpConnectModal projectId={projectId} appName={data?.phases?.[0]?.name} onClose={() => setShowMcpModal(false)} />
       )}
 
       {/* ── Topbar ── */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid var(--border-hairline)", background: "rgba(16,24,43,0.96)", backdropFilter: "blur(12px)" }}>
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid var(--border-hairline)", background: "rgba(252, 251, 248, 0.92)", backdropFilter: "blur(12px)" }}>
         <ProjectHeaderBrand projectId={projectId} />
         <StepNavbar currentStep="task" projectId={projectId} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
@@ -680,7 +680,7 @@ function TaskPageContent() {
           {!isLoading && data && (
             <button onClick={handleExport} style={btn}>↓ Export .md</button>
           )}
-          <Link href="/generate" style={{ ...btn, background: "var(--color-signal)", color: "var(--color-graphite)", borderColor: "var(--color-signal)", textDecoration: "none" }}>
+          <Link href="/generate" style={{ ...btn, background: "var(--color-signal)", color: "#ffffff", borderColor: "var(--color-signal)", textDecoration: "none" }}>
             + New Project
           </Link>
         </div>
@@ -783,7 +783,7 @@ function TaskPageContent() {
                   <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--color-mist)", margin: 0 }}>Claim your Points now for completing this project.</p>
                 </div>
               </div>
-              <button onClick={handleFinish} disabled={isFinishing} style={{ padding: "8px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", flexShrink: 0, opacity: isFinishing ? 0.7 : 1 }}>
+              <button onClick={handleFinish} disabled={isFinishing} style={{ padding: "8px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", flexShrink: 0, opacity: isFinishing ? 0.7 : 1 }}>
                 <Award size={12} />
                 {isFinishing ? "Processing…" : "Finish & Claim +100 Points"}
               </button>
@@ -817,7 +817,7 @@ function TaskPageContent() {
                     </button>
                   )}
                   {data && data.phases.findIndex(p => p.id === activePhase) < data.phases.length - 1 && (
-                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx + 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
+                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx + 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
                       Next Phase →
                     </button>
                   )}

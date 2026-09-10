@@ -6,13 +6,13 @@ export function RootNode({ id, data }: { id: string; data: any }) {
     <>
       <div
         style={{
-          background: "#141C30",
+          background: "var(--bg-elevated)",
           border: "1px solid var(--color-signal)",
           borderRadius: 8,
           padding: "16px 20px",
           minWidth: 200,
           maxWidth: 250,
-          boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
+          boxShadow: "var(--shadow-raised)",
           position: "relative",
         }}
       >
@@ -124,7 +124,7 @@ export function RootNode({ id, data }: { id: string; data: any }) {
         isConnectable={data.isEditing}
         style={{
           background: "var(--color-signal)",
-          border: "2px solid #10182B",
+          border: "2px solid var(--bg-elevated)",
           width: 10,
           height: 10,
           right: -5,

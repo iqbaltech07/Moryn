@@ -185,14 +185,14 @@ function PreviewPageContent() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-ink)", color: "var(--fg-primary)" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-background)", color: "var(--fg-primary)" }}>
 
       {/* ── Topbar ── */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 20px", height: 52, flexShrink: 0,
         borderBottom: "1px solid var(--border-hairline)",
-        background: "rgba(16,24,43,0.96)", backdropFilter: "blur(12px)",
+        background: "rgba(252, 251, 248, 0.92)", backdropFilter: "blur(12px)",
         position: "relative", zIndex: 50,
       }}>
         <ProjectHeaderBrand projectId={projectId} />
@@ -214,7 +214,7 @@ function PreviewPageContent() {
           <button onClick={handleDownload} style={btn}>↓ .md</button>
           <button
             onClick={handleContinueToDesign} disabled={isGenerating}
-            style={{ ...btn, background: "var(--color-signal)", color: "var(--color-graphite)", borderColor: "var(--color-signal)", opacity: isGenerating ? 0.4 : 1, cursor: isGenerating ? "not-allowed" : "pointer", padding: "5px 14px" }}
+            style={{ ...btn, background: "var(--color-signal)", color: "#ffffff", borderColor: "var(--color-signal)", opacity: isGenerating ? 0.4 : 1, cursor: isGenerating ? "not-allowed" : "pointer", padding: "5px 14px" }}
           >
             Continue to Design →
           </button>
@@ -432,7 +432,7 @@ function PreviewPageContent() {
                 width: 34, height: 34, borderRadius: "var(--radius-md)", flexShrink: 0,
                 background: (!isAiEditing && aiPrompt.trim()) ? "var(--color-signal)" : "var(--bg-elevated)",
                 border: "1px solid var(--border-hairline)",
-                color: (!isAiEditing && aiPrompt.trim()) ? "var(--color-graphite)" : "var(--fg-muted)",
+                color: (!isAiEditing && aiPrompt.trim()) ? "#ffffff" : "var(--fg-muted)",
                 display: "flex", alignItems: "center", justifyContent: "center",
                 cursor: isAiEditing || !aiPrompt.trim() ? "not-allowed" : "pointer",
                 opacity: isAiEditing || !aiPrompt.trim() ? 0.4 : 1,
