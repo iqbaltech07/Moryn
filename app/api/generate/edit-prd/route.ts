@@ -100,8 +100,13 @@ export async function POST(req: NextRequest) {
       // Save to Database & Redis if projectId is provided
       if (projectId) {
         try {
-          const project = await prisma.project.findFirst({
-            where: { id: projectId, userId: session.user.id },
+          const project = await prisma.project.findUnique({
+            where: {
+              id_userId: {
+                id: projectId,
+                userId: session.user.id,
+              },
+            },
             select: { formInputs: true },
           });
 
@@ -116,7 +121,12 @@ export async function POST(req: NextRequest) {
           }
 
           await prisma.project.update({
-            where: { id: projectId },
+            where: {
+              id_userId: {
+                id: projectId,
+                userId: session.user.id,
+              },
+            },
             data: updateData,
             select: { id: true },
           });

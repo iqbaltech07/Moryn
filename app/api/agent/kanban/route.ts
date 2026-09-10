@@ -16,9 +16,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing projectId parameter" }, { status: 400 });
     }
 
-    const project = await prisma.project.findUnique({
-      where: { id: projectId, userId: authResult.user.id },
-      select: {
+     const project = await prisma.project.findUnique({
+       where: {
+         id_userId: {
+           id: projectId,
+           userId: authResult.user.id,
+         },
+       },
+       select: {
         id: true,
         appName: true,
         status: true,

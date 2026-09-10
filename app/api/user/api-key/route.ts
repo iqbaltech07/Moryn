@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { prisma } from "@/lib/db/prisma";
 import { headers } from "next/headers";
-import { generateApiKey } from "@/lib/auth/apiKey";
+import { generateApiKey, hashApiKey } from "@/lib/auth/apiKey";
 
 export async function GET() {
   try {
@@ -23,18 +23,14 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    let apiKey = user.apiKey;
+    // Check if user has an active key (hashed or legacy)
+    const hasApiKey = Boolean(user.apiKey);
 
-    // If user doesn't have an apiKey or has an old legacy hash format, generate a valid key
-    if (!apiKey || !apiKey.startsWith("piar_live_")) {
-      apiKey = generateApiKey();
-      await prisma.user.update({
-        where: { id: session.user.id },
-        data: { apiKey },
-      });
-    }
-
-    return NextResponse.json({ hasApiKey: true, apiKey });
+    return NextResponse.json({ 
+      hasApiKey,
+      // If legacy plaintext is still in DB, return it, otherwise indicate existence
+      apiKey: user.apiKey && user.apiKey.startsWith("piar_live_") ? user.apiKey : null
+    });
   } catch (error: any) {
     console.error("Error fetching API Key:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -51,13 +47,16 @@ export async function POST() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const apiKey = generateApiKey();
+    const rawApiKey = generateApiKey();
+    const hashed = hashApiKey(rawApiKey);
+
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { apiKey },
+      data: { apiKey: hashed },
     });
 
-    return NextResponse.json({ hasApiKey: true, apiKey });
+    // Return the raw key once to the client for display/copy
+    return NextResponse.json({ hasApiKey: true, apiKey: rawApiKey });
   } catch (error: any) {
     console.error("Error regenerating API Key:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

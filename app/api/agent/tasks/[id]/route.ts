@@ -79,7 +79,12 @@ export async function PATCH(
     }
 
     const project = await prisma.project.findUnique({
-      where: { id: projectId, userId: authResult.user.id },
+      where: {
+        id_userId: {
+          id: projectId,
+          userId: authResult.user.id,
+        },
+      },
       select: { id: true, checkedTasks: true },
     });
 
@@ -96,7 +101,12 @@ export async function PATCH(
     savedStatuses[taskId] = newStatus;
 
     await prisma.project.update({
-      where: { id: projectId },
+      where: {
+        id_userId: {
+          id: projectId,
+          userId: authResult.user.id,
+        },
+      },
       data: { checkedTasks: JSON.stringify(savedStatuses) },
     });
 
