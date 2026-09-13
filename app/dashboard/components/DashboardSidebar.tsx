@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { LayoutGrid, Folder, Layers, Settings, HelpCircle, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { LayoutGrid, Folder, Layers, Settings, HelpCircle, LogOut, X, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { signOut } from "@/lib/auth/auth-client";
 
 interface DashboardSidebarProps {
   currentTab?: string;
@@ -19,6 +21,23 @@ export default function DashboardSidebar({
   onCloseMobile,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await signOut({
+        fetchOptions: {
+          onSuccess: () => {
+            router.push("/login");
+          },
+        },
+      });
+    } catch {
+      setLoggingOut(false);
+    }
+  };
 
   const navItems = [
     {
@@ -140,7 +159,7 @@ export default function DashboardSidebar({
         </div>
 
         {/* Bottom Help */}
-        <div className="pt-4 border-t border-neutral-100">
+        <div className="pt-4 border-t border-neutral-100 space-y-1">
           <Link
             href="/#how-it-works"
             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13.5px] font-medium text-neutral-500 hover:text-neutral-900 hover:bg-neutral-50 transition-colors"
@@ -148,6 +167,19 @@ export default function DashboardSidebar({
             <HelpCircle size={18} strokeWidth={1.8} className="text-neutral-400" />
             <span>Help</span>
           </Link>
+
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13.5px] font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-60 cursor-pointer disabled:cursor-not-allowed"
+          >
+            {loggingOut ? (
+              <Loader2 size={18} className="animate-spin shrink-0" />
+            ) : (
+              <LogOut size={18} className="shrink-0" />
+            )}
+            <span>Logout</span>
+          </button>
         </div>
       </aside>
     </>

@@ -120,7 +120,7 @@ export default function FeaturesSection() {
                   v2.4.0-verified
                 </span>
                 <Link
-                  href="/generate"
+                  href="/dashboard"
                   className="px-3.5 py-1.5 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] text-white text-xs font-semibold shadow-xs transition"
                 >
                   Generate PRD
@@ -269,7 +269,7 @@ export default function FeaturesSection() {
                 </div>
 
                 <Link
-                  href="/generate"
+                  href="/dashboard"
                   className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white hover:bg-[#f5f2ea] border border-[#141817]/10 text-xs font-semibold text-[#141817] shadow-2xs transition"
                 >
                   <span>Open Full Blueprint</span>

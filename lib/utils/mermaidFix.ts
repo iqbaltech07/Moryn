@@ -66,7 +66,24 @@ export async function fixMermaidBlocks(markdown: string): Promise<string> {
     // 1. Remove markdown formatting (bold/italic/backtick are always invalid inside mermaid)
     code = code.replace(/\*\*/g, "").replace(/__/g, "").replace(/`/g, "");
 
-    // 2. Fix unquoted node labels for flowchart/graph diagrams
+    // 2. Fix broken LLM arrows and convert double-hyphen quoted labels to valid Mermaid pipes
+    code = code.replace(/([A-Za-z0-9_\]\)\}]|")\s+->\s+([A-Za-z0-9_\[\(\{]|")/g, "$1 --> $2");
+    code = code.replace(/([A-Za-z0-9_\]\)\}]|")\s+->\|(.*?)\|\s+([A-Za-z0-9_\[\(\{]|")/g, "$1 -->|$2| $3");
+    code = code.replace(/→/g, "-->");
+
+    // Convert `-- label with quotes -->` into safe `-->|label|`
+    code = code.replace(/--\s*([^-\n>]+?)\s*-->/g, (_m, label) => {
+      const safeLabel = label.replace(/["']/g, "").replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim();
+      return `-->|${safeLabel}|`;
+    });
+
+    // Clean pipe edge labels
+    code = code.replace(/\|([^|\n]*?)\|/g, (_m, label) => {
+      const safeLabel = label.replace(/["']/g, "").replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim();
+      return `|${safeLabel}|`;
+    });
+
+    // 3. Fix unquoted node labels for flowchart/graph diagrams
     const diagramFirstLine = code.trim().split('\n')[0].trim();
     const diagramType = diagramFirstLine.split(' ')[0];
     if (diagramType === 'flowchart' || diagramType === 'graph') {

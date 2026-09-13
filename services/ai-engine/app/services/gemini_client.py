@@ -32,9 +32,21 @@ class GeminiClientService:
         temperature: float = 0.7,
     ) -> tuple[str, str]:
         """Generates text with automatic key rotation and model fallback."""
+        # Check if the requested model is an OpenRouter model
+        if model and ("/" in model or not (model.startswith("gemini-") or model.startswith("gemma-"))):
+            if self.settings.OPENROUTER_API_KEY:
+                try:
+                    logger.info(f"Directly calling OpenRouter with requested model: {model}")
+                    text = await self._call_openrouter(system_prompt, user_prompt, model=model)
+                    if text:
+                        return text, model
+                except Exception as e:
+                    logger.warning(f"Requested OpenRouter model {model} failed: {e}. Falling back to default Gemini...")
+
         clients = self._get_clients()
-        models = [model or self.settings.DEFAULT_GEMINI_MODEL] + [
-            m for m in self.settings.GEMINI_FALLBACK_MODELS if m != model
+        target_gemini_model = model if model and (model.startswith("gemini-") or model.startswith("gemma-")) else None
+        models = [target_gemini_model or self.settings.DEFAULT_GEMINI_MODEL] + [
+            m for m in self.settings.GEMINI_FALLBACK_MODELS if m != (target_gemini_model or self.settings.DEFAULT_GEMINI_MODEL)
         ]
 
         last_error = None
@@ -190,7 +202,8 @@ class GeminiClientService:
 
         raise RuntimeError(f"Failed to generate embeddings. Last error: {last_error}")
 
-    async def _call_openrouter(self, system_prompt: str, user_prompt: str) -> Optional[str]:
+    async def _call_openrouter(self, system_prompt: str, user_prompt: str, model: Optional[str] = None) -> Optional[str]:
+        target_model = model or self.settings.DEFAULT_OPENROUTER_MODEL
         async with httpx.AsyncClient(timeout=60.0) as http_client:
             res = await http_client.post(
                 "https://openrouter.ai/api/v1/chat/completions",
@@ -199,7 +212,7 @@ class GeminiClientService:
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": self.settings.DEFAULT_OPENROUTER_MODEL,
+                    "model": target_model,
                     "messages": [
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},

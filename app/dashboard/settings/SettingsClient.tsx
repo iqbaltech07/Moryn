@@ -52,6 +52,7 @@ import {
 } from "@/lib/analytics/gamification";
 import { toast } from "sonner";
 import settingsStyles from "./settings.module.css";
+import { isTextGenerationModel, type AiModelOption } from "@/lib/ai/models";
 
 const RANK_ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>> = {
   Sprout,
@@ -96,28 +97,6 @@ interface SettingsClientProps {
   user: UserProfileData;
 }
 
-const GEMINI_MODELS = [
-  { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash (Fast & Default)" },
-  { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite (Ultra Fast)" },
-  { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro (Deep Reasoning)" },
-];
-
-const OPENROUTER_MODELS = [
-  { id: "inclusionai/ling-3.0-flash-sante:free", name: "Ling 3.0 Flash Sante (Free)" },
-  { id: "dots-studio/dots-3-note-preview:free", name: "Dots 3 Note Preview (Free)" },
-  { id: "nvidia/nemotron-3.5-lightning:free", name: "Nemotron 3.5 Lightning (Free)" },
-  { id: "google/gemma-4-31b-it:free", name: "Gemma 4 31B (Free)" },
-  { id: "meta-llama/llama-3.3-70b-instruct:free", name: "Llama 3.3 70B (Free)" },
-  { id: "deepseek/deepseek-r1:free", name: "DeepSeek R1 Reasoning (Free)" },
-  { id: "openai/gpt-6-astra", name: "OpenAI: GPT-6 Astra" },
-  { id: "openai/gpt-6-astra-pro", name: "OpenAI: GPT-6 Astra Pro" },
-  { id: "qwen/qwen3.8-max-0902", name: "Qwen: Qwen3.8 Max" },
-  { id: "anthropic/claude-fable-5.1", name: "Anthropic: Claude Fable 5.1" },
-  { id: "inception/mercury-2.5-preview", name: "Inception: Mercury 2.5 Preview" },
-  { id: "anthropic/claude-3.7-sonnet", name: "Claude 3.7 Sonnet" },
-  { id: "openai/gpt-4o", name: "GPT-4o (OpenAI)" },
-];
-
 export default function SettingsClient({ user }: SettingsClientProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -155,7 +134,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   const [updatingModelId, setUpdatingModelId] = useState<string | null>(null);
 
   // Dynamic Gemini Models State (Fetched from API)
-  const [geminiModels, setGeminiModels] = useState<Array<{ id: string; name: string }>>(GEMINI_MODELS);
+  const [geminiModels, setGeminiModels] = useState<AiModelOption[]>([]);
   const [isGeminiLoading, setIsGeminiLoading] = useState(false);
 
   // Dynamic OpenRouter Models State (Top 20 Ranked + Free Models)
@@ -183,7 +162,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       setIsGeminiLoading(true);
       const res = await apiClient.gemini.getModels();
       if (res.models && res.models.length > 0) {
-        setGeminiModels(res.models);
+        setGeminiModels(res.models.filter(isTextGenerationModel));
       }
     } catch (err: unknown) {
       console.warn("Failed to fetch Gemini models:", err);
@@ -198,10 +177,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       setIsOpenRouterLoading(true);
       const res = await apiClient.openrouter.getModels();
       if (res.freeModels && res.freeModels.length > 0) {
-        setOpenRouterFreeModels(res.freeModels);
+        setOpenRouterFreeModels(res.freeModels.filter(isTextGenerationModel));
       }
       if (res.popularModels && res.popularModels.length > 0) {
-        setOpenRouterRankedModels(res.popularModels);
+        setOpenRouterRankedModels(res.popularModels.filter(isTextGenerationModel));
       }
     } catch (err: unknown) {
       console.warn("Failed to fetch OpenRouter models:", err);
@@ -706,9 +685,15 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                         aria-label={`Preferred model for ${keyItem.label}`}
                                       >
                                         {keyItem.provider === "gemini" ? (
-                                          (geminiModels.length > 0 ? geminiModels : GEMINI_MODELS).map((m) => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                          ))
+                                          geminiModels.length > 0 ? (
+                                            geminiModels.map((m) => (
+                                              <option key={m.id} value={m.id}>{m.name}</option>
+                                            ))
+                                          ) : (
+                                            <option value={keyItem.preferredModel || "gemini-2.5-flash"}>
+                                              {isGeminiLoading ? "Memuat model..." : (keyItem.preferredModel || "gemini-2.5-flash")}
+                                            </option>
+                                          )
                                         ) : (
                                           <>
                                             {openRouterFreeModels.length > 0 && (
@@ -716,12 +701,15 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                                 {openRouterFreeModels.map((m) => <option key={m.id} value={m.id}>{m.name} (Free)</option>)}
                                               </optgroup>
                                             )}
-                                            {openRouterRankedModels.length > 0 ? (
+                                            {openRouterRankedModels.length > 0 && (
                                               <optgroup label={`Top 20 Ranked Models (${openRouterRankedModels.length})`}>
                                                 {openRouterRankedModels.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                                               </optgroup>
-                                            ) : (
-                                              OPENROUTER_MODELS.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)
+                                            )}
+                                            {openRouterFreeModels.length === 0 && openRouterRankedModels.length === 0 && (
+                                              <option value={keyItem.preferredModel || ""}>
+                                                {isOpenRouterLoading ? "Memuat model..." : (keyItem.preferredModel || "Default Model")}
+                                              </option>
                                             )}
                                           </>
                                         )}
@@ -1193,11 +1181,17 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                       className="w-full h-10 px-3 rounded-xl bg-white border border-neutral-200 text-sm text-neutral-900 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition"
                     >
                       {newProvider === "gemini" ? (
-                        (geminiModels.length > 0 ? geminiModels : GEMINI_MODELS).map((m) => (
-                          <option key={m.id} value={m.id}>
-                            {m.name}
+                        geminiModels.length > 0 ? (
+                          geminiModels.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))
+                        ) : (
+                          <option value="gemini-2.5-flash">
+                            {isGeminiLoading ? "Memuat model..." : "gemini-2.5-flash"}
                           </option>
-                        ))
+                        )
                       ) : (
                         <>
                           {openRouterFreeModels.length > 0 && (
@@ -1210,7 +1204,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                             </optgroup>
                           )}
 
-                          {openRouterRankedModels.length > 0 ? (
+                          {openRouterRankedModels.length > 0 && (
                             <optgroup label={`Top 20 Ranked Models (${openRouterRankedModels.length})`}>
                               {openRouterRankedModels.map((m) => (
                                 <option key={m.id} value={m.id}>
@@ -1218,12 +1212,12 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                                 </option>
                               ))}
                             </optgroup>
-                          ) : (
-                            OPENROUTER_MODELS.map((m) => (
-                              <option key={m.id} value={m.id}>
-                                {m.name}
-                              </option>
-                            ))
+                          )}
+
+                          {openRouterFreeModels.length === 0 && openRouterRankedModels.length === 0 && (
+                            <option value="" disabled>
+                              {isOpenRouterLoading ? "Memuat model OpenRouter..." : "Tidak ada model tersedia"}
+                            </option>
                           )}
                         </>
                       )}

@@ -33,9 +33,15 @@ function sanitizeMermaidDiagram(code: string): string {
   // Fix collapsed newlines
   clean = clean.replace(/(\]|\)|\}|"|[A-Za-z0-9_])\s+([A-Za-z0-9_]+(\[.*?\]|\(.*?\)|{.*?}|".*?")?\s*-->)/g, "$1\n$2");
 
+  // Fix `-- Klik "Tambah Tugas Baru" -->` into `-->|Klik Tambah Tugas Baru|`
+  clean = clean.replace(/--\s*([^-\n>]+?)\s*-->/g, (_match, label) => {
+    const safeLabel = label.replace(/["']/g, "").replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim();
+    return `-->|${safeLabel}|`;
+  });
+
   // Clean pipe link labels like -->|Laporan & Visualisasi Data (Radar/Line)|
   clean = clean.replace(/\|([^|\n]*?)\|/g, (_match, edgeLabel) => {
-    const safeLabel = edgeLabel.replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim();
+    const safeLabel = edgeLabel.replace(/["']/g, "").replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim();
     return `|${safeLabel}|`;
   });
 

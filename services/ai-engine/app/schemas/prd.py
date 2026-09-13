@@ -17,15 +17,31 @@ class PRDGenerateResponse(BaseModel):
     appName: Optional[str] = None
     modelUsed: str = Field(description="The exact AI model name that synthesized the document")
 
+class ChatHistoryItem(BaseModel):
+    role: str = Field(description="'user' or 'assistant'")
+    content: str = Field(description="The message text content")
+
 class EditPrdRequest(BaseModel):
     currentPrd: str
     instruction: str
     appName: Optional[str] = None
     isEditIntent: Optional[bool] = False
+    model: Optional[str] = None
+    history: Optional[list[ChatHistoryItem]] = None
+
+class ChatAction(BaseModel):
+    id: str
+    label: str
+    prompt: Optional[str] = None
+    variant: Optional[str] = "primary"
+    icon: Optional[str] = None
+    actionType: Optional[str] = "send_prompt"
+    payload: Optional[str] = None
 
 class EditPrdResponse(BaseModel):
     reply: str
     isPrdUpdated: bool
     updatedMarkdown: Optional[str] = None
     modelUsed: str = "gemini"
+    actions: Optional[list[ChatAction]] = None
 

@@ -9,12 +9,13 @@ import { MessageRenderer } from "../components/ai/MessageRenderer";
 import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
 import { UpgradeModal } from "../components/modals";
 import { PrdPreviewSkeleton } from "../components/shared";
-import { Send, Bot, Loader2, Lightbulb, Scale, PenLine, Database } from "lucide-react";
+import { Send, Bot, Loader2, Lightbulb, Scale, PenLine, Database, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/utils/apiClient";
-import { useChatStore } from "@/stores/useChatStore";
+import { useChatStore, ChatAction } from "@/stores/useChatStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useUiStore } from "@/stores/useUiStore";
+import { isTextGenerationModel, type AiModelOption } from "@/lib/ai/models";
 
 function PreviewPageContent() {
   const router = useRouter();
@@ -33,7 +34,14 @@ function PreviewPageContent() {
   const contentRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
-  const [freeModels, setFreeModels] = useState<any[]>([]);
+  // Dynamic Gemini Models State (Fetched 100% dynamically from API)
+  const [geminiModels, setGeminiModels] = useState<AiModelOption[]>([]);
+  const [isGeminiLoading, setIsGeminiLoading] = useState(false);
+
+  // Dynamic OpenRouter Models State (Top 20 Ranked + Free Models, matching API Key Settings)
+  const [openRouterFreeModels, setOpenRouterFreeModels] = useState<Array<{ id: string; name: string; isFree?: boolean }>>([]);
+  const [openRouterRankedModels, setOpenRouterRankedModels] = useState<Array<{ id: string; name: string; isFree?: boolean }>>([]);
+  const [isOpenRouterLoading, setIsOpenRouterLoading] = useState(false);
 
   const {
     chatMessages,
@@ -44,31 +52,59 @@ function PreviewPageContent() {
     setIsAiEditing,
     selectedModel,
     setSelectedModel,
+    setCurrentProjectId,
+    clearChat,
   } = useChatStore();
   const { updateProjectLocally } = useProjectStore();
   const { setShowUpgradeModal } = useUiStore();
 
-  const [popularModels, setPopularModels] = useState<any[]>([]);
-
-  const GEMINI_MODELS = [
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Default)" },
-    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash" },
-    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
-    { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash Lite" },
-    { id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite" },
-    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
-    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
-  ];
+  // Synchronize active project for persistent localStorage chat history
+  useEffect(() => {
+    if (projectId) {
+      setCurrentProjectId(projectId);
+    }
+  }, [projectId, setCurrentProjectId]);
 
   useEffect(() => {
+    // 1. Dynamic fetch Gemini models from API (same pattern as settings)
+    setIsGeminiLoading(true);
+    apiClient.gemini
+      .getModels()
+      .then((res) => {
+        if (res.models && res.models.length > 0) {
+          const textOnly = res.models.filter(isTextGenerationModel);
+          setGeminiModels(textOnly);
+          if (!selectedModel && textOnly.length > 0) {
+            setSelectedModel(textOnly[0].id);
+          }
+        }
+      })
+      .catch((err: unknown) => {
+        console.warn("Failed to fetch Gemini models:", err);
+      })
+      .finally(() => {
+        setIsGeminiLoading(false);
+      });
+
+    // 2. Dynamic fetch OpenRouter models from API (same pattern as settings)
+    setIsOpenRouterLoading(true);
     apiClient.openrouter
       .getModels()
-      .then((d) => {
-        setFreeModels(d.freeModels || d.models || []);
-        setPopularModels(d.popularModels || []);
+      .then((res) => {
+        if (res.freeModels && res.freeModels.length > 0) {
+          setOpenRouterFreeModels(res.freeModels.filter(isTextGenerationModel));
+        }
+        if (res.popularModels && res.popularModels.length > 0) {
+          setOpenRouterRankedModels(res.popularModels.filter(isTextGenerationModel));
+        }
       })
-      .catch(() => {});
-  }, []);
+      .catch((err: unknown) => {
+        console.warn("Failed to fetch OpenRouter models:", err);
+      })
+      .finally(() => {
+        setIsOpenRouterLoading(false);
+      });
+  }, [selectedModel, setSelectedModel]);
 
   useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages, isAiEditing]);
 
@@ -78,17 +114,31 @@ function PreviewPageContent() {
     const query = textToSubmit.trim();
     if (!promptText) setAiPrompt("");
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+    // Multi-turn conversation context: extract recent turns before appending the new query
+    const history = chatMessages.slice(-10).map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+
     addMessage({ id: Date.now().toString(), role: "user", content: query, timestamp: ts });
     setIsAiEditing(true);
     try {
-      const data = await apiClient.generate.editPrd({ projectId, currentPrd: markdown, prompt: query, selectedModel });
-      if (data.updatedMarkdown) {
-        setMarkdown(data.updatedMarkdown);
-        setEditContent(data.updatedMarkdown);
-        updateProjectLocally({ prdData: data.updatedMarkdown });
+      const data = await apiClient.generate.editPrd({
+        projectId,
+        currentPrd: markdown,
+        prompt: query,
+        selectedModel,
+        history,
+      });
+      const newMd = data.updatedMarkdown || (data as any).markdown;
+      if (newMd && (data as any).isPrdUpdated) {
+        setMarkdown(newMd);
+        setEditContent(newMd);
+        updateProjectLocally({ prdData: newMd });
         toast.success("PRD berhasil diperbarui!");
         try {
-          window.dispatchEvent(new CustomEvent("prdUpdated", { detail: { prdData: data.updatedMarkdown } }));
+          window.dispatchEvent(new CustomEvent("prdUpdated", { detail: { prdData: newMd } }));
         } catch {}
       }
       let reply = (data as any).reply || data.diffSummary || "Done.";
@@ -98,10 +148,26 @@ function PreviewPageContent() {
           if (m?.[1]) reply = m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
         } catch (_) {}
       }
-      addMessage({ id: (Date.now()+1).toString(), role: "assistant", content: reply, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      addMessage({
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: reply,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        actions: (data as any).actions || undefined,
+      });
     } catch (err: any) {
-      addMessage({ id: (Date.now()+1).toString(), role: "assistant", content: `❌ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      addMessage({ id: (Date.now() + 1).toString(), role: "assistant", content: `❌ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
     } finally { setIsAiEditing(false); }
+  };
+
+  const handleActionClick = (action: ChatAction) => {
+    if (isAiEditing) return;
+    if (action.actionType === "send_prompt" && action.prompt) {
+      handleAiSubmit(action.prompt);
+    } else if (action.actionType === "copy_text" && action.payload) {
+      navigator.clipboard.writeText(action.payload);
+      toast.success("Disalin ke clipboard!");
+    }
   };
 
   useEffect(() => {
@@ -156,7 +222,7 @@ function PreviewPageContent() {
       toast.error("Silakan login untuk mengunduh dokumen PRD.");
     }
   }, [markdown, setShowUpgradeModal]);
-  const handleContinueToDesign = () => router.push(`/detail${projectId ? `?projectId=${projectId}` : ""}`);
+  const handleContinueToDesign = () => router.push(`/design${projectId ? `?projectId=${projectId}` : ""}`);
   const scrollToHeading = (id: string) => { const c = contentRef.current; if (!c) return; const el = c.querySelector<HTMLElement>(`#${id}`); if (!el) return; c.scrollTo({ top: el.getBoundingClientRect().top - c.getBoundingClientRect().top + c.scrollTop - 24, behavior: "smooth" }); };
   const handleSave = async () => {
     if (!projectId) return; setIsSaving(true);
@@ -324,9 +390,51 @@ function PreviewPageContent() {
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--color-circuit)", margin: 0, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Brainstorm · Edit PRD</p>
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-xs)", background: "var(--bg-elevated)" }}>
-                <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e" }} />
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--color-mist)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Live</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                {chatMessages.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (window.confirm("Hapus seluruh riwayat chat untuk proyek ini?")) {
+                        clearChat();
+                        toast.success("Riwayat percakapan dibersihkan");
+                      }
+                    }}
+                    title="Bersihkan riwayat percakapan"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      padding: "3px 7px",
+                      borderRadius: "var(--radius-xs)",
+                      border: "1px solid var(--border-hairline)",
+                      background: "transparent",
+                      color: "var(--color-mist)",
+                      cursor: "pointer",
+                      fontFamily: "var(--font-mono)",
+                      fontSize: 9,
+                      fontWeight: 600,
+                      letterSpacing: "0.05em",
+                      textTransform: "uppercase",
+                      transition: "all 0.15s ease",
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = "var(--color-error)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "rgba(198, 61, 61, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.currentTarget as HTMLElement).style.color = "var(--color-mist)";
+                      (e.currentTarget as HTMLElement).style.borderColor = "var(--border-hairline)";
+                    }}
+                  >
+                    <Trash2 size={10} />
+                    <span>Clear</span>
+                  </button>
+                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-xs)", background: "var(--bg-elevated)" }}>
+                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e" }} />
+                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--color-mist)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Live</span>
+                </div>
               </div>
             </div>
           </div>
@@ -372,7 +480,14 @@ function PreviewPageContent() {
                 ))}
               </div>
             ) : (
-              chatMessages.map((msg) => <MessageRenderer key={msg.id} message={msg} />)
+              chatMessages.map((msg) => (
+                <MessageRenderer
+                  key={msg.id}
+                  message={msg}
+                  onActionClick={handleActionClick}
+                  isAiEditing={isAiEditing}
+                />
+              ))
             )}
             {isAiEditing && (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
@@ -394,16 +509,64 @@ function PreviewPageContent() {
             {/* Model selector */}
             <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-xs)", background: "var(--bg-elevated)", width: "fit-content", maxWidth: "100%" }}>
               <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--color-circuit)", flexShrink: 0 }} />
-              <select value={selectedModel} onChange={(e) => setSelectedModel(e.target.value)} disabled={isAiEditing} style={{ padding: "2px 0", border: "none", background: "transparent", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, outline: "none", cursor: "pointer", fontWeight: 600, letterSpacing: "0.04em", WebkitAppearance: "none", appearance: "none" }}>
+              <select
+                value={selectedModel || "gemini-2.5-flash"}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                disabled={isAiEditing}
+                style={{
+                  padding: "2px 0",
+                  border: "none",
+                  background: "transparent",
+                  color: "var(--fg-secondary)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  outline: "none",
+                  cursor: "pointer",
+                  fontWeight: 600,
+                  letterSpacing: "0.04em",
+                  WebkitAppearance: "none",
+                  appearance: "none",
+                }}
+              >
                 <optgroup label="Google Gemini">
-                  {GEMINI_MODELS.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                  {geminiModels.length > 0 ? (
+                    geminiModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))
+                  ) : (
+                    <option value={selectedModel || "gemini-2.5-flash"}>
+                      {isGeminiLoading ? "Memuat model Gemini..." : (selectedModel || "gemini-2.5-flash")}
+                    </option>
+                  )}
                 </optgroup>
-                <optgroup label="OpenRouter (Free Tier $0)">
-                  {freeModels.length > 0 ? freeModels.map(m => <option key={m.id} value={m.id}>{m.name || m.id}</option>) : <option value="loading">Loading…</option>}
-                </optgroup>
-                {popularModels.length > 0 && (
-                  <optgroup label="OpenRouter (Flagship / Paid)">
-                    {popularModels.map(m => <option key={m.id} value={m.id}>{m.name || m.id}</option>)}
+
+                {openRouterFreeModels.length > 0 && (
+                  <optgroup label={`Free Models (${openRouterFreeModels.length})`}>
+                    {openRouterFreeModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name} (Free)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+
+                {openRouterRankedModels.length > 0 && (
+                  <optgroup label={`Top 20 Ranked Models (${openRouterRankedModels.length})`}>
+                    {openRouterRankedModels.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+
+                {openRouterFreeModels.length === 0 && openRouterRankedModels.length === 0 && isOpenRouterLoading && (
+                  <optgroup label="OpenRouter">
+                    <option value="" disabled>
+                      Memuat model OpenRouter…
+                    </option>
                   </optgroup>
                 )}
               </select>

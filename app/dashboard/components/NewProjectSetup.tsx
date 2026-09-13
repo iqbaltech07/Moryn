@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   ChevronRight,
-  Sparkles,
   CheckCircle2,
   SlidersHorizontal,
   ArrowRight,
@@ -14,8 +12,8 @@ import { useWizardStore } from "@/stores/useWizardStore";
 import { apiClient, ApiError } from "@/lib/utils/apiClient";
 import { useUiStore } from "@/stores/useUiStore";
 import { UpgradeModal } from "@/app/components/modals";
-import Step2TechStack from "@/app/generate/components/Step2TechStack";
-import Step3Personalize from "@/app/generate/components/Step3Personalize";
+import Step2TechStack from "./setup/Step2TechStack";
+import Step3Personalize from "./setup/Step3Personalize";
 
 interface NewProjectSetupProps {
   onBack: () => void;
@@ -31,6 +29,7 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
     setSubStep,
     loading,
     setLoading,
+    questionsLoading,
     form,
     setStack,
     setAppName,
@@ -199,10 +198,10 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
           {/* Left Column: Form Inputs */}
           <div className="lg:col-span-8 bg-white border border-neutral-200/80 rounded-2xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
             <h2 className="text-2xl font-bold text-neutral-900 tracking-tight">
-              01. Define Project Concept
+              01. Project Details
             </h2>
             <p className="text-neutral-500 text-sm leading-relaxed mt-2 mb-8">
-              Articulate the core problem and vision. Moryn&apos;s intelligence engine will automatically scaffold user journeys and domain models.
+              Name your project and describe what you want to build. This context helps generate your PRD, system architecture, and roadmap.
             </p>
 
             <div className="space-y-6">
@@ -210,26 +209,26 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-[11px] font-bold tracking-widest text-neutral-700 uppercase">
-                    PROJECT NAME
+                    Project Name
                   </label>
-                  <span className="text-[11px] font-mono text-neutral-400">
-                    {form.appName ? form.appName : "PROJ-2025"}
+                  <span className="text-[11px] text-neutral-400 font-medium">
+                    Required
                   </span>
                 </div>
                 <input
                   type="text"
-                  placeholder="Stratum AI"
+                  placeholder="e.g. Acme Dashboard, EventHub, TaskFlow"
                   value={form.appName}
                   onChange={(e) => setAppName(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-[#FAF9F6] border border-neutral-200 text-sm font-medium text-neutral-900 focus:outline-none focus:border-neutral-400 focus:bg-white transition"
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF9F6] border border-neutral-200 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:bg-white transition"
                 />
               </div>
 
-              {/* Input 2: PRODUCT VISION & PROBLEM STATEMENT */}
+              {/* Input 2: PROJECT DESCRIPTION */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-[11px] font-bold tracking-widest text-neutral-700 uppercase">
-                    PRODUCT VISION &amp; PROBLEM STATEMENT
+                    What are you building?
                   </label>
                   <span className="text-[11px] font-mono text-neutral-400">
                     {form.appIdea.length} / 500
@@ -238,11 +237,25 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
                 <textarea
                   rows={5}
                   maxLength={500}
-                  placeholder="Autonomous intelligence platform designed to parse multi-modal telemetry from developer staging logs and construct continuous system architecture graphs."
+                  placeholder="e.g. A lightweight customer support platform for e-commerce stores that aggregates emails, live chat, and returns into a single shared inbox for support agents."
                   value={form.appIdea}
                   onChange={(e) => setAppIdea(e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl bg-[#FAF9F6] border border-neutral-200 text-sm font-medium text-neutral-900 focus:outline-none focus:border-neutral-400 focus:bg-white transition leading-relaxed resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#FAF9F6] border border-neutral-200 text-sm font-medium text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-neutral-400 focus:bg-white transition leading-relaxed resize-none"
                 />
+
+                {/* Helpful prompt hints */}
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px] text-neutral-500">
+                  <span className="font-semibold text-neutral-600 mr-1">Include:</span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#FAF9F6] border border-neutral-200/80 text-neutral-600">
+                    Target audience
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#FAF9F6] border border-neutral-200/80 text-neutral-600">
+                    Problem &amp; core value
+                  </span>
+                  <span className="px-2 py-0.5 rounded-md bg-[#FAF9F6] border border-neutral-200/80 text-neutral-600">
+                    2-3 key features
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -253,7 +266,7 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
                 onClick={onBack}
                 className="px-5 py-2.5 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-semibold text-xs transition cursor-pointer"
               >
-                Cancel &amp; Return
+                Cancel
               </button>
 
               <div className="flex items-center gap-3 ml-auto">
@@ -279,15 +292,14 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
 
           {/* Right Column: Blueprint Guidelines Card */}
           <div className="lg:col-span-4 bg-[#FAF9F6] border border-neutral-200/80 rounded-2xl p-6 shadow-2xs">
-            <div className="flex items-center gap-2.5 text-[#E05A38] mb-2">
-              <Sparkles size={16} strokeWidth={2.2} />
-              <span className="text-[11px] font-bold tracking-widest text-neutral-800 uppercase">
-                BLUEPRINT GUIDELINES
+            <div className="flex items-center gap-2 text-neutral-800 mb-2">
+              <span className="text-[11px] font-bold tracking-widest uppercase">
+                WRITING GUIDELINES
               </span>
             </div>
 
             <p className="text-xs text-neutral-500 leading-relaxed pb-4 mb-5 border-b border-neutral-200/70">
-              Articulating clear product boundaries early helps Moryn scaffold accurate architectural components, entity contracts, and API routes.
+              Clear requirements produce more accurate user stories, data schemas, and API routes.
             </p>
 
             <div className="space-y-4">
@@ -299,10 +311,10 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
                 />
                 <div>
                   <h4 className="text-xs font-bold text-neutral-900">
-                    Be explicit with scope
+                    Define the core problem
                   </h4>
                   <p className="text-xs text-neutral-500 leading-relaxed mt-0.5">
-                    Detail data boundaries and target audience personas clearly.
+                    Describe who experiences the problem and what outcome they achieve with your app.
                   </p>
                 </div>
               </div>
@@ -315,10 +327,10 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
                 />
                 <div>
                   <h4 className="text-xs font-bold text-neutral-900">
-                    Domain terminology
+                    Outline primary workflows
                   </h4>
                   <p className="text-xs text-neutral-500 leading-relaxed mt-0.5">
-                    Use precise internal naming to prime the entity relational graph.
+                    Mention the 2-3 most important actions users will take inside the product.
                   </p>
                 </div>
               </div>
@@ -329,18 +341,16 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
 
       {/* ── STEP 2: TECH STACK ── */}
       {step === 2 && (
-        <div className="bg-white border border-neutral-200/80 rounded-2xl p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
-          <Step2TechStack
-            stackMode={form.stackMode}
-            stacks={form.stacks}
-            appName={form.appName}
-            appIdea={form.appIdea}
-            designData={form.designData}
-            setStackMode={setStackMode}
-            setStack={setStack}
-            setDesignData={setDesignData}
-          />
-
+        <Step2TechStack
+          stackMode={form.stackMode}
+          stacks={form.stacks}
+          appName={form.appName}
+          appIdea={form.appIdea}
+          designData={form.designData}
+          setStackMode={setStackMode}
+          setStack={setStack}
+          setDesignData={setDesignData}
+        >
           <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-neutral-100">
             <button
               type="button"
@@ -364,7 +374,7 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
               <ArrowRight size={14} />
             </button>
           </div>
-        </div>
+        </Step2TechStack>
       )}
 
       {/* ── STEP 3: PERSONALIZE & GENERATE ── */}
@@ -378,6 +388,7 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
           onBack={() => setStep(2)}
           onGenerate={handleGenerate}
           loading={loading}
+          questionsLoading={questionsLoading}
         />
       )}
     </div>

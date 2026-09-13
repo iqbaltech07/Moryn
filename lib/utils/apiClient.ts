@@ -148,8 +148,12 @@ export const apiClient = {
         recommendation: {
           stacks: Record<string, string>;
           paletteId: string;
+          paletteName?: string;
+          designStyle?: string;
           badge: string;
           reasoning: string;
+          designReasoning?: string;
+          modelUsed?: string;
         };
       }>("/api/generate/recommend-stack", {
         method: "POST",
@@ -167,12 +171,25 @@ export const apiClient = {
       currentPrd: string;
       prompt: string;
       selectedModel?: string;
+      history?: Array<{ role: "user" | "assistant"; content: string }>;
     }) =>
       request<{
+        reply?: string;
+        isPrdUpdated?: boolean;
         updatedMarkdown: string;
-        diffSummary: string;
-        modelUsed: string;
-        provider: string;
+        markdown?: string;
+        diffSummary?: string;
+        modelUsed?: string;
+        provider?: string;
+        actions?: Array<{
+          id: string;
+          label: string;
+          prompt?: string;
+          variant?: "primary" | "secondary" | "outline";
+          icon?: "edit" | "brainstorm" | "database" | "diagram" | "sync" | "sparkles";
+          actionType?: "send_prompt" | "copy_text";
+          payload?: string;
+        }>;
       }>("/api/generate/edit-prd", {
         method: "POST",
         body: JSON.stringify(payload),

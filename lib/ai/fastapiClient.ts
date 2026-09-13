@@ -121,11 +121,22 @@ export class FastApiClient {
     instruction: string;
     appName?: string;
     isEditIntent?: boolean;
+    model?: string;
+    history?: Array<{ role: "user" | "assistant"; content: string }>;
   }): Promise<{
     reply: string;
     isPrdUpdated: boolean;
     updatedMarkdown?: string | null;
     modelUsed: string;
+    actions?: Array<{
+      id: string;
+      label: string;
+      prompt?: string;
+      variant?: "primary" | "secondary" | "outline";
+      icon?: "edit" | "brainstorm" | "database" | "diagram" | "sync" | "sparkles";
+      actionType?: "send_prompt" | "copy_text";
+      payload?: string;
+    }>;
   }> {
     return this.request("/api/v1/generate/edit-prd", payload);
   }

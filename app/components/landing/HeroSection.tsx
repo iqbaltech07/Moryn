@@ -61,7 +61,7 @@ export default function HeroSection({ onSeeExample }: { onSeeExample: () => void
           className="flex flex-col sm:flex-row items-center gap-3.5 mb-14"
         >
           <Link
-            href="/generate"
+            href="/dashboard"
             id="hero-cta-primary"
             className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] active:bg-[#c93e21] text-white text-[15px] font-semibold tracking-[-0.01em] shadow-[0_4px_16px_rgba(232,93,63,0.28)] hover:shadow-[0_6px_24px_rgba(232,93,63,0.36)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 min-w-[160px]"
           >

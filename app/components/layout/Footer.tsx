@@ -47,7 +47,7 @@ export default function Footer() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/generate" className="text-sm text-[#57575c] hover:text-[#141817] transition">
+                  <Link href="/dashboard" className="text-sm text-[#57575c] hover:text-[#141817] transition">
                     PRD Generator
                   </Link>
                 </li>

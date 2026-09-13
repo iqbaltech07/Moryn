@@ -98,7 +98,7 @@ export const RELEASES: Release[] = [
         type: "improvement",
         title: "Instant 0ms Page Navigation & Streaming Skeletons",
         description:
-          "Menghapus seluruh artificial delay dan mengimplementasikan Next.js 16 streaming skeleton loaders (loading.tsx) serta animasi shimmer di seluruh halaman (/structure, /preview, /detail, /task, /profile).",
+          "Menghapus seluruh artificial delay dan mengimplementasikan Next.js 16 streaming skeleton loaders (loading.tsx) serta animasi shimmer di seluruh halaman (/structure, /prd, /design, /task, /profile).",
         tags: ["Next.js 16", "Turbopack", "Skeletons", "UX"],
       },
       {

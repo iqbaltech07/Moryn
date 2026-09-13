@@ -469,7 +469,7 @@ function StrukturPageContent() {
             </button>
           )}
           <button
-            onClick={() => router.push(`/preview${projectId ? `?projectId=${projectId}` : ""}`)}
+            onClick={() => router.push(`/prd${projectId ? `?projectId=${projectId}` : ""}`)}
             disabled={isLoading || !projectId || isEditing}
             style={{
               ...btn,

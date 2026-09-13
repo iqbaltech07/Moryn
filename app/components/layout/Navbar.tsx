@@ -86,7 +86,7 @@ export default function Navbar() {
                 Log in
               </Link>
               <Link
-                href="/generate"
+                href="/dashboard"
                 id="nav-cta-get-started"
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] active:bg-[#c93e21] text-white text-[13.5px] font-semibold tracking-[-0.01em] shadow-[0_2px_8px_rgba(232,93,63,0.25)] hover:shadow-[0_4px_16px_rgba(232,93,63,0.32)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150"
               >
@@ -104,7 +104,7 @@ export default function Navbar() {
               </Link>
 
               <Link
-                href="/generate"
+                href="/dashboard"
                 className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] text-white text-[13px] font-semibold tracking-[-0.01em] shadow-sm transition-all"
               >
                 <Sparkles size={14} className="opacity-90" />
@@ -227,7 +227,7 @@ export default function Navbar() {
                       Log in
                     </Link>
                     <Link
-                      href="/generate"
+                      href="/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full text-center py-2.5 text-sm font-semibold text-white bg-[#e85d3f] rounded-full shadow-sm"
                     >
@@ -237,7 +237,7 @@ export default function Navbar() {
                 ) : (
                   <>
                     <Link
-                      href="/generate"
+                      href="/dashboard"
                       onClick={() => setMobileMenuOpen(false)}
                       className="w-full text-center py-2.5 text-sm font-semibold text-white bg-[#e85d3f] rounded-full shadow-sm"
                     >

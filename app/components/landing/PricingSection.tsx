@@ -87,7 +87,7 @@ export default function PricingSection() {
               </div>
 
               <Link
-                href="/generate"
+                href="/dashboard"
                 className="w-full inline-flex items-center justify-center py-3 px-6 rounded-full bg-white hover:bg-[#f5f2ea] text-[#141817] text-sm font-semibold border border-[#141817]/12 shadow-xs transition mb-8"
               >
                 Get started
@@ -140,7 +140,7 @@ export default function PricingSection() {
               </div>
 
               <Link
-                href="/generate"
+                href="/dashboard"
                 className="w-full inline-flex items-center justify-center gap-2 py-3 px-6 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] text-white text-sm font-semibold shadow-[0_4px_16px_rgba(232,93,63,0.28)] hover:shadow-[0_6px_22px_rgba(232,93,63,0.36)] transition mb-8"
               >
                 <span>Start with Pro</span>

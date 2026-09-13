@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
+import { redis } from "@/lib/db/redis";
+
+import { isTextGenerationModel } from "@/lib/ai/models";
+
+const REDIS_GEMINI_CACHE_KEY = "cache:catalog:gemini:models:text-v3";
+const REDIS_LEGACY_CACHE_KEY = "cache:catalog:gemini:models";
 
 interface RawGeminiModel {
   name: string;
@@ -48,13 +54,13 @@ const EXCLUDE_MODEL_KEYWORDS = [
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth.api.getSession({
-      headers: await headers(),
-    });
+    // Purge old unfiltered cache key if present
+    redis.del(REDIS_LEGACY_CACHE_KEY).catch(() => null);
 
-    if (!session || !session.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    // Optional session check (model catalog metadata is public and cached)
+    await auth.api.getSession({
+      headers: await headers(),
+    }).catch(() => null);
 
     const { searchParams } = new URL(req.url);
     const customKey = searchParams.get("key");
@@ -64,17 +70,24 @@ export async function GET(req: NextRequest) {
       process.env.GEMINI_API_KEY_SECONDARY;
 
     if (!apiKey) {
-      return NextResponse.json({
-        models: getFallbackGeminiModels(),
-        count: getFallbackGeminiModels().length,
-        isFallback: true,
-      });
+      // Check Redis cache if no key available
+      try {
+        const cached = await redis.get<string | object>(REDIS_GEMINI_CACHE_KEY);
+        if (cached) {
+          const cachedData = typeof cached === "string" ? JSON.parse(cached) : cached;
+          return NextResponse.json({ ...cachedData, isCached: true });
+        }
+      } catch {}
+      return NextResponse.json(
+        { models: [], count: 0, error: "API Key Gemini belum dikonfigurasi." },
+        { status: 503 }
+      );
     }
 
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}`,
       {
-        next: { revalidate: 3600 }, // Cache 1 hour
+        next: { revalidate: 3600 }, // Cache 1 hour in Next.js ISR
       }
     );
 
@@ -109,6 +122,10 @@ export async function GET(req: NextRequest) {
       );
       if (isExcluded) continue;
 
+      if (!isTextGenerationModel({ id: rawId, name: model.displayName, description: model.description })) {
+        continue;
+      }
+
       textModels.push({
         id: rawId,
         name: model.displayName || rawId,
@@ -117,35 +134,46 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({
-      models: textModels.length > 0 ? textModels : getFallbackGeminiModels(),
-      count: textModels.length > 0 ? textModels.length : getFallbackGeminiModels().length,
-      isFallback: textModels.length === 0,
-    });
+    const resultPayload = {
+      models: textModels,
+      count: textModels.length,
+      isFallback: false,
+    };
+
+    // Store real response in Redis cache (persisted for 24 hours to survive API downtime)
+    try {
+      await redis.set(REDIS_GEMINI_CACHE_KEY, JSON.stringify(resultPayload), { ex: 86400 });
+    } catch (redisErr) {
+      console.warn("Failed to cache Gemini models in Redis:", redisErr);
+    }
+
+    return NextResponse.json(resultPayload);
   } catch (error: unknown) {
     const errMessage = error instanceof Error ? error.message : "Internal Server Error";
-    console.error("Error fetching Gemini models:", errMessage);
+    console.error("Error fetching live Gemini models:", errMessage);
 
-    const fallback = getFallbackGeminiModels();
-    return NextResponse.json({
-      models: fallback,
-      count: fallback.length,
-      isFallback: true,
-    });
+    // Retrieve last known live models from Redis cache (Zero hardcoded fake models)
+    try {
+      const cached = await redis.get<string | object>(REDIS_GEMINI_CACHE_KEY);
+      if (cached) {
+        const cachedData = typeof cached === "string" ? JSON.parse(cached) : cached;
+        return NextResponse.json({
+          ...cachedData,
+          isCached: true,
+        });
+      }
+    } catch (cacheErr) {
+      console.warn("Failed to retrieve Gemini models from Redis cache:", cacheErr);
+    }
+
+    return NextResponse.json(
+      {
+        models: [],
+        count: 0,
+        isFallback: false,
+        error: "Gagal memuat katalog model Gemini dari API maupun cache.",
+      },
+      { status: 503 }
+    );
   }
-}
-
-function getFallbackGeminiModels(): FormattedGeminiModel[] {
-  return [
-    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
-    { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash-Lite" },
-    { id: "gemini-2.5-pro", name: "Gemini 2.5 Pro" },
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash" },
-    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash" },
-    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
-    { id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite" },
-    { id: "gemini-flash-latest", name: "Gemini Flash Latest" },
-    { id: "gemini-flash-lite-latest", name: "Gemini Flash-Lite Latest" },
-    { id: "gemini-pro-latest", name: "Gemini Pro Latest" },
-  ];
 }

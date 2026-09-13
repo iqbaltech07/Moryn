@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await parseBody(req, editPrdSchema);
-    const { projectId, currentPrd, prompt } = body;
+    const { projectId, currentPrd, prompt, history, selectedModel } = body;
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -70,14 +70,20 @@ export async function POST(req: NextRequest) {
       prompt
     );
 
+    // Sanitize user prompt to prevent XML/delimiter tag evasion
+    const sanitizedPrompt = prompt
+      .replace(/<\/?user_instruction>/gi, "")
+      .replace(/<\/?updated_prd>/gi, "")
+      .replace(/<\/?is_prd_updated>/gi, "");
+
     // Retrieve semantic context via RAG
-    let augmentedInstruction = prompt;
+    let augmentedInstruction = sanitizedPrompt;
     if (projectId) {
       try {
-        const retrieved = await retrieveRelevantChunks(projectId, prompt, { topK: 5, minSimilarity: 0.48 });
+        const retrieved = await retrieveRelevantChunks(projectId, sanitizedPrompt, { topK: 5, minSimilarity: 0.48 });
         if (retrieved.length > 0) {
           const ragSummary = formatRetrievedContext(retrieved);
-          augmentedInstruction = `${prompt}\n\n=== GROUNDED ARCHITECTURE & USER CONTEXT (RAG) ===\n${ragSummary}`;
+          augmentedInstruction = `${sanitizedPrompt}\n\n=== GROUNDED ARCHITECTURE & USER CONTEXT (RAG) ===\n${ragSummary}`;
         }
       } catch (ragErr) {
         console.warn("[EditPRD] RAG retrieval warning:", ragErr);
@@ -89,6 +95,8 @@ export async function POST(req: NextRequest) {
       currentPrd,
       instruction: augmentedInstruction,
       isEditIntent,
+      model: selectedModel,
+      history: history || undefined,
     });
 
     let updatedMarkdown = res.updatedMarkdown || "";
@@ -154,9 +162,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       reply: res.reply,
       isPrdUpdated: res.isPrdUpdated,
+      updatedMarkdown: res.isPrdUpdated ? updatedMarkdown : null,
       markdown: res.isPrdUpdated ? updatedMarkdown : null,
       chatCount: currentChats + 1,
       chatLimit: chatLimit === Infinity ? null : chatLimit,
+      actions: res.actions || null,
     });
   } catch (error: unknown) {
     console.error("Error editing/brainstorming PRD:", error);

@@ -2,9 +2,21 @@
 
 import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { Bot, User, AlertCircle } from "lucide-react";
+import {
+  Bot,
+  User,
+  AlertCircle,
+  PenLine,
+  Lightbulb,
+  RefreshCw,
+  Database,
+  Sparkles,
+  ArrowRight,
+  GitBranch,
+} from "lucide-react";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import { CopyButton } from "./CopyButton";
+import type { ChatAction } from "@/stores/useChatStore";
 
 export interface Message {
   id: string;
@@ -12,11 +24,14 @@ export interface Message {
   content: string;
   timestamp?: string;
   isStreaming?: boolean;
+  actions?: ChatAction[];
 }
 
 interface MessageRendererProps {
   message: Message;
   onCopy?: (content: string) => void;
+  onActionClick?: (action: ChatAction) => void;
+  isAiEditing?: boolean;
   className?: string;
 }
 
@@ -62,6 +77,8 @@ class ComponentErrorBoundary extends React.Component<
 
 const MessageRendererComponent: React.FC<MessageRendererProps> = ({
   message,
+  onActionClick,
+  isAiEditing = false,
   className = "",
 }) => {
   const isUser = message.role === "user";
@@ -109,6 +126,59 @@ const MessageRendererComponent: React.FC<MessageRendererProps> = ({
             <ComponentErrorBoundary fallbackText={message.content}>
               <MarkdownRenderer content={message.content} />
             </ComponentErrorBoundary>
+          )}
+
+          {/* Interactive Action Buttons */}
+          {!isUser && message.actions && message.actions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/80 w-full">
+              {message.actions.map((act) => {
+                const isPrimary = act.variant === "primary";
+                const isOutline = act.variant === "outline";
+
+                const renderIcon = () => {
+                  const iconProps = { className: "w-3.5 h-3.5 shrink-0" };
+                  switch (act.icon) {
+                    case "edit":
+                      return <PenLine {...iconProps} />;
+                    case "brainstorm":
+                      return <Lightbulb {...iconProps} />;
+                    case "sync":
+                      return <RefreshCw {...iconProps} />;
+                    case "database":
+                      return <Database {...iconProps} />;
+                    case "diagram":
+                      return <GitBranch {...iconProps} />;
+                    case "sparkles":
+                    default:
+                      return <Sparkles {...iconProps} />;
+                  }
+                };
+
+                return (
+                  <button
+                    key={act.id}
+                    type="button"
+                    disabled={isAiEditing}
+                    onClick={() => onActionClick?.(act)}
+                    className={`group/btn relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 active:scale-[0.98] select-none ${
+                      isAiEditing
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer hover:shadow-md"
+                    } ${
+                      isPrimary
+                        ? "bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold shadow-xs shadow-orange-500/20 border border-orange-400/40"
+                        : isOutline
+                        ? "bg-cyan-950/20 hover:bg-cyan-900/40 text-cyan-300 hover:text-cyan-200 border border-cyan-500/40 hover:border-cyan-400/60"
+                        : "bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/80"
+                    }`}
+                  >
+                    {renderIcon()}
+                    <span>{act.label}</span>
+                    <ArrowRight className="w-3 h-3 opacity-60 group-hover/btn:opacity-100 group-hover/btn:translate-x-0.5 transition-all duration-150 shrink-0" />
+                  </button>
+                );
+              })}
+            </div>
           )}
 
           {/* Streaming Dot Indicator */}

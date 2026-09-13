@@ -30,6 +30,14 @@ export const editPrdSchema = z.object({
   currentPrd: z.string().min(1),
   prompt: z.string().min(1).max(4000),
   selectedModel: z.string().optional(),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      })
+    )
+    .optional(),
 });
 
 /** Request body for /api/generate/* routes that need a projectId and optional forceSync. */

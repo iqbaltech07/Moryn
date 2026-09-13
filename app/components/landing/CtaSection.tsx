@@ -49,7 +49,7 @@ export default function CtaSection({ onSeeExample }: { onSeeExample?: () => void
           className="flex flex-col sm:flex-row items-center justify-center gap-3.5"
         >
           <Link
-            href="/generate"
+            href="/dashboard"
             id="bottom-cta-primary"
             className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full bg-white hover:bg-[#fff9f7] active:bg-[#f5f2ea] text-[#e85d3f] text-[15px] font-bold shadow-[0_6px_24px_rgba(0,0,0,0.15)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.22)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150"
           >

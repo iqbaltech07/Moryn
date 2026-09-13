@@ -196,7 +196,7 @@ export default function ProjectsClient({
                 return (
                   <Link
                     key={project.id}
-                    href={`/detail?projectId=${project.id}`}
+                    href={`/design?projectId=${project.id}`}
                     className="bg-white rounded-2xl border border-neutral-200/80 p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_24px_rgba(0,0,0,0.05)] hover:border-neutral-300 hover:-translate-y-0.5 transition-all duration-200 flex flex-col justify-between min-h-[190px] group text-decoration-none relative"
                   >
                     {/* Top Row: Folder Icon + Status Pill + Delete */}

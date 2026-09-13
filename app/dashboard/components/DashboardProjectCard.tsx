@@ -17,7 +17,7 @@ export default function DashboardProjectCard({ project }: { project: DashboardPr
     project.status === "FINISHED" || project.status.toLowerCase() === "finish";
 
   const badgeText = isFinished ? "Finish" : "Unfinish";
-  const targetHref = project.href || `/detail?projectId=${project.id}`;
+  const targetHref = project.href || `/design?projectId=${project.id}`;
 
   return (
     <Link

@@ -6,16 +6,17 @@ import {
   Plus,
   ArrowRight,
   ArrowLeft,
-  CheckCircle2,
+  Check,
+  X,
   Loader2,
 } from "lucide-react";
-import { FormData } from "../types";
+import { FormData } from "./types";
 
 export interface PersonalizeOption {
   label: string;
   badge?: string;
   badgeType?: "recommended" | "neutral";
-  desc: string;
+  desc?: string;
 }
 
 export interface PersonalizeQuestion {
@@ -37,16 +38,16 @@ export const DEFAULT_PERSONALIZE_QUESTIONS: PersonalizeQuestion[] = [
     selectionType: "single",
     options: [
       {
-        label: "Event-Driven Microservices (Kafka / RabbitMQ)",
-        badge: "High Scale",
-        badgeType: "neutral",
-        desc: "Decoupled asynchronous worker nodes processing high-throughput telemetry streams independently.",
-      },
-      {
         label: "Modular Monolith (Next.js Server Actions + Node)",
         badge: "Recommended for MVP",
         badgeType: "recommended",
         desc: "Unified deployable codebase with domain-driven modular boundaries for lower dev overhead.",
+      },
+      {
+        label: "Event-Driven Microservices (Kafka / RabbitMQ)",
+        badge: "High Scale",
+        badgeType: "neutral",
+        desc: "Decoupled asynchronous worker nodes processing high-throughput telemetry streams independently.",
       },
       {
         label: "Serverless Edge Functions (Vercel Edge + Redis Queues)",
@@ -67,23 +68,29 @@ export const DEFAULT_PERSONALIZE_QUESTIONS: PersonalizeQuestion[] = [
     topicTag: "02 · DATA PERSISTENCE & CACHING",
     question: (name) =>
       `How should ${name} handle real-time streaming state and temporal queries?`,
-    hint: "Determines database index strategy, time-series tables, and cold storage archival.",
-    selectionType: "single",
+    hint: "Pilih satu atau lebih strategi penyimpanan data yang akan diintegrasikan dalam PRD.",
+    selectionType: "multiple",
     options: [
       {
-        label: "Relational + In-Memory Redis Cache",
-        badge: "Recommended",
+        label: "Relational PostgreSQL Persistence",
+        badge: "Core DB",
         badgeType: "recommended",
-        desc: "Fast in-memory cache for live telemetry state with PostgreSQL persistence.",
+        desc: "Primary structured relational database for accounts, entities, and transactions.",
       },
       {
-        label: "Dedicated Time-Series Database (TimescaleDB)",
+        label: "In-Memory Redis Cache & Pub/Sub",
+        badge: "Recommended",
+        badgeType: "recommended",
+        desc: "Fast in-memory cache for live telemetry state and session tokens.",
+      },
+      {
+        label: "Dedicated Time-Series Storage (TimescaleDB / InfluxDB)",
         badge: "High Throughput",
         badgeType: "neutral",
         desc: "Specialized chunks for high-frequency logs and rapid temporal aggregations.",
       },
       {
-        label: "Vector Embedded Graph Store",
+        label: "Vector Embedded Store (pgvector / Pinecone)",
         badge: "AI Native",
         badgeType: "neutral",
         desc: "Vector embeddings stored alongside relational entity links for deep semantic queries.",
@@ -158,63 +165,19 @@ export const DEFAULT_PERSONALIZE_QUESTIONS: PersonalizeQuestion[] = [
         label: "Managed Cloud (Vercel / Railway / Neon)",
         badge: "Zero DevOps",
         badgeType: "recommended",
-        desc: "Serverless deployments with automated Git preview environments and zero server maintenance.",
+        desc: "Push-to-deploy workflow with automatic edge network provisioning and preview URLs.",
       },
       {
-        label: "Containerized Kubernetes Cluster (EKS / GKE)",
-        badge: "Enterprise",
+        label: "Containerized Orchestration (Docker / Kubernetes / ECS)",
+        badge: "Portability",
         badgeType: "neutral",
-        desc: "Helm charts and container manifests for deployment into private VPC clouds.",
+        desc: "Multi-stage Docker builds with reproducible runtime manifests for self-hosted clouds.",
       },
       {
-        label: "Single Docker Compose Instance",
-        badge: "Self-Hosted",
+        label: "Serverless Micro-VMs (Cloudflare Workers / Fly.io)",
+        badge: "Global Edge",
         badgeType: "neutral",
-        desc: "Portable docker-compose bundle ideal for on-premise developer staging.",
-      },
-    ],
-  },
-  {
-    id: "observability",
-    topicTag: "06 · OBSERVABILITY & TELEMETRY",
-    question: (name) =>
-      `How should system metrics and errors be collected in ${name}?`,
-    hint: "Injects logger middleware and error boundary tracking hooks.",
-    selectionType: "single",
-    options: [
-      {
-        label: "OpenTelemetry + Structured JSON Logging",
-        badge: "Modern Standard",
-        badgeType: "recommended",
-        desc: "Vendor-agnostic distributed tracing compatible with Datadog, Grafana, and PostHog.",
-      },
-      {
-        label: "Sentry + Lightweight Console Metrics",
-        badge: "Quick Setup",
-        badgeType: "neutral",
-        desc: "Real-time exception capture and stack traces with minimal latency impact.",
-      },
-    ],
-  },
-  {
-    id: "compliance_testing",
-    topicTag: "07 · TESTING & RELIABILITY",
-    question: (name) =>
-      `What testing pipeline should be pre-configured for ${name}?`,
-    hint: "Generates initial unit tests, end-to-end spec scaffolds, and mock factories.",
-    selectionType: "single",
-    options: [
-      {
-        label: "Vitest Unit Tests + Playwright E2E Integration",
-        badge: "Comprehensive",
-        badgeType: "recommended",
-        desc: "Lightning fast unit coverage paired with headless browser end-to-end verification.",
-      },
-      {
-        label: "Contract Testing with Mock Service Worker (MSW)",
-        badge: "API Focused",
-        badgeType: "neutral",
-        desc: "Strict type-safe network mocks for isolated frontend-backend parallel development.",
+        desc: "Sub-millisecond cold starts across 300+ edge points with geo-distributed routing.",
       },
     ],
   },
@@ -233,6 +196,7 @@ interface Step3PersonalizeProps {
   onBack: () => void;
   onGenerate: () => void;
   loading: boolean;
+  questionsLoading?: boolean;
 }
 
 export default function Step3Personalize({
@@ -244,35 +208,83 @@ export default function Step3Personalize({
   onBack,
   onGenerate,
   loading,
+  questionsLoading = false,
 }: Step3PersonalizeProps) {
   const [showCustomInput, setShowCustomInput] = useState(false);
   const [customText, setCustomText] = useState("");
 
-  const totalQuestions = DEFAULT_PERSONALIZE_QUESTIONS.length;
-  const currentQ = DEFAULT_PERSONALIZE_QUESTIONS[subStep] || DEFAULT_PERSONALIZE_QUESTIONS[0];
+  const hasDynamicQuestions = Boolean(form.dynamicQuestions && form.dynamicQuestions.length > 0);
 
-  const currentAnswer = form.dynamicAnswers[currentQ.id];
+  // Normalize questions from AI dynamic questions or default fallback
+  const normalizedQuestions = hasDynamicQuestions
+    ? form.dynamicQuestions.map((q, idx) => ({
+        id: q.key,
+        topicTag: `0${idx + 1} · ${q.key.replace(/([A-Z])/g, " $1").toUpperCase()}`,
+        question: q.title,
+        hint: q.subtitle,
+        selectionType: (q.type === "multiple" ? "multiple" : "single") as "single" | "multiple",
+        options: q.options.map((opt, oIdx) => {
+          const isStr = typeof opt === "string";
+          const optObj = !isStr && typeof opt === "object" && opt !== null ? (opt as Record<string, unknown>) : null;
+          const label = isStr ? opt : String(optObj?.label || opt);
+          const desc = isStr ? "" : String(optObj?.desc || "");
+          const badge = isStr ? (oIdx === 0 ? "Recommended" : undefined) : optObj?.badge ? String(optObj.badge) : undefined;
+          return {
+            label,
+            desc,
+            badge,
+            badgeType: oIdx === 0 ? ("recommended" as const) : ("neutral" as const),
+          };
+        }),
+      }))
+    : DEFAULT_PERSONALIZE_QUESTIONS.map((q) => ({
+        id: q.id,
+        topicTag: q.topicTag,
+        question: q.question(appName || "your project"),
+        hint: q.hint,
+        selectionType: q.selectionType,
+        options: q.options,
+      }));
+
+  const totalQuestions = normalizedQuestions.length;
+  const currentQ = normalizedQuestions[subStep] || normalizedQuestions[0];
+  const isMultiple = currentQ?.selectionType === "multiple";
+
+  const rawAnswer = form.dynamicAnswers[currentQ?.id];
+  const selectedArr = Array.isArray(rawAnswer)
+    ? rawAnswer
+    : typeof rawAnswer === "string" && rawAnswer
+    ? [rawAnswer]
+    : [];
+
   const isSelected = (label: string) => {
-    if (Array.isArray(currentAnswer)) {
-      return currentAnswer.includes(label);
+    if (isMultiple) {
+      return selectedArr.includes(label);
     }
-    return currentAnswer === label;
+    return rawAnswer === label;
   };
 
-  const hasSelection = Boolean(
-    (Array.isArray(currentAnswer) && currentAnswer.length > 0) ||
-      (typeof currentAnswer === "string" && currentAnswer.trim().length > 0)
-  );
+  const selectedCount = isMultiple ? selectedArr.length : rawAnswer ? 1 : 0;
+  const hasSelection = selectedCount > 0;
 
   const handleSelectOption = (label: string) => {
     setDynamicAnswer(currentQ.id, label, currentQ.selectionType);
   };
 
   const handleAddCustom = () => {
-    if (!customText.trim()) return;
-    setDynamicAnswer(currentQ.id, customText.trim(), currentQ.selectionType);
+    const trimmed = customText.trim();
+    if (!trimmed) return;
+    setDynamicAnswer(currentQ.id, trimmed, currentQ.selectionType);
     setCustomText("");
     setShowCustomInput(false);
+  };
+
+  const customMultipleAnswers = isMultiple
+    ? selectedArr.filter((item) => !currentQ.options.some((opt) => opt.label === item))
+    : [];
+
+  const handleRemoveCustomAnswer = (tag: string) => {
+    setDynamicAnswer(currentQ.id, tag, "multiple");
   };
 
   const handleNext = () => {
@@ -293,7 +305,28 @@ export default function Step3Personalize({
     }
   };
 
-  const progressPercent = Math.round(((subStep + 1) / totalQuestions) * 100);
+  const progressPercent = Math.round(((subStep + 1) / Math.max(totalQuestions, 1)) * 100);
+
+  // Loading Screen while AI generates clarifying questions
+  if (questionsLoading) {
+    return (
+      <div className="w-full max-w-4xl mx-auto bg-white border border-neutral-200/80 rounded-2xl p-8 sm:p-14 shadow-[0_2px_12px_rgba(0,0,0,0.02)] text-center">
+        <div className="w-12 h-12 rounded-2xl bg-orange-50 border border-orange-200/60 flex items-center justify-center mx-auto mb-4 text-[#E05A38]">
+          <Loader2 size={24} className="animate-spin" />
+        </div>
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#FAF3F0] text-[#E05A38] text-[11px] font-mono font-bold tracking-wider mb-2">
+          <Sparkles size={13} />
+          <span>OPENROUTER AI SYNTHESIS</span>
+        </div>
+        <h3 className="text-xl font-bold text-neutral-900 tracking-tight mb-2">
+          Menyusun Pertanyaan Personalisasi Blueprint...
+        </h3>
+        <p className="text-xs sm:text-sm text-neutral-500 max-w-lg mx-auto leading-relaxed">
+          AI sedang menganalisis ide proyek <strong className="text-neutral-800">{appName || "Anda"}</strong> dan tech stack terpilih untuk merumuskan pertanyaan arsitektur yang terkalibrasi (single &amp; multiple choice).
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full max-w-4xl mx-auto bg-white border border-neutral-200/80 rounded-2xl p-6 sm:p-9 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
@@ -333,7 +366,7 @@ export default function Step3Personalize({
 
       {/* Main Question Title */}
       <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 tracking-tight leading-snug mb-2">
-        {currentQ.question(appName || "Stratum AI")}
+        {currentQ.question}
       </h2>
 
       {/* Hint / Subtitle */}
@@ -341,19 +374,53 @@ export default function Step3Personalize({
         {currentQ.hint}
       </p>
 
-      {/* Select Header */}
-      <div className="flex items-center justify-between mb-3.5 pt-2 border-t border-neutral-100">
-        <span className="text-[11px] font-bold tracking-widest text-neutral-600 uppercase">
-          SELECT PRIMARY PATTERN ({currentQ.selectionType.toUpperCase()} CHOICE)
-        </span>
+      {/* Select Header: Clearly indicate Single vs Multiple choice */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3.5 pt-2 border-t border-neutral-100">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-bold tracking-widest text-neutral-600 uppercase">
+            {isMultiple ? "MULTIPLE CHOICE" : "SINGLE CHOICE"}
+          </span>
+          <span
+            className={`text-[10px] px-2.5 py-0.5 rounded-full font-semibold ${
+              isMultiple
+                ? "bg-blue-50 text-blue-700 border border-blue-200/60"
+                : "bg-orange-50 text-[#E05A38] border border-orange-200/60"
+            }`}
+          >
+            {isMultiple ? "Bisa pilih lebih dari satu jawaban" : "Pilih salah satu jawaban utama"}
+          </span>
+        </div>
         <span
-          className={`text-xs font-medium ${
+          className={`text-xs font-semibold ${
             hasSelection ? "text-[#E05A38]" : "text-neutral-400"
           }`}
         >
-          {hasSelection ? "1 selected" : "0 selected"}
+          {selectedCount} selected
         </span>
       </div>
+
+      {/* Custom Multiple Choice Selected Badges */}
+      {isMultiple && customMultipleAnswers.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap mb-4 p-3 bg-neutral-50 border border-neutral-200/70 rounded-xl">
+          <span className="text-[11px] text-neutral-500 font-medium">Jawaban Kustom:</span>
+          {customMultipleAnswers.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-50 text-[#E05A38] border border-orange-200/60 text-xs font-medium"
+            >
+              <span>{tag}</span>
+              <button
+                type="button"
+                onClick={() => handleRemoveCustomAnswer(tag)}
+                className="hover:text-red-700 cursor-pointer"
+                title="Hapus pilihan kustom"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Options List */}
       <div className="space-y-3 mb-5">
@@ -370,16 +437,28 @@ export default function Step3Personalize({
                   : "border-neutral-200/80 bg-white hover:border-neutral-300 hover:bg-neutral-50/50"
               }`}
             >
-              {/* Radio Indicator */}
-              <div
-                className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 border transition-colors ${
-                  selected
-                    ? "border-[#E05A38] bg-[#E05A38]"
-                    : "border-neutral-300 bg-white"
-                }`}
-              >
-                {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-              </div>
+              {/* Indicator: Checkbox for Multiple, Radio for Single */}
+              {isMultiple ? (
+                <div
+                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
+                    selected
+                      ? "border-[#E05A38] bg-[#E05A38] text-white shadow-2xs"
+                      : "border-neutral-300 bg-white"
+                  }`}
+                >
+                  {selected && <Check size={11} strokeWidth={3} />}
+                </div>
+              ) : (
+                <div
+                  className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 border transition-all ${
+                    selected
+                      ? "border-[#E05A38] bg-[#E05A38]"
+                      : "border-neutral-300 bg-white"
+                  }`}
+                >
+                  {selected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                </div>
+              )}
 
               {/* Text & Badges */}
               <div className="flex-1 min-w-0">
@@ -399,9 +478,11 @@ export default function Step3Personalize({
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-neutral-500 leading-relaxed">
-                  {opt.desc}
-                </p>
+                {opt.desc && (
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    {opt.desc}
+                  </p>
+                )}
               </div>
             </div>
           );
@@ -417,13 +498,21 @@ export default function Step3Personalize({
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#E05A38] hover:text-[#c44728] transition cursor-pointer"
           >
             <Plus size={14} strokeWidth={2.5} />
-            <span>Add your own custom architectural constraint</span>
+            <span>
+              {isMultiple
+                ? "Tambah opsi atau batasan kustom tambahan"
+                : "Tulis opsi atau batasan arsitektur kustom sendiri"}
+            </span>
           </button>
         ) : (
           <div className="flex items-center gap-2 p-2 rounded-xl bg-[#FAF9F6] border border-neutral-200">
             <input
               type="text"
-              placeholder="e.g. Must support multi-region failover and HIPAA compliance"
+              placeholder={
+                isMultiple
+                  ? "Contoh: Integrasi WhatsApp Gateway dan webhook Telegram"
+                  : "Contoh: Menggunakan arsitektur offline-first dengan sinkronisasi periodik"
+              }
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               onKeyDown={(e) => {
@@ -439,14 +528,14 @@ export default function Step3Personalize({
               onClick={handleAddCustom}
               className="px-3 py-1.5 rounded-lg bg-[#E05A38] text-white text-xs font-semibold hover:bg-[#d04a28] cursor-pointer shrink-0"
             >
-              Add
+              Tambah
             </button>
             <button
               type="button"
               onClick={() => setShowCustomInput(false)}
               className="px-2 py-1.5 text-neutral-400 hover:text-neutral-700 text-xs cursor-pointer"
             >
-              Cancel
+              Batal
             </button>
           </div>
         )}
@@ -460,7 +549,7 @@ export default function Step3Personalize({
           className="px-5 py-2.5 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-semibold text-xs transition cursor-pointer flex items-center gap-1.5"
         >
           <ArrowLeft size={14} />
-          <span>Previous</span>
+          <span>Sebelumnya</span>
         </button>
 
         <div className="flex items-center gap-3 ml-auto">
@@ -469,7 +558,7 @@ export default function Step3Personalize({
             onClick={handleNext}
             className="px-4 py-2.5 rounded-xl text-neutral-500 hover:text-neutral-800 font-semibold text-xs transition cursor-pointer"
           >
-            Skip for now
+            Lewati pertanyaan
           </button>
 
           <button
@@ -490,7 +579,7 @@ export default function Step3Personalize({
               </>
             ) : (
               <>
-                <span>Next Question</span>
+                <span>Pertanyaan Selanjutnya</span>
                 <ArrowRight size={14} />
               </>
             )}

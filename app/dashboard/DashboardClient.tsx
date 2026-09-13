@@ -66,7 +66,7 @@ export default function DashboardClient({
       appName: p.appName,
       appIdea: p.appIdea,
       status: p.status === "FINISHED" ? "Finish" : "Unfinish",
-      href: `/detail?projectId=${p.id}`,
+      href: `/design?projectId=${p.id}`,
     }));
   } else {
     itemsToDisplay = SHOWCASE_PROJECTS;

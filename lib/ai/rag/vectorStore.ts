@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/db/prisma";
-import { redis } from "@/lib/db/redis";
 import { generateGeminiEmbeddings, generateSingleEmbedding } from "./embeddings";
 import type { RawKnowledgeChunk } from "./chunker";
 
@@ -9,26 +8,6 @@ export interface RetrievedChunk {
   title: string;
   content: string;
   similarity: number;
-}
-
-/**
- * Calculates cosine similarity between two numeric vectors.
- */
-export function cosineSimilarity(vecA: number[], vecB: number[]): number {
-  if (!vecA || !vecB || vecA.length !== vecB.length) return 0;
-
-  let dotProduct = 0;
-  let normA = 0;
-  let normB = 0;
-
-  for (let i = 0; i < vecA.length; i++) {
-    dotProduct += vecA[i] * vecB[i];
-    normA += vecA[i] * vecA[i];
-    normB += vecB[i] * vecB[i];
-  }
-
-  if (normA === 0 || normB === 0) return 0;
-  return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
 /**
@@ -59,37 +38,22 @@ export async function storeProjectChunks(
     });
 
     // 2. Persist to PostgreSQL via Prisma
-    const chunkRecords = chunks.map((chunk, idx) => ({
-      projectId,
-      category: chunk.category,
-      title: chunk.title,
-      content: chunk.content,
-      embedding: JSON.stringify(embeddings[idx]),
-      metadata: chunk.metadata ? JSON.stringify(chunk.metadata) : null,
-    }));
-
-    await prisma.projectKnowledgeChunk.createMany({
-      data: chunkRecords,
-    });
-
-    // 3. Cache vectors in Redis for fast semantic lookup
-    try {
-      const allChunks = await prisma.projectKnowledgeChunk.findMany({
-        where: { projectId },
-        select: {
-          id: true,
-          category: true,
-          title: true,
-          content: true,
-          embedding: true,
-        },
-      });
-
-      await redis.set(`project:${projectId}:vectors`, allChunks);
-    } catch (redisErr) {
-      console.warn("[VectorStore] Redis cache update warning:", redisErr);
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const vectorStr = `[${embeddings[i].join(",")}]`;
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "project_knowledge_chunk" ("id", "projectId", "category", "title", "content", "embedding", "metadata", "createdAt", "updatedAt")
+         VALUES (gen_random_uuid()::text, $1, $2, $3, $4, $5::vector, $6, NOW(), NOW())`,
+        projectId,
+        chunk.category,
+        chunk.title,
+        chunk.content,
+        vectorStr,
+        chunk.metadata ? JSON.stringify(chunk.metadata) : null
+      );
     }
 
+    // 3. Invalidate Redis vector cache so next retrieval hits fresh DB data
     console.log(
       `[VectorStore] Successfully embedded and saved ${chunks.length} chunks for project ${projectId}.`
     );
@@ -120,63 +84,33 @@ export async function retrieveRelevantChunks(
     const queryVector = await generateSingleEmbedding(query);
     if (!queryVector || queryVector.length === 0) return [];
 
-    // 2. Fetch project chunks from Redis cache or PostgreSQL
-    let storedChunks: Array<{
+    // 2. Perform native vector search with cosine distance (<=>) in PostgreSQL
+    const vectorStr = `[${queryVector.join(",")}]`;
+    let queryRaw = `
+      SELECT "id", "category", "title", "content",
+             (1 - ("embedding" <=> $1::vector))::float as similarity
+      FROM "project_knowledge_chunk"
+      WHERE "projectId" = $2
+    `;
+    const params: unknown[] = [vectorStr, projectId];
+
+    if (options?.category) {
+      queryRaw += ` AND "category" = $3`;
+      params.push(options.category);
+    }
+
+    queryRaw += ` AND (1 - ("embedding" <=> $1::vector)) >= ${minSimilarity}`;
+    queryRaw += ` ORDER BY similarity DESC LIMIT ${topK}`;
+
+    const rows = await prisma.$queryRawUnsafe<Array<{
       id: string;
       category: string;
       title: string;
       content: string;
-      embedding: string;
-    }> | null = null;
+      similarity: number;
+    }>>(queryRaw, ...params);
 
-    try {
-      storedChunks = await redis.get(`project:${projectId}:vectors`);
-    } catch {}
-
-    if (!storedChunks || !Array.isArray(storedChunks) || storedChunks.length === 0) {
-      storedChunks = await prisma.projectKnowledgeChunk.findMany({
-        where: {
-          projectId,
-          ...(options?.category ? { category: options.category } : {}),
-        },
-        select: {
-          id: true,
-          category: true,
-          title: true,
-          content: true,
-          embedding: true,
-        },
-      });
-    } else if (options?.category) {
-      storedChunks = storedChunks.filter((c) => c.category === options.category);
-    }
-
-    if (!storedChunks || storedChunks.length === 0) return [];
-
-    // 3. Compute cosine similarity for each chunk
-    const scored: RetrievedChunk[] = [];
-
-    for (const chunk of storedChunks) {
-      try {
-        const vec = JSON.parse(chunk.embedding) as number[];
-        const sim = cosineSimilarity(queryVector, vec);
-
-        if (sim >= minSimilarity) {
-          scored.push({
-            id: chunk.id,
-            category: chunk.category,
-            title: chunk.title,
-            content: chunk.content,
-            similarity: sim,
-          });
-        }
-      } catch {}
-    }
-
-    // 4. Rank descending by similarity score
-    scored.sort((a, b) => b.similarity - a.similarity);
-
-    return scored.slice(0, topK);
+    return rows;
   } catch (error) {
     console.error(`[VectorStore] Semantic retrieval failed for project ${projectId}:`, error);
     return [];

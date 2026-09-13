@@ -39,7 +39,7 @@ export function StudioHeader() {
         </div>
 
         <Link
-          href="/generate"
+          href="/dashboard"
           className="px-3 py-1.5 rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white font-mono font-bold text-xs flex items-center gap-1.5 transition-colors shadow-md shadow-[#6366F1]/20"
         >
           <Sparkles size={13} />

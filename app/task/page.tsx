@@ -719,7 +719,7 @@ function TaskPageContent() {
           {!isLoading && data && (
             <button onClick={handleExport} style={btn}>↓ Export .md</button>
           )}
-          <Link href="/generate" style={{ ...btn, background: "var(--color-signal)", color: "#ffffff", borderColor: "var(--color-signal)", textDecoration: "none" }}>
+          <Link href="/dashboard" style={{ ...btn, background: "var(--color-signal)", color: "#ffffff", borderColor: "var(--color-signal)", textDecoration: "none" }}>
             + New Project
           </Link>
         </div>

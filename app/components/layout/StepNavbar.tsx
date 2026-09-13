@@ -6,8 +6,8 @@ export type WorkflowStep = "struktur" | "prd" | "design" | "task";
 
 const STEPS: { id: WorkflowStep; label: string; path: string }[] = [
   { id: "struktur", label: "Structure", path: "/structure" },
-  { id: "prd",      label: "PRD",       path: "/preview" },
-  { id: "design",   label: "Design",    path: "/detail" },
+  { id: "prd",      label: "PRD",       path: "/prd" },
+  { id: "design",   label: "Design",    path: "/design" },
   { id: "task",     label: "Task",      path: "/task" },
 ];
 

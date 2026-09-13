@@ -3,7 +3,7 @@ from app.schemas.questions import QuestionItem, QuestionsGenerateRequest, Questi
 from app.schemas.stack import TechStackGroup, RecommendStackRequest, RecommendStackResponse
 from app.schemas.structure import ChildNode, StructureNode, StrukturData, StrukturGenerateRequest, StrukturGenerateResponse
 from app.schemas.tasks import KanbanTask, PhaseGroup, TasksData, TasksGenerateRequest, TasksGenerateResponse
-from app.schemas.prd import PRDGenerateRequest, PRDGenerateResponse, EditPrdRequest, EditPrdResponse
+from app.schemas.prd import PRDGenerateRequest, PRDGenerateResponse, EditPrdRequest, EditPrdResponse, ChatAction, ChatHistoryItem
 from app.schemas.embedding import EmbeddingRequest, EmbeddingResponse
 
 __all__ = [
@@ -29,6 +29,8 @@ __all__ = [
     "PRDGenerateResponse",
     "EditPrdRequest",
     "EditPrdResponse",
+    "ChatAction",
+    "ChatHistoryItem",
     "EmbeddingRequest",
     "EmbeddingResponse",
 ]
