@@ -100,7 +100,7 @@ export default function ProjectsClient({
             </div>
 
             <Link
-              href="/generate"
+              href="/dashboard/new-project"
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#E05A38] hover:bg-[#CF4D2C] active:bg-[#B83E1F] text-white text-sm font-medium tracking-tight shadow-xs transition-all duration-150 sm:self-center shrink-0"
             >
               <Plus size={17} strokeWidth={2.2} />
@@ -177,7 +177,7 @@ export default function ProjectsClient({
                   : "Turn your first idea into a structured PRD, architecture, and Kanban board."}
               </p>
               <Link
-                href="/generate"
+                href="/dashboard/new-project"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E05A38] text-white text-sm font-medium hover:bg-[#CF4D2C] transition shadow-xs"
               >
                 <Plus size={16} />

@@ -3,7 +3,11 @@
 import Link from "next/link";
 import { FolderPlus, Plus } from "lucide-react";
 
-export default function DashboardHeroCard() {
+interface DashboardHeroCardProps {
+  onNewProject?: () => void;
+}
+
+export default function DashboardHeroCard({ onNewProject }: DashboardHeroCardProps) {
   return (
     <section className="mb-12">
       <span className="text-[11px] font-bold tracking-[0.14em] text-neutral-400 uppercase mb-3 block">
@@ -19,13 +23,13 @@ export default function DashboardHeroCard() {
           <p className="text-neutral-500 text-sm leading-relaxed mb-6">
             Turn an idea into structured product context with Moryn.
           </p>
-          <Link
-            href="/generate"
+          <button
+            onClick={onNewProject}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white border border-neutral-300 hover:bg-neutral-50 active:bg-neutral-100 text-neutral-800 text-sm font-semibold tracking-tight shadow-2xs transition-all duration-150"
           >
             <Plus size={16} strokeWidth={2.2} className="text-neutral-500" />
             <span>Create Project</span>
-          </Link>
+          </button>
         </div>
 
         {/* Right Folder Icon Container */}

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { Search, Bell, Menu } from "lucide-react";
 import { useState } from "react";
@@ -10,6 +9,7 @@ interface DashboardHeaderProps {
   userImage?: string | null;
   onOpenMobile?: () => void;
   onSearch?: (query: string) => void;
+  onNewProject?: () => void;
 }
 
 export default function DashboardHeader({
@@ -17,6 +17,7 @@ export default function DashboardHeader({
   userImage,
   onOpenMobile,
   onSearch,
+  onNewProject,
 }: DashboardHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
@@ -82,27 +83,12 @@ export default function DashboardHeader({
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#E05A38]" />
         </button>
 
-        {/* Profile Avatar link */}
-        <Link
-          href="/dashboard/settings?tab=account"
-          className="ml-1 p-0.5 rounded-full hover:ring-2 hover:ring-neutral-900/10 transition"
-          aria-label="Account Settings & Profile"
+        <button
+          onClick={onNewProject}
+          className="ml-1 inline-flex h-9 items-center rounded-lg bg-[#1D211F] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#343936] cursor-pointer"
         >
-          {userImage ? (
-            <Image
-              src={userImage}
-              alt={userName || "Profile"}
-              width={32}
-              height={32}
-              unoptimized
-              className="w-8 h-8 rounded-full border border-neutral-200 object-cover"
-            />
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-neutral-100 border border-neutral-200 flex items-center justify-center text-xs font-bold text-neutral-700">
-              {initial}
-            </div>
-          )}
-        </Link>
+          New Project
+        </button>
       </div>
     </header>
   );
