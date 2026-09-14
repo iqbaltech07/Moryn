@@ -66,6 +66,7 @@ export const apiClient = {
       dynamicAnswers?: Record<string, any>;
       designPreference?: string;
       designData?: string;
+      language?: "en" | "id";
     }) =>
       request<{ projectId: string }>("/api/projects/create", {
         method: "POST",
@@ -136,7 +137,12 @@ export const apiClient = {
   },
 
   generate: {
-    questions: (payload: { appName?: string; appIdea: string; stacks?: Record<string, string> }) =>
+    questions: (payload: {
+      appName?: string;
+      appIdea: string;
+      stacks?: Record<string, string>;
+      language?: "en" | "id";
+    }) =>
       request<any[]>("/api/generate/questions", {
         method: "POST",
         body: JSON.stringify(payload),

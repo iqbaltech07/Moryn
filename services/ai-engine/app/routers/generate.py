@@ -30,6 +30,10 @@ from app.services.prompt_service import (
     PRD_SYSTEM_PROMPT,
     STRUKTUR_SYSTEM_PROMPT,
     TASKS_SYSTEM_PROMPT,
+    get_questions_system_prompt,
+    get_prd_system_prompt,
+    get_struktur_system_prompt,
+    get_tasks_system_prompt,
     build_prd_user_prompt,
 )
 
@@ -49,8 +53,9 @@ async def generate_questions(payload: QuestionsGenerateRequest):
         user_prompt += f"\nTech Stack: {json.dumps(payload.stacks)}"
 
     try:
+        system_prompt = get_questions_system_prompt(payload.language or "en")
         result, _ = await gemini_service.generate_structured(
-            system_prompt=QUESTIONS_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema_class=QuestionsGenerateResponse,
         )
@@ -94,11 +99,13 @@ async def generate_prd(payload: PRDGenerateRequest):
         design_preference=payload.designPreference,
         custom_prompt=payload.customPrompt,
         structure_context=payload.structureContext,
+        language=payload.language or "en",
     )
 
     try:
+        system_prompt = get_prd_system_prompt(payload.language or "en")
         markdown, model_used = await gemini_service.generate_text(
-            system_prompt=PRD_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             user_prompt=user_prompt,
             temperature=0.7,
         )
@@ -125,12 +132,14 @@ async def stream_prd(payload: PRDGenerateRequest):
         design_preference=payload.designPreference,
         custom_prompt=payload.customPrompt,
         structure_context=payload.structureContext,
+        language=payload.language or "en",
     )
 
     async def sse_event_stream():
         try:
+            system_prompt = get_prd_system_prompt(payload.language or "en")
             async for chunk in gemini_service.generate_stream(
-                system_prompt=PRD_SYSTEM_PROMPT,
+                system_prompt=system_prompt,
                 user_prompt=user_prompt,
             ):
                 # SSE format: data: <chunk>\n\n
@@ -367,8 +376,9 @@ async def generate_tasks(payload: TasksGenerateRequest):
     user_prompt = "\n\n".join(user_prompt_parts)
 
     try:
+        system_prompt = get_tasks_system_prompt(payload.language or "en")
         data, _ = await gemini_service.generate_structured(
-            system_prompt=TASKS_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema_class=TasksData,
         )
@@ -402,8 +412,9 @@ async def generate_struktur(payload: StrukturGenerateRequest):
     user_prompt = "\n\n".join(user_prompt_parts)
 
     try:
+        system_prompt = get_struktur_system_prompt(payload.language or "en")
         data, _ = await gemini_service.generate_structured(
-            system_prompt=STRUKTUR_SYSTEM_PROMPT,
+            system_prompt=system_prompt,
             user_prompt=user_prompt,
             schema_class=StrukturData,
         )

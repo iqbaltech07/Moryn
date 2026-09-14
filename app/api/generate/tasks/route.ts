@@ -140,6 +140,7 @@ export async function POST(req: NextRequest) {
       strukturSummary: structureSummary,
       coreFeatures: form?.coreFeatures,
       stacks: form?.stacks,
+      language: (form?.language === "id" ? "id" : "en") as "en" | "id",
     });
 
     if (!tasksRes?.data) {

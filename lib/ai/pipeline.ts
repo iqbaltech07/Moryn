@@ -102,6 +102,7 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
     const dynamicAnswers = formInputs.dynamicAnswers as Record<string, unknown> | undefined;
     const designPrefVal = dynamicAnswers?.designPreference || formInputs.designPreference;
     const designPreference = typeof designPrefVal === "string" ? designPrefVal : undefined;
+    const language = (formInputs.language === "id" ? "id" : "en") as "en" | "id";
 
     await redis.set(pipelineStatusKey, {
       status: "in_progress",
@@ -132,6 +133,7 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
         appIdea: project.appIdea,
         stacks,
         dynamicAnswers,
+        language,
       });
 
       if (strukturRes?.data) {
@@ -194,6 +196,7 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
         dynamicAnswers,
         designPreference,
         structureContext: combinedStructureContext,
+        language,
       });
 
       if (prdRes?.markdown) {
@@ -256,6 +259,7 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
           ? (formInputs.coreFeatures as string[])
           : undefined,
         stacks,
+        language,
       });
 
       if (tasksRes?.data) {

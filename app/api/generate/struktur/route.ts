@@ -105,6 +105,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Fallback / Direct Generation if pipeline didn't finish or wasn't running
     const formInputs = project.formInputs ? JSON.parse(project.formInputs) : {};
+    const language = (formInputs.language === "id" ? "id" : "en") as "en" | "id";
 
     const strukturRes = await FastApiClient.generateStruktur({
       appName: project.appName,
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest) {
       stacks: formInputs.stacks,
       prdMarkdown: project.prdData || undefined,
       dynamicAnswers: formInputs.dynamicAnswers,
+      language,
     });
 
     if (!strukturRes?.data) {

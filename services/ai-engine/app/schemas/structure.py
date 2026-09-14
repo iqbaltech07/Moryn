@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 class ChildNode(BaseModel):
@@ -23,6 +23,7 @@ class StrukturGenerateRequest(BaseModel):
     stacks: Optional[dict] = None
     prdMarkdown: Optional[str] = None
     dynamicAnswers: Optional[dict] = None
+    language: Optional[Literal["en", "id"]] = "en"
 
 class StrukturGenerateResponse(BaseModel):
     data: StrukturData

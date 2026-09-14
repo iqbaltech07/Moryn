@@ -4,8 +4,14 @@ export interface DynamicQuestion {
   key: string;
   title: string;
   subtitle: string;
-  type: "single" | "multiple";
+  type: "single" | "multiple" | "essay";
   options: string[];
+  placeholder?: string;
+  hasConditionalInput?: boolean;
+  conditionalTriggerValue?: string;
+  conditionalInputLabel?: string;
+  conditionalInputPlaceholder?: string;
+  conditionalInputType?: "text" | "textarea";
 }
 
 export interface FormData {

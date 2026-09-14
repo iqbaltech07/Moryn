@@ -57,6 +57,7 @@ export class FastApiClient {
     designPreference?: string;
     customPrompt?: string;
     structureContext?: string;
+    language?: "en" | "id";
   }): Promise<{ markdown: string; modelUsed: string }> {
     return this.request("/api/v1/generate/prd", payload);
   }
@@ -66,6 +67,7 @@ export class FastApiClient {
     appName?: string;
     appIdea: string;
     stacks?: Record<string, unknown>;
+    language?: "en" | "id";
   }): Promise<{ questions: Array<{ key: string; title: string; subtitle: string; type: "single" | "multiple"; options: string[] }> }> {
     return this.request("/api/v1/generate/questions", payload);
   }
@@ -92,6 +94,7 @@ export class FastApiClient {
     coreFeatures?: string[];
     strukturSummary?: string;
     stacks?: Record<string, unknown>;
+    language?: "en" | "id";
   }): Promise<{ data: { phases: Array<Record<string, unknown>> } }> {
     return this.request("/api/v1/generate/tasks", payload);
   }
@@ -103,6 +106,7 @@ export class FastApiClient {
     stacks?: Record<string, unknown>;
     prdMarkdown?: string;
     dynamicAnswers?: Record<string, unknown>;
+    language?: "en" | "id";
   }): Promise<{ data: { title: string; description: string; nodes: Array<Record<string, unknown>> } }> {
     return this.request("/api/v1/generate/struktur", payload);
   }

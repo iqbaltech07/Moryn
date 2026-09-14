@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
 
 class KanbanTask(BaseModel):
@@ -30,6 +30,7 @@ class TasksGenerateRequest(BaseModel):
     prdMarkdown: Optional[str] = None
     currentTaskData: Optional[dict] = None
     forceSync: Optional[bool] = False
+    language: Optional[Literal["en", "id"]] = "en"
 
 class TasksGenerateResponse(BaseModel):
     data: TasksData

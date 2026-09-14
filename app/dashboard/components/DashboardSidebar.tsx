@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { LayoutGrid, Folder, Layers, Settings, HelpCircle, LogOut, X, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { signOut } from "@/lib/auth/auth-client";
+import { useTranslation } from "@/lib/i18n";
 
 interface DashboardSidebarProps {
   currentTab?: string;
@@ -23,6 +24,7 @@ export default function DashboardSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const { t } = useTranslation();
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -42,14 +44,14 @@ export default function DashboardSidebar({
   const navItems = [
     {
       id: "overview",
-      label: "Overview",
+      label: t.nav.overview,
       icon: LayoutGrid,
       href: "/dashboard",
       active: currentTab ? currentTab === "overview" : pathname === "/dashboard",
     },
     {
       id: "projects",
-      label: "Projects",
+      label: t.nav.projects,
       icon: Folder,
       href: "/dashboard/projects",
       active: currentTab ? currentTab === "projects" : pathname.startsWith("/dashboard/projects"),
@@ -63,7 +65,7 @@ export default function DashboardSidebar({
     },
     {
       id: "settings",
-      label: "Settings",
+      label: t.nav.settings,
       icon: Settings,
       href: "/dashboard/settings",
       active: currentTab ? currentTab === "settings" : pathname.startsWith("/dashboard/settings"),

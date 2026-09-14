@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 
 class PRDGenerateRequest(BaseModel):
@@ -11,6 +11,7 @@ class PRDGenerateRequest(BaseModel):
     customPrompt: Optional[str] = None
     targetPlatform: Optional[str] = None
     structureContext: Optional[str] = Field(default=None, description="Generated feature structure mindmap context to align PRD")
+    language: Optional[Literal["en", "id"]] = "en"
 
 class PRDGenerateResponse(BaseModel):
     markdown: str = Field(description="Complete 10-Section PRD Markdown content")
@@ -28,6 +29,7 @@ class EditPrdRequest(BaseModel):
     isEditIntent: Optional[bool] = False
     model: Optional[str] = None
     history: Optional[list[ChatHistoryItem]] = None
+    language: Optional[Literal["en", "id"]] = "en"
 
 class ChatAction(BaseModel):
     id: str

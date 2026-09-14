@@ -6,7 +6,8 @@ export const createProjectSchema = z.object({
   appIdea: z.string().trim().min(20).max(5000),
   designData: z.union([z.string(), z.instanceof(String)]).optional(),
   designPreference: z.string().optional(),
-  dynamicAnswers: z.record(z.string(), z.union([z.string(), z.array(z.string())])).optional(),
+  dynamicAnswers: z.record(z.string(), z.union([z.string(), z.array(z.string()), z.record(z.string(), z.any())])).optional(),
+  language: z.enum(["en", "id"]).optional().default("en"),
 });
 
 export const updateProjectSchema = z.object({

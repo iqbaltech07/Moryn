@@ -106,6 +106,7 @@ export async function POST(req: NextRequest) {
     // 4. Fallback / Direct Generation with Structure Context
     const formInputs = project.formInputs ? JSON.parse(project.formInputs) : {};
     const structureSummary = project.strukturData ? formatStructureSummary(project.strukturData) : undefined;
+    const language = (formInputs.language === "id" ? "id" : "en") as "en" | "id";
 
     // Call FastAPI AI Engine (Single Source of Truth)
     const fastApiRes = await FastApiClient.generatePrd({
@@ -115,6 +116,7 @@ export async function POST(req: NextRequest) {
       dynamicAnswers: formInputs.dynamicAnswers,
       designPreference: formInputs.designPreference,
       structureContext: structureSummary,
+      language,
     });
 
     if (!fastApiRes?.markdown) {

@@ -39,10 +39,12 @@ import {
   CheckCircle2,
   Folder,
   Calendar,
+  Languages,
 } from "lucide-react";
 import DashboardSidebar from "../components/DashboardSidebar";
 import DashboardHeader from "../components/DashboardHeader";
 import { apiClient } from "@/lib/utils/apiClient";
+import { useTranslation } from "@/lib/i18n";
 import {
   getRank,
   getNextRank,
@@ -101,13 +103,14 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<"keys" | "byok" | "account">(
-    tabParam === "account" ? "account" : tabParam === "byok" ? "byok" : "keys"
+  const [activeSection, setActiveSection] = useState<"keys" | "byok" | "account" | "preferences">(
+    tabParam === "preferences" ? "preferences" : tabParam === "account" ? "account" : tabParam === "byok" ? "byok" : "keys"
   );
+  const { t, language, setLanguage } = useTranslation();
 
   useEffect(() => {
     const tab = searchParams.get("tab");
-    if (tab === "account" || tab === "byok" || tab === "keys") {
+    if (tab === "account" || tab === "byok" || tab === "keys" || tab === "preferences") {
       setActiveSection(tab);
     }
   }, [searchParams]);
@@ -443,7 +446,19 @@ export default function SettingsClient({ user }: SettingsClientProps) {
               }`}
             >
               <User size={16} />
-              <span>Account & Plan</span>
+              <span>{t.settings.tabAccountPlan}</span>
+            </button>
+
+            <button
+              onClick={() => setActiveSection("preferences")}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                activeSection === "preferences"
+                  ? "bg-[#FAF3F0] text-[#E05A38] font-semibold"
+                  : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70"
+              }`}
+            >
+              <Languages size={16} />
+              <span>{t.settings.tabPreferences}</span>
             </button>
           </div>
 
@@ -1070,6 +1085,124 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                     </div>
                     <ChevronRight size={18} className="text-neutral-400 group-hover:translate-x-1 transition-transform" />
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ════════ SECTION 4: PREFERENCES & LANGUAGE ════════ */}
+          {activeSection === "preferences" && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl border border-neutral-200/80 p-6 sm:p-8 shadow-[0_2px_12px_rgba(0,0,0,0.02)]">
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div>
+                    <span className="text-[11px] font-bold tracking-[0.14em] text-neutral-400 uppercase block mb-1">
+                      LOCALIZATION & AI GENERATION
+                    </span>
+                    <h2 className="text-xl font-bold text-neutral-900 tracking-tight">
+                      {t.settings.preferencesTitle}
+                    </h2>
+                    <p className="text-sm text-neutral-500 mt-1 max-w-2xl leading-relaxed">
+                      {t.settings.preferencesSubtitle}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* English Option */}
+                  <div
+                    onClick={() => {
+                      setLanguage("en");
+                      toast.success(t.settings.switchedSuccess);
+                    }}
+                    className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      language === "en"
+                        ? "border-[#E05A38] bg-[#FAF3F0]/40 shadow-xs"
+                        : "border-neutral-200/80 bg-white hover:border-neutral-300"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-2xl" role="img" aria-label="US Flag">🇺🇸</span>
+                          <div>
+                            <h3 className="text-base font-bold text-neutral-900">
+                              {t.settings.langEnglishTitle}
+                            </h3>
+                            <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
+                              {t.settings.langEnglishBadge}
+                            </span>
+                          </div>
+                        </div>
+                        {language === "en" ? (
+                          <div className="w-6 h-6 rounded-full bg-[#E05A38] text-white flex items-center justify-center shadow-xs">
+                            <Check size={14} strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full border border-neutral-300" />
+                        )}
+                      </div>
+                      <p className="text-xs text-neutral-600 leading-relaxed">
+                        {t.settings.langEnglishDesc}
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs">
+                      <span className="text-neutral-500 font-medium">Prompt & Output</span>
+                      <span className="font-semibold text-neutral-700">100% English</span>
+                    </div>
+                  </div>
+
+                  {/* Bahasa Indonesia Option */}
+                  <div
+                    onClick={() => {
+                      setLanguage("id");
+                      toast.success(t.settings.switchedSuccess);
+                    }}
+                    className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
+                      language === "id"
+                        ? "border-[#E05A38] bg-[#FAF3F0]/40 shadow-xs"
+                        : "border-neutral-200/80 bg-white hover:border-neutral-300"
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="text-2xl" role="img" aria-label="ID Flag">🇮🇩</span>
+                          <div>
+                            <h3 className="text-base font-bold text-neutral-900">
+                              {t.settings.langIndonesianTitle}
+                            </h3>
+                            <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider">
+                              {t.settings.langIndonesianBadge}
+                            </span>
+                          </div>
+                        </div>
+                        {language === "id" ? (
+                          <div className="w-6 h-6 rounded-full bg-[#E05A38] text-white flex items-center justify-center shadow-xs">
+                            <Check size={14} strokeWidth={3} />
+                          </div>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full border border-neutral-300" />
+                        )}
+                      </div>
+                      <p className="text-xs text-neutral-600 leading-relaxed">
+                        {t.settings.langIndonesianDesc}
+                      </p>
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-neutral-100 flex items-center justify-between text-xs">
+                      <span className="text-neutral-500 font-medium">Prompt & Output</span>
+                      <span className="font-semibold text-neutral-700">100% Bahasa Indonesia</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-4 rounded-xl bg-neutral-50 border border-neutral-200/60 flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-md bg-neutral-200 text-neutral-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <Terminal size={12} />
+                  </div>
+                  <p className="text-xs text-neutral-500 leading-relaxed">
+                    <strong>Zero Token Waste Architecture:</strong> Switching language adjusts the AI generation pipeline directly. No dual-language payloads are generated or stored, minimizing LLM token consumption and maximizing context efficiency.
+                  </p>
                 </div>
               </div>
             </div>
