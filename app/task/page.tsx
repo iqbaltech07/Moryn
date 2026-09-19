@@ -14,7 +14,7 @@ import {
   Sprout, Compass, PenLine, LayoutList, Lightbulb,
   Map, Timer, Telescope, Trophy, Wrench,
   CheckCircle2, PartyPopper, Award, ArrowRight, Check, Loader2,
-  Plus, MoreHorizontal, LayoutGrid, List, Cpu, RefreshCw
+  Plus, MoreHorizontal, LayoutGrid, List, Cpu, RefreshCw, Download
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -652,80 +652,51 @@ function TaskPageContent() {
       )}
 
       {/* ── Topbar ── */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid var(--border-hairline)", background: "rgba(252, 251, 248, 0.92)", backdropFilter: "blur(12px)" }}>
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          height: 56,
+          borderBottom: "1px solid var(--border-hairline)",
+          background: "rgba(252, 251, 248, 0.92)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
         <ProjectHeaderBrand projectId={projectId} />
         <StepNavbar currentStep="task" projectId={projectId} />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-          {!isLoading && data && (
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 10px",
-                borderRadius: "var(--radius-xs)",
-                border: "1px solid rgba(79,209,197,0.25)",
-                background: "rgba(79,209,197,0.06)",
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                color: "var(--color-circuit)",
-                letterSpacing: "0.04em",
-              }}
-              title="Kanban status automatically syncs with AI Agent via NPX CLI & REST API"
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#4FD1C5",
-                  boxShadow: "0 0 8px #4FD1C5",
-                }}
-              />
-              Live Sync
-            </div>
-          )}
-          {!isLoading && data && (
-            <button
-              onClick={() => setShowMcpModal(true)}
-              style={{
-                ...btn,
-                background: "rgba(79,209,197,0.08)",
-                borderColor: "rgba(79,209,197,0.35)",
-                color: "var(--color-circuit)",
-              }}
-            >
-              <Cpu size={12} style={{ color: "var(--color-circuit)" }} />
-              Setup AI Agent CLI
-            </button>
-          )}
-          {!isLoading && data && (
-            <button
-              onClick={() => fetchTasks(true)}
-              disabled={isSyncing}
-              style={{
-                ...btn,
-                background: isSyncing ? "rgba(255,182,39,0.15)" : "var(--bg-elevated)",
-                borderColor: isSyncing ? "var(--color-signal)" : "var(--border-hairline)",
-                color: isSyncing ? "var(--color-signal)" : "var(--fg-secondary)",
-                cursor: isSyncing ? "not-allowed" : "pointer",
-              }}
-              title="Sync tasks with latest PRD and Structure changes"
-            >
-              <RefreshCw size={11} className={isSyncing ? "animate-spin" : ""} style={{ color: isSyncing ? "var(--color-signal)" : "var(--fg-muted)" }} />
-              {isSyncing ? "Syncing…" : "Sync Tasks"}
-            </button>
-          )}
-          {!isLoading && data && (
-            <button onClick={handleExport} style={btn}>↓ Export .md</button>
-          )}
-          <Link href="/dashboard" style={{ ...btn, background: "var(--color-signal)", color: "#ffffff", borderColor: "var(--color-signal)", textDecoration: "none" }}>
-            + New Project
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+          <Link
+            href="/dashboard"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "8px",
+              background: "#e15b39",
+              color: "#ffffff",
+              border: "none",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              textDecoration: "none",
+              transition: "opacity 0.15s, transform 0.1s",
+            }}
+          >
+            <span>+ New Project</span>
           </Link>
         </div>
       </header>
 
-      <div style={{ paddingTop: 52, display: "flex", height: "100vh" }}>
+      <div style={{ paddingTop: 56, display: "flex", height: "100vh" }}>
 
         {/* ── Left sidebar: phase nav ── */}
         <aside style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border-hairline)", background: "var(--bg-surface)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
@@ -784,6 +755,90 @@ function TaskPageContent() {
               );
             })}
           </div>
+
+          {/* Quick Actions in Sidebar */}
+          {!isLoading && data && (
+            <div style={{ padding: "14px 10px", borderTop: "1px solid var(--border-hairline)", display: "flex", flexDirection: "column", gap: 8 }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "6px 10px",
+                  borderRadius: "var(--radius-xs)",
+                  border: "1px solid rgba(79,209,197,0.25)",
+                  background: "rgba(79,209,197,0.06)",
+                  fontFamily: "var(--font-mono)",
+                  fontSize: "10px",
+                  color: "var(--color-circuit)",
+                  letterSpacing: "0.04em",
+                }}
+                title="Kanban status automatically syncs with AI Agent via NPX CLI & REST API"
+              >
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <span
+                    style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: "50%",
+                      background: "#4FD1C5",
+                      boxShadow: "0 0 8px #4FD1C5",
+                    }}
+                  />
+                  Live Sync
+                </span>
+                <span style={{ fontSize: 9, opacity: 0.8 }}>Active</span>
+              </div>
+
+              <button
+                onClick={() => setShowMcpModal(true)}
+                style={{
+                  ...btn,
+                  width: "100%",
+                  justifyContent: "center",
+                  background: "rgba(79,209,197,0.08)",
+                  borderColor: "rgba(79,209,197,0.35)",
+                  color: "var(--color-circuit)",
+                  padding: "7px 10px",
+                }}
+              >
+                <Cpu size={12} style={{ color: "var(--color-circuit)" }} />
+                Setup AI Agent CLI
+              </button>
+
+              <button
+                onClick={() => fetchTasks(true)}
+                disabled={isSyncing}
+                style={{
+                  ...btn,
+                  width: "100%",
+                  justifyContent: "center",
+                  background: isSyncing ? "rgba(255,182,39,0.15)" : "var(--bg-elevated)",
+                  borderColor: isSyncing ? "var(--color-signal)" : "var(--border-hairline)",
+                  color: isSyncing ? "var(--color-signal)" : "var(--fg-secondary)",
+                  cursor: isSyncing ? "not-allowed" : "pointer",
+                  padding: "7px 10px",
+                }}
+                title="Sync tasks with latest PRD and Structure changes"
+              >
+                <RefreshCw size={11} className={isSyncing ? "animate-spin" : ""} style={{ color: isSyncing ? "var(--color-signal)" : "var(--fg-muted)" }} />
+                {isSyncing ? "Syncing…" : "Sync Tasks"}
+              </button>
+
+              <button
+                onClick={handleExport}
+                style={{
+                  ...btn,
+                  width: "100%",
+                  justifyContent: "center",
+                  padding: "7px 10px",
+                }}
+              >
+                <Download size={12} />
+                Export .md
+              </button>
+            </div>
+          )}
         </aside>
 
         {/* ── Main Kanban View ── */}

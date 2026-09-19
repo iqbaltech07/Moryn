@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
+import { ArrowRight } from "lucide-react";
 import { McpConnectModal } from "../components/modals";
 import { ProjectDetailSkeleton } from "../components/shared";
 import { ProjectDetailData } from "./types";
@@ -158,7 +159,7 @@ function ProjectDetailContent() {
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 20px",
-          height: 52,
+          height: 56,
           borderBottom: "1px solid var(--border-hairline)",
           background: "rgba(252, 251, 248, 0.92)",
           backdropFilter: "blur(12px)",
@@ -166,18 +167,28 @@ function ProjectDetailContent() {
       >
         <ProjectHeaderBrand projectId={projectId} />
         <StepNavbar currentStep="design" projectId={projectId} />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
           <Link
             href={`/task?projectId=${projectId}`}
             style={{
-              ...btn,
-              background: "var(--color-signal)",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "8px",
+              background: "#e15b39",
               color: "#ffffff",
-              borderColor: "var(--color-signal)",
+              border: "none",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
               textDecoration: "none",
+              transition: "opacity 0.15s, transform 0.1s",
             }}
           >
-            Lanjut ke Task →
+            <span>Next Step</span>
+            <ArrowRight size={14} strokeWidth={2.2} />
           </Link>
         </div>
       </header>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import Image from "next/image";
-import { FolderGit2, Lightbulb, Pencil, X, Check, Loader2 } from "lucide-react";
+import { FolderGit2, Lightbulb, Pencil, X, Check, Loader2, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/utils/apiClient";
 import { useProjectStore } from "@/stores/useProjectStore";
@@ -23,8 +23,9 @@ export default function ProjectHeaderBrand({
 }) {
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [loading, setLoading] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const { updateProjectLocally } = useProjectStore();
 
   // Edit Modal State
@@ -39,6 +40,21 @@ export default function ProjectHeaderBrand({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   useEffect(() => {
     if (!projectId) {
@@ -76,7 +92,7 @@ export default function ProjectHeaderBrand({
     const currentName = project?.appName || project?.title || displayName || "";
     setEditName(currentName === "Untitled Project" ? "" : currentName);
     setEditIdea(project?.appIdea || "");
-    setShowTooltip(false);
+    setIsDropdownOpen(false);
     setIsEditingModalOpen(true);
   };
 
@@ -130,7 +146,6 @@ export default function ProjectHeaderBrand({
     <>
       <div
         style={{
-          flex: 1,
           display: "flex",
           alignItems: "center",
           justifyContent: "flex-start",
@@ -138,7 +153,7 @@ export default function ProjectHeaderBrand({
           minWidth: 0,
         }}
       >
-        {/* Logo */}
+        {/* Brand: Moryn Logo */}
         <Link
           href="/"
           style={{
@@ -151,9 +166,15 @@ export default function ProjectHeaderBrand({
           <Image
             src="/logo/Moryn-Light-Mode.webp"
             alt="Moryn"
-            width={800}
-            height={200}
-            style={{ height: 28, width: "auto" }}
+            width={120}
+            height={32}
+            priority
+            style={{
+              height: 24,
+              width: "auto",
+              objectFit: "contain",
+              display: "block",
+            }}
           />
         </Link>
 
@@ -161,9 +182,8 @@ export default function ProjectHeaderBrand({
         {projectId && (
           <span
             style={{
-              fontFamily: "var(--font-mono)",
               fontSize: "14px",
-              color: "var(--border-strong)",
+              color: "#9ca3af",
               flexShrink: 0,
               userSelect: "none",
             }}
@@ -172,17 +192,16 @@ export default function ProjectHeaderBrand({
           </span>
         )}
 
-        {/* Project Name & Idea */}
+        {/* Project Name Dropdown Trigger */}
         {projectId && (
           <div
+            ref={dropdownRef}
             style={{
               position: "relative",
               display: "flex",
               alignItems: "center",
               minWidth: 0,
             }}
-            onMouseEnter={() => !isEditingModalOpen && setShowTooltip(true)}
-            onMouseLeave={() => setShowTooltip(false)}
           >
             {loading ? (
               <div
@@ -190,210 +209,126 @@ export default function ProjectHeaderBrand({
                   display: "flex",
                   alignItems: "center",
                   gap: 6,
-                  padding: "4px 10px",
-                  borderRadius: "var(--radius-md)",
-                  background: "rgba(255,182,39,0.04)",
-                  border: "1px solid var(--border-hairline)",
+                  padding: "4px 8px",
+                  borderRadius: "6px",
+                  background: "rgba(225,91,57,0.06)",
                 }}
               >
-                <div
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    background: "var(--color-signal)",
-                    animation: "pulse 1.2s infinite ease-in-out",
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: "11px",
-                    color: "var(--fg-muted)",
-                  }}
-                >
-                  Loading project…
+                <Loader2 size={13} className="animate-spin" style={{ color: "#e15b39" }} />
+                <span style={{ fontSize: "12px", color: "var(--fg-muted, #71717a)" }}>
+                  Loading…
                 </span>
               </div>
             ) : (
-              <div
-                onClick={openEditModal}
-                title="Click to edit project name or idea"
+              <button
+                type="button"
+                onClick={() => setIsDropdownOpen((prev) => !prev)}
+                title="Click for project options"
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 8,
-                  padding: "4px 10px",
-                  borderRadius: "var(--radius-md)",
-                  background: "rgba(255,182,39,0.06)",
-                  border: "1px solid rgba(255,182,39,0.25)",
+                  gap: 5,
+                  padding: "4px 6px",
+                  borderRadius: "6px",
+                  background: isDropdownOpen ? "rgba(0,0,0,0.05)" : "transparent",
+                  border: "none",
                   cursor: "pointer",
-                  maxWidth: "320px",
-                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+                  maxWidth: "260px",
+                  transition: "background 0.15s ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!isDropdownOpen) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.04)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!isDropdownOpen) (e.currentTarget as HTMLElement).style.background = "transparent";
                 }}
               >
-                {/* Project Icon */}
-                <div
+                <span
                   style={{
-                    width: 22,
-                    height: 22,
-                    borderRadius: 4,
-                    background: "rgba(255,182,39,0.15)",
-                    border: "1px solid rgba(255,182,39,0.3)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    flexShrink: 0,
+                    fontSize: "14px",
+                    fontWeight: 700,
+                    color: "var(--fg-primary, #111827)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    lineHeight: 1.3,
                   }}
                 >
-                  <FolderGit2 size={12} style={{ color: "var(--color-signal)" }} />
-                </div>
-
-                {/* Title & Idea Preview */}
-                <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
-                      fontWeight: 700,
-                      color: "var(--fg-primary)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      lineHeight: 1.25,
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {displayName}
-                  </span>
-
-                  {ideaText && (
-                    <span
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: "10px",
-                        color: "var(--fg-muted)",
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        lineHeight: 1.2,
-                        maxWidth: "200px",
-                      }}
-                    >
-                      {ideaText}
-                    </span>
-                  )}
-                </div>
-
-                {/* Edit Pencil Icon */}
-                <div
+                  {displayName}
+                </span>
+                <ChevronDown
+                  size={14}
                   style={{
-                    padding: 2,
-                    borderRadius: 3,
-                    color: "var(--fg-muted)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    color: "var(--fg-muted, #71717a)",
+                    transform: isDropdownOpen ? "rotate(180deg)" : "none",
+                    transition: "transform 0.2s ease",
                     flexShrink: 0,
                   }}
-                >
-                  <Pencil size={11} />
-                </div>
-              </div>
+                />
+              </button>
             )}
 
-            {/* Hover Card / Tooltip displaying BOTH Project Name & Idea */}
-            {showTooltip && !isEditingModalOpen && (
+            {/* Dropdown Menu when clicking the chevron */}
+            {isDropdownOpen && (
               <div
                 style={{
                   position: "absolute",
                   top: "calc(100% + 8px)",
                   left: 0,
-                  width: 320,
-                  padding: "14px 16px",
-                  borderRadius: "var(--radius-lg)",
-                  background: "rgba(20,28,48,0.98)",
-                  border: "1px solid var(--border-strong)",
-                  boxShadow: "0 12px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 182, 39, 0.25)",
-                  backdropFilter: "blur(12px)",
+                  width: 280,
+                  padding: "12px",
+                  borderRadius: "10px",
+                  background: "var(--bg-elevated, #ffffff)",
+                  border: "1px solid var(--border-hairline, #e5e7eb)",
+                  boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
                   zIndex: 100,
-                  pointerEvents: "none",
-                  animation: "fadeIn 0.15s ease-out",
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10,
+                  gap: 8,
                 }}
               >
-                {/* Section 1: Project Name */}
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                    <FolderGit2 size={13} style={{ color: "var(--color-signal)" }} />
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.08em",
-                        color: "var(--color-signal)",
-                      }}
-                    >
-                      Project Name
-                    </span>
-                  </div>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "13px",
-                      fontWeight: 700,
-                      color: "var(--fg-primary)",
-                      margin: 0,
-                    }}
-                  >
+                <div style={{ padding: "4px 6px" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "var(--fg-primary, #111827)", marginBottom: 2 }}>
                     {displayName}
-                  </p>
-                </div>
-
-                {/* Section 2: Idea Description */}
-                {ideaText && (
-                  <div style={{ borderTop: "1px solid var(--border-hairline)", paddingTop: 8 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                      <Lightbulb size={13} style={{ color: "var(--color-circuit)" }} />
-                      <span
-                        style={{
-                          fontFamily: "var(--font-mono)",
-                          fontSize: "10px",
-                          fontWeight: 700,
-                          textTransform: "uppercase",
-                          letterSpacing: "0.08em",
-                          color: "var(--color-circuit)",
-                        }}
-                      >
-                        Idea Description
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontFamily: "var(--font-body)",
-                        fontSize: "12px",
-                        color: "var(--fg-secondary)",
-                        lineHeight: 1.45,
-                        margin: 0,
-                        wordBreak: "break-word",
-                      }}
-                    >
-                      {ideaText}
-                    </p>
                   </div>
-                )}
-
-                {/* Hint Footer */}
-                <div style={{ borderTop: "1px dashed var(--border-hairline)", paddingTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
-                  <Pencil size={11} style={{ color: "var(--color-signal)" }} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: "9px", color: "var(--fg-muted)", letterSpacing: "0.04em" }}>
-                    Click to edit name & idea
-                  </span>
+                  {ideaText && (
+                    <div style={{ fontSize: 11, color: "var(--fg-muted, #71717a)", lineHeight: 1.4 }}>
+                      {ideaText}
+                    </div>
+                  )}
                 </div>
+
+                <div style={{ height: 1, background: "var(--border-hairline, #e5e7eb)", margin: "2px 0" }} />
+
+                {/* Edit Button in Dropdown */}
+                <button
+                  type="button"
+                  onClick={openEditModal}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    width: "100%",
+                    padding: "8px 10px",
+                    borderRadius: "6px",
+                    border: "none",
+                    background: "rgba(225,91,57,0.08)",
+                    color: "#e15b39",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "background 0.15s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(225,91,57,0.14)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(225,91,57,0.08)";
+                  }}
+                >
+                  <Pencil size={13} strokeWidth={2} />
+                  <span>Edit Project Details</span>
+                </button>
               </div>
             )}
           </div>

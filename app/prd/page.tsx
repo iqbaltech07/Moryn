@@ -9,13 +9,45 @@ import { MessageRenderer } from "../components/ai/MessageRenderer";
 import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
 import { UpgradeModal } from "../components/modals";
 import { PrdPreviewSkeleton } from "../components/shared";
-import { Send, Bot, Loader2, Lightbulb, Scale, PenLine, Database, Trash2 } from "lucide-react";
+import {
+  Send,
+  Bot,
+  Loader2,
+  Lightbulb,
+  Scale,
+  PenLine,
+  Database,
+  Trash2,
+  ArrowRight,
+  Pencil,
+  Copy,
+  Download,
+  Check,
+  FileText,
+  BookOpen,
+  Users,
+  Folder,
+  Clock,
+  TrendingUp,
+  Sparkles,
+} from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/utils/apiClient";
 import { useChatStore, ChatAction } from "@/stores/useChatStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useUiStore } from "@/stores/useUiStore";
 import { isTextGenerationModel, type AiModelOption } from "@/lib/ai/models";
+
+function getTocIcon(text: string, index: number) {
+  const t = text.toLowerCase();
+  if (t.includes("overview") || t.includes("objective") || t.includes("ringkasan")) return BookOpen;
+  if (t.includes("user") || t.includes("pain") || t.includes("pengguna") || t.includes("persona")) return Users;
+  if (t.includes("flow") || t.includes("alur") || t.includes("journey") || t.includes("arsitektur")) return Folder;
+  if (t.includes("requirement") || t.includes("fungsional") || t.includes("kebutuhan") || t.includes("fitur")) return Clock;
+  if (t.includes("tech") || t.includes("konteks") || t.includes("stack") || t.includes("data") || t.includes("context")) return TrendingUp;
+  const defaults = [BookOpen, Users, Folder, Clock, TrendingUp];
+  return defaults[index % defaults.length] || FileText;
+}
 
 function PreviewPageContent() {
   const router = useRouter();
@@ -31,6 +63,7 @@ function PreviewPageContent() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [appName] = useState("PRD");
+  const [projectInfo, setProjectInfo] = useState<{ appName: string; appIdea: string } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +90,34 @@ function PreviewPageContent() {
   } = useChatStore();
   const { updateProjectLocally } = useProjectStore();
   const { setShowUpgradeModal } = useUiStore();
+
+  // Load project details for header card & metadata
+  useEffect(() => {
+    if (!projectId) return;
+    apiClient.projects
+      .get(projectId)
+      .then((data) => {
+        if (data) {
+          setProjectInfo({
+            appName: data.appName || data.title || "Project",
+            appIdea: data.appIdea || "",
+          });
+        }
+      })
+      .catch(() => {});
+
+    const handleProjectUpdated = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (customEvent.detail) {
+        setProjectInfo((prev) => ({
+          appName: customEvent.detail.appName || prev?.appName || "Project",
+          appIdea: customEvent.detail.appIdea || prev?.appIdea || "",
+        }));
+      }
+    };
+    window.addEventListener("projectUpdated", handleProjectUpdated);
+    return () => window.removeEventListener("projectUpdated", handleProjectUpdated);
+  }, [projectId]);
 
   // Synchronize active project for persistent localStorage chat history
   useEffect(() => {
@@ -202,7 +263,13 @@ function PreviewPageContent() {
     return () => container.removeEventListener("scroll", onScroll);
   }, [toc]);
 
-  const handleCopy = useCallback(async () => { await navigator.clipboard.writeText(markdown); setCopied(true); setTimeout(() => setCopied(false), 2000); }, [markdown]);
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    toast.success("PRD copied to clipboard!");
+    setTimeout(() => setCopied(false), 2000);
+  }, [markdown]);
+
   const handleDownload = useCallback(async () => {
     try {
       const { user } = await apiClient.user.me();
@@ -222,6 +289,7 @@ function PreviewPageContent() {
       toast.error("Silakan login untuk mengunduh dokumen PRD.");
     }
   }, [markdown, setShowUpgradeModal]);
+
   const handleContinueToDesign = () => router.push(`/design${projectId ? `?projectId=${projectId}` : ""}`);
   const scrollToHeading = (id: string) => { const c = contentRef.current; if (!c) return; const el = c.querySelector<HTMLElement>(`#${id}`); if (!el) return; c.scrollTo({ top: el.getBoundingClientRect().top - c.getBoundingClientRect().top + c.scrollTop - 24, behavior: "smooth" }); };
   const handleSave = async () => {
@@ -239,16 +307,8 @@ function PreviewPageContent() {
     }
   };
 
-  /* Shared small button style */
-  const btn: React.CSSProperties = {
-    display: "inline-flex", alignItems: "center", gap: 5,
-    padding: "5px 10px", borderRadius: "var(--radius-md)",
-    fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
-    letterSpacing: "0.08em", textTransform: "uppercase",
-    cursor: "pointer", border: "1px solid var(--border-hairline)",
-    background: "var(--bg-elevated)", color: "var(--fg-secondary)",
-    transition: "opacity 0.15s",
-  };
+  const wordCount = markdown ? markdown.trim().split(/\s+/).filter(Boolean).length : 0;
+  const currentProjectName = projectInfo?.appName || "GerobakLink";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-background)", color: "var(--fg-primary)" }}>
@@ -256,33 +316,42 @@ function PreviewPageContent() {
       {/* ── Topbar ── */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "0 20px", height: 52, flexShrink: 0,
-        borderBottom: "1px solid var(--border-hairline)",
-        background: "rgba(252, 251, 248, 0.92)", backdropFilter: "blur(12px)",
+        padding: "0 24px", height: 56, flexShrink: 0,
+        borderBottom: "1px solid var(--border-hairline, #e5e7eb)",
+        background: "rgba(252, 251, 248, 0.95)", backdropFilter: "blur(12px)",
         position: "relative", zIndex: 50,
       }}>
+        {/* Left: Brand + Project dropdown */}
         <ProjectHeaderBrand projectId={projectId} />
 
+        {/* Center: Workflow step badges */}
         <StepNavbar currentStep="prd" projectId={projectId} />
 
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6 }}>
-          {isEditing ? (
-            <>
-              <button onClick={() => setIsEditing(false)} style={{ ...btn, color: "#f87171", borderColor: "rgba(248,113,113,0.3)", background: "rgba(248,113,113,0.07)" }}>Cancel</button>
-              <button onClick={handleSave} disabled={isSaving} style={{ ...btn, color: "var(--color-circuit)", borderColor: "rgba(79,209,197,0.3)", background: "rgba(79,209,197,0.07)" }}>
-                {isSaving ? "Saving…" : "Save PRD"}
-              </button>
-            </>
-          ) : (
-            <button onClick={() => { setEditContent(markdown); setIsEditing(true); }} style={{ ...btn, color: "var(--color-mist)" }}>Edit Mode</button>
-          )}
-          <button onClick={handleCopy} disabled={isEditing} style={btn}>{copied ? "✓ Copied" : "Copy"}</button>
-          <button onClick={handleDownload} style={btn}>↓ .md</button>
+        {/* Right: ONLY Next Step button */}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
           <button
-            onClick={handleContinueToDesign} disabled={isGenerating}
-            style={{ ...btn, background: "var(--color-signal)", color: "#ffffff", borderColor: "var(--color-signal)", opacity: isGenerating ? 0.4 : 1, cursor: isGenerating ? "not-allowed" : "pointer", padding: "5px 14px" }}
+            onClick={handleContinueToDesign}
+            disabled={isGenerating}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "8px",
+              background: "#e15b39",
+              color: "#ffffff",
+              border: "none",
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              cursor: isGenerating ? "not-allowed" : "pointer",
+              opacity: isGenerating ? 0.4 : 1,
+              transition: "opacity 0.15s, transform 0.1s",
+            }}
           >
-            Continue to Design →
+            <span>Next Step</span>
+            <ArrowRight size={14} strokeWidth={2.2} />
           </button>
         </div>
       </header>
@@ -290,30 +359,260 @@ function PreviewPageContent() {
       {/* ── Body ── */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-        {/* TOC Sidebar */}
-        <aside style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border-hairline)", background: "var(--bg-surface)", overflowY: "auto", padding: "16px 0" }}>
-          <div style={{ padding: "0 14px 10px", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-muted)" }}>
-            Contents
-          </div>
-          {toc.length === 0 && isGenerating && (
-            <div style={{ padding: "0 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)" }}>Generating…</div>
-          )}
-          {toc.map((item) => (
-            <button key={item.id} onClick={() => scrollToHeading(item.id)} style={{
-              display: "block", width: "100%", textAlign: "left",
-              padding: item.level === 2 ? "6px 14px" : "4px 22px",
-              fontFamily: "var(--font-mono)", fontSize: item.level === 2 ? 11 : 10,
-              fontWeight: item.level === 2 ? 600 : 400,
-              letterSpacing: "0.04em",
-              color: activeTocId === item.id ? "var(--color-signal)" : "var(--fg-muted)",
-              background: activeTocId === item.id ? "rgba(255,182,39,0.07)" : "transparent",
-              border: "none", cursor: "pointer", transition: "all 0.12s",
-              borderLeft: activeTocId === item.id ? "2px solid var(--color-signal)" : "2px solid transparent",
-              lineHeight: 1.4,
+        {/* ── Left Sidebar: Document Header, Actions & TOC ── */}
+        <aside style={{
+          width: 250,
+          flexShrink: 0,
+          borderRight: "1px solid var(--border-hairline, #e5e7eb)",
+          background: "var(--bg-surface, #fcfbf9)",
+          display: "flex",
+          flexDirection: "column",
+          height: "100%",
+          overflow: "hidden",
+        }}>
+          {/* Top Document Header Card */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 16px 14px" }}>
+            <div style={{
+              width: 38,
+              height: 38,
+              borderRadius: 8,
+              background: "rgba(225, 91, 57, 0.12)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#e15b39",
+              flexShrink: 0,
             }}>
-              {item.text}
-            </button>
-          ))}
+              <FileText size={20} strokeWidth={2} />
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "#e15b39",
+                fontFamily: "var(--font-mono, monospace)",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                lineHeight: 1.25,
+              }}>
+                {currentProjectName}
+              </div>
+              <div style={{
+                fontSize: 11,
+                color: "var(--fg-muted, #71717a)",
+                fontWeight: 500,
+                marginTop: 2,
+              }}>
+                PRD Documentation
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons: Edit Mode & Copy/Download */}
+          <div style={{ padding: "0 14px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+            {isEditing ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(false)}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(248,113,113,0.35)",
+                    background: "rgba(248,113,113,0.08)",
+                    color: "#f87171",
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={isSaving}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    padding: "8px 10px",
+                    borderRadius: 8,
+                    border: "none",
+                    background: "#e15b39",
+                    color: "#ffffff",
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: isSaving ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {isSaving ? "Saving…" : "Save PRD"}
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => { setEditContent(markdown); setIsEditing(true); }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  width: "100%",
+                  padding: "9px 16px",
+                  borderRadius: 8,
+                  background: "#e15b39",
+                  color: "#ffffff",
+                  border: "none",
+                  fontFamily: "var(--font-mono, monospace)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  letterSpacing: "0.04em",
+                  cursor: "pointer",
+                  transition: "opacity 0.15s",
+                }}
+              >
+                <Pencil size={13} strokeWidth={2.2} />
+                <span>Edit Mode</span>
+              </button>
+            )}
+
+            {/* Side-by-side Copy & Download buttons */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+              <button
+                type="button"
+                onClick={handleCopy}
+                disabled={isEditing}
+                title={copied ? "Copied to clipboard!" : "Copy markdown"}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  borderRadius: 8,
+                  border: "1px solid var(--border-hairline, #e5e7eb)",
+                  background: "var(--bg-elevated, #ffffff)",
+                  color: copied ? "#16a34a" : "var(--fg-secondary, #4b5563)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+              </button>
+              <button
+                type="button"
+                onClick={handleDownload}
+                title="Download .md"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: "8px",
+                  borderRadius: 8,
+                  border: "1px solid var(--border-hairline, #e5e7eb)",
+                  background: "var(--bg-elevated, #ffffff)",
+                  color: "var(--fg-secondary, #4b5563)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                }}
+              >
+                <Download size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* CONTENTS Header */}
+          <div style={{
+            padding: "8px 16px 6px",
+            fontFamily: "var(--font-mono, monospace)",
+            fontSize: "10px",
+            fontWeight: 700,
+            letterSpacing: "0.12em",
+            textTransform: "uppercase",
+            color: "var(--fg-muted, #9ca3af)",
+          }}>
+            CONTENTS
+          </div>
+
+          {/* TOC Items */}
+          <div style={{
+            flex: 1,
+            overflowY: "auto",
+            padding: "0 10px 14px",
+            display: "flex",
+            flexDirection: "column",
+            gap: 3,
+          }}>
+            {toc.length === 0 && isGenerating && (
+              <div style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-muted)" }}>
+                Generating contents…
+              </div>
+            )}
+            {toc.map((item, idx) => {
+              const isActive = activeTocId === item.id;
+              const Icon = getTocIcon(item.text, idx);
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => scrollToHeading(item.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    width: "100%",
+                    textAlign: "left",
+                    padding: "7px 12px",
+                    borderRadius: 8,
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: "11px",
+                    fontWeight: isActive ? 700 : 500,
+                    letterSpacing: "0.02em",
+                    color: isActive ? "#ffffff" : "var(--fg-secondary, #4b5563)",
+                    background: isActive ? "#e15b39" : "transparent",
+                    border: "none",
+                    cursor: "pointer",
+                    transition: "all 0.12s",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.03)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                  }}
+                >
+                  <Icon size={14} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.75 }} />
+                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {item.text.replace(/^[0-9]+(\.[0-9]+)*\s*/, "")}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Sidebar Footer Info */}
+          <div style={{
+            padding: "12px 16px",
+            borderTop: "1px solid var(--border-hairline, #e5e7eb)",
+            fontFamily: "var(--font-mono, monospace)",
+            fontSize: "10px",
+            color: "var(--fg-muted, #9ca3af)",
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            flexShrink: 0,
+          }}>
+            <span>{toc.length} sections</span>
+            <span>•</span>
+            <span>{wordCount.toLocaleString()} words</span>
+          </div>
         </aside>
 
         {/* ── Main document area ── */}
@@ -344,22 +643,76 @@ function PreviewPageContent() {
                 <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 400, gap: 16 }}>
                   <div style={{
                     width: 44, height: 44, borderRadius: "var(--radius-lg)",
-                    border: "1px solid var(--color-signal)", background: "rgba(255,182,39,0.08)",
+                    border: "1px solid #e15b39", background: "rgba(225,91,57,0.08)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     animation: "spin 0.8s linear infinite",
                   }}>
-                    <Loader2 size={20} style={{ color: "var(--color-signal)" }} strokeWidth={2} />
+                    <Loader2 size={20} style={{ color: "#e15b39" }} strokeWidth={2} />
                   </div>
                   <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-muted)", letterSpacing: "0.06em" }}>
                     Writing Product Requirements Document…
                   </p>
                 </div>
               ) : (
-                <MarkdownRenderer
-                  content={markdown}
-                  onTocUpdate={(newToc) => { setToc(newToc); if (newToc.length > 0 && !activeTocId) setActiveTocId(newToc[0].id); }}
-                  className="markdown-preview"
-                />
+                <>
+                  {/* Top Document Header from mockup */}
+                  <div style={{ marginBottom: 32 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+                      <span style={{
+                        display: "inline-block",
+                        padding: "3px 8px",
+                        borderRadius: "6px",
+                        background: "var(--bg-elevated, #f3f4f6)",
+                        border: "1px solid var(--border-hairline, #e5e7eb)",
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        letterSpacing: "0.06em",
+                        color: "var(--fg-muted, #71717a)",
+                        textTransform: "uppercase",
+                      }}>
+                        DRAFT
+                      </span>
+                      <span style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "11px",
+                        color: "var(--fg-muted, #9ca3af)",
+                      }}>
+                        Last edited recently
+                      </span>
+                    </div>
+
+                    <h1 style={{
+                      fontSize: "36px",
+                      fontWeight: 800,
+                      letterSpacing: "-0.03em",
+                      color: "var(--fg-primary, #111827)",
+                      margin: "0 0 16px",
+                      lineHeight: 1.15,
+                    }}>
+                      {currentProjectName}
+                    </h1>
+
+                    {projectInfo?.appIdea && (
+                      <div style={{
+                        borderLeft: "3px solid #e15b39",
+                        paddingLeft: "16px",
+                        color: "var(--fg-secondary, #4b5563)",
+                        fontSize: "15px",
+                        lineHeight: 1.6,
+                        margin: "16px 0 28px",
+                      }}>
+                        {projectInfo.appIdea}
+                      </div>
+                    )}
+                  </div>
+
+                  <MarkdownRenderer
+                    content={markdown}
+                    onTocUpdate={(newToc) => { setToc(newToc); if (newToc.length > 0 && !activeTocId) setActiveTocId(newToc[0].id); }}
+                    className="markdown-preview"
+                  />
+                </>
               )}
             </div>
           )}
@@ -367,27 +720,27 @@ function PreviewPageContent() {
 
         {/* ── AI Chat Sidebar ── */}
         <aside style={{
-          width: 420, flexShrink: 0,
-          borderLeft: "1px solid var(--border-hairline)",
-          background: "var(--bg-surface)",
+          width: 380, flexShrink: 0,
+          borderLeft: "1px solid var(--border-hairline, #e5e7eb)",
+          background: "var(--bg-surface, #fcfbf9)",
           display: "flex", flexDirection: "column", height: "100%",
           position: "relative", overflow: "hidden",
         }}>
           {/* Header */}
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-hairline)", flexShrink: 0 }}>
+          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-hairline, #e5e7eb)", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{
-                  width: 28, height: 28, borderRadius: "var(--radius-md)",
-                  border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)",
+                  width: 30, height: 30, borderRadius: 8,
+                  border: "none", background: "rgba(225,91,57,0.12)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  color: "var(--color-circuit)",
+                  color: "#e15b39",
                 }}>
-                  <Bot size={13} />
+                  <Bot size={16} />
                 </div>
                 <div>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>AI Assistant</p>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--color-circuit)", margin: 0, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Brainstorm · Edit PRD</p>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>Moryn AI</p>
+                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#16a34a", margin: 0, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>● CONTEXT READY</p>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -431,10 +784,7 @@ function PreviewPageContent() {
                     <span>Clear</span>
                   </button>
                 )}
-                <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 8px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-xs)", background: "var(--bg-elevated)" }}>
-                  <div style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e" }} />
-                  <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--color-mist)", fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>Live</span>
-                </div>
+                <Sparkles size={14} style={{ color: "var(--fg-muted, #9ca3af)" }} />
               </div>
             </div>
           </div>
@@ -442,42 +792,83 @@ function PreviewPageContent() {
           {/* Messages */}
           <div style={{ flex: 1, overflowY: "auto", padding: "14px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
             {chatMessages.length === 0 ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {/* Welcome */}
-                <div style={{ padding: "14px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-md)", background: "var(--bg-elevated)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7 }}>
-                    <Bot size={13} style={{ color: "var(--color-signal)" }} />
-                    <span style={{ fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 700, color: "var(--fg-primary)" }}>Halo! Saya AI-mu.</span>
-                  </div>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--color-mist)", lineHeight: 1.65, margin: 0 }}>
-                    Brainstorm ide, tanya hal teknis, atau instruksikan saya untuk merevisi PRD ini langsung.
-                  </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Suggested actions from mockup */}
+                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: "var(--fg-muted, #9ca3af)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  SUGGESTED ACTIONS
                 </div>
-                {/* Preset label */}
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, color: "var(--fg-muted)", letterSpacing: "0.1em", textTransform: "uppercase", padding: "2px 0" }}>
-                  Quick prompts
+
+                <button
+                  type="button"
+                  onClick={() => handleAiSubmit("Review for missing edge cases in this PRD")}
+                  disabled={isAiEditing}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: "#e15b39",
+                    color: "#ffffff",
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    boxShadow: "0 1px 2px rgba(225,91,57,0.2)",
+                  }}
+                >
+                  <span>Review for missing edge cases</span>
+                  <ArrowRight size={13} strokeWidth={2.2} />
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleAiSubmit("Generate technical constraints and architectural boundaries")}
+                  disabled={isAiEditing}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "10px 14px",
+                    borderRadius: "8px",
+                    border: "none",
+                    background: "#e15b39",
+                    color: "#ffffff",
+                    fontFamily: "var(--font-mono, monospace)",
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    textAlign: "left",
+                    boxShadow: "0 1px 2px rgba(225,91,57,0.2)",
+                  }}
+                >
+                  <span>Generate technical constraints</span>
+                  <ArrowRight size={13} strokeWidth={2.2} />
+                </button>
+
+                {/* Additional quick prompts */}
+                <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {[
+                    { icon: <Lightbulb size={12} />, label: "Brainstorm", text: "Apa ide fitur gamifikasi yang menarik untuk app ini?" },
+                    { icon: <PenLine size={12} />, label: "Edit PRD", text: "Tambahkan section FAQ dan Troubleshooting ke PRD" },
+                  ].map((p, i) => (
+                    <button key={i} onClick={() => handleAiSubmit(p.text)} disabled={isAiEditing} style={{
+                      textAlign: "left", padding: "8px 12px",
+                      border: "1px solid var(--border-hairline, #e5e7eb)",
+                      borderRadius: "8px",
+                      background: "var(--bg-elevated, #ffffff)",
+                      cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+                      transition: "border-color 0.12s",
+                    }}>
+                      <div style={{ color: "#e15b39", flexShrink: 0 }}>
+                        {p.icon}
+                      </div>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-secondary)", lineHeight: 1.4 }}>{p.text}</span>
+                    </button>
+                  ))}
                 </div>
-                {[
-                  { icon: <Lightbulb size={12} />, label: "Brainstorm", text: "Apa ide fitur gamifikasi yang menarik untuk app ini?", accent: "var(--color-signal)" },
-                  { icon: <Scale size={12} />, label: "Analysis",   text: "Apa kelebihan & kekurangan tech stack yang dipilih?", accent: "var(--color-circuit)" },
-                  { icon: <PenLine size={12} />, label: "Edit PRD",  text: "Tambahkan section FAQ dan Troubleshooting ke PRD",   accent: "var(--color-circuit)" },
-                  { icon: <Database size={12} />, label: "Technical", text: "Detailkan skema database untuk modul autentikasi",   accent: "var(--color-signal)" },
-                ].map((p, i) => (
-                  <button key={i} onClick={() => handleAiSubmit(p.text)} disabled={isAiEditing} style={{
-                    textAlign: "left", padding: "9px 12px",
-                    border: "1px solid var(--border-hairline)",
-                    borderRadius: "var(--radius-md)",
-                    background: "var(--bg-elevated)",
-                    cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 9,
-                    transition: "border-color 0.12s",
-                  }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 5, color: p.accent, flexShrink: 0, marginTop: 1 }}>
-                      {p.icon}
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase" }}>{p.label}</span>
-                    </div>
-                    <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--color-mist)", lineHeight: 1.5 }}>{p.text}</span>
-                  </button>
-                ))}
               </div>
             ) : (
               chatMessages.map((msg) => (
