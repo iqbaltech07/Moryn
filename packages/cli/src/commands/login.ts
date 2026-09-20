@@ -15,8 +15,8 @@ function promptInput(query: string): Promise<string> {
   });
 }
 
-export async function loginCommand(options: { token?: string; url?: string; json?: boolean }) {
-  let token = options.token?.trim() || process.env.MORYN_API_KEY?.trim() || process.env.PIARDIFY_API_KEY?.trim();
+export async function loginCommand(options: { token?: string; key?: string; url?: string; json?: boolean }) {
+  let token = options.token?.trim() || options.key?.trim() || process.env.MORYN_API_KEY?.trim() || process.env.PIARDIFY_API_KEY?.trim();
 
   if (!token && !options.json && process.stdin.isTTY) {
     console.log("\n  Moryn CLI Login");

@@ -30,7 +30,7 @@ export interface Message {
 interface MessageRendererProps {
   message: Message;
   onCopy?: (content: string) => void;
-  onActionClick?: (action: ChatAction) => void;
+  onActionClick?: (action: ChatAction, messageId?: string) => void;
   isAiEditing?: boolean;
   className?: string;
 }
@@ -88,28 +88,28 @@ const MessageRendererComponent: React.FC<MessageRendererProps> = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className={`flex items-start gap-3 w-full min-w-0 my-2 ${
+      className={`flex items-start gap-2.5 w-full min-w-0 my-2 ${
         isUser ? "flex-row-reverse" : "flex-row"
       } ${className}`}
     >
       {/* Role Avatar */}
       <div
-        className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-md transition-all ${
+        className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all ${
           isUser
-            ? "bg-linear-to-br from-indigo-500 to-indigo-700 text-white border border-indigo-400/30"
-            : "bg-linear-to-br from-purple-900/60 to-indigo-900/60 text-purple-300 border border-purple-500/30"
+            ? "bg-white border border-zinc-200 text-zinc-700 shadow-xs"
+            : "bg-[#e15b39]/12 text-[#e15b39]"
         }`}
       >
-        {isUser ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4 text-purple-300" />}
+        {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
       </div>
 
       {/* Bubble Container */}
-      <div className={`group relative min-w-0 max-w-[85%] sm:max-w-[82%] flex flex-col ${isUser ? "items-end" : "items-start"}`}>
+      <div className={`group relative min-w-0 max-w-[88%] sm:max-w-[85%] flex flex-col ${isUser ? "items-end" : "items-start"}`}>
         <div
-          className={`relative px-4 py-3 rounded-2xl shadow-xl backdrop-blur-md transition-all min-w-0 max-w-full overflow-hidden wrap-break-word ${
+          className={`relative px-3.5 py-3 rounded-xl transition-all min-w-0 max-w-full overflow-hidden wrap-break-word ${
             isUser
-              ? "rounded-tr-xs bg-linear-to-br from-indigo-600/30 via-indigo-700/25 to-indigo-900/30 border border-indigo-500/40 text-slate-100"
-              : "rounded-tl-xs bg-[#121318]/80 border border-slate-800/90 text-slate-200"
+              ? "bg-[#e15b39]/10 border border-[#e15b39]/25 text-zinc-900 shadow-xs"
+              : "bg-[#f7f6f2] border border-zinc-200/90 text-zinc-900 shadow-xs"
           }`}
         >
           {/* Top Quick Actions (Copy) */}
@@ -119,24 +119,25 @@ const MessageRendererComponent: React.FC<MessageRendererProps> = ({
 
           {/* Render Body */}
           {isUser ? (
-            <p className="text-xs sm:text-sm whitespace-pre-wrap leading-relaxed text-slate-100">
+            <p className="text-xs sm:text-[13px] whitespace-pre-wrap leading-relaxed text-zinc-900 font-sans">
               {message.content}
             </p>
           ) : (
             <ComponentErrorBoundary fallbackText={message.content}>
-              <MarkdownRenderer content={message.content} />
+              <div className="text-xs sm:text-[13px] leading-relaxed text-zinc-900 font-sans">
+                <MarkdownRenderer content={message.content} />
+              </div>
             </ComponentErrorBoundary>
           )}
 
           {/* Interactive Action Buttons */}
           {!isUser && message.actions && message.actions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-slate-800/80 w-full">
+            <div className="flex flex-col gap-1.5 mt-3 pt-2.5 border-t border-zinc-200/80 w-full">
               {message.actions.map((act) => {
-                const isPrimary = act.variant === "primary";
-                const isOutline = act.variant === "outline";
+                const isPrimary = act.variant === "primary" || !act.variant;
 
                 const renderIcon = () => {
-                  const iconProps = { className: "w-3.5 h-3.5 shrink-0" };
+                  const iconProps = { className: "w-3 h-3 shrink-0" };
                   switch (act.icon) {
                     case "edit":
                       return <PenLine {...iconProps} />;
@@ -159,21 +160,21 @@ const MessageRendererComponent: React.FC<MessageRendererProps> = ({
                     key={act.id}
                     type="button"
                     disabled={isAiEditing}
-                    onClick={() => onActionClick?.(act)}
-                    className={`group/btn relative inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 active:scale-[0.98] select-none ${
+                    onClick={() => onActionClick?.(act, message.id)}
+                    className={`group/btn relative w-full flex items-center justify-between gap-1.5 px-3 py-2 rounded-md text-[11px] font-semibold transition-all duration-150 active:scale-[0.98] select-none ${
                       isAiEditing
                         ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer hover:shadow-md"
+                        : "cursor-pointer hover:shadow-xs"
                     } ${
                       isPrimary
-                        ? "bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold shadow-xs shadow-orange-500/20 border border-orange-400/40"
-                        : isOutline
-                        ? "bg-cyan-950/20 hover:bg-cyan-900/40 text-cyan-300 hover:text-cyan-200 border border-cyan-500/40 hover:border-cyan-400/60"
-                        : "bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white border border-slate-700/80"
+                        ? "bg-[#e15b39]/12 hover:bg-[#e15b39]/20 text-[#e15b39] border border-[#e15b39]/25"
+                        : "bg-white hover:bg-zinc-50 text-zinc-700 border border-zinc-200"
                     }`}
                   >
-                    {renderIcon()}
-                    <span>{act.label}</span>
+                    <span className="inline-flex items-center gap-1.5">
+                      {renderIcon()}
+                      <span>{act.label}</span>
+                    </span>
                     <ArrowRight className="w-3 h-3 opacity-60 group-hover/btn:opacity-100 group-hover/btn:translate-x-0.5 transition-all duration-150 shrink-0" />
                   </button>
                 );
@@ -184,16 +185,16 @@ const MessageRendererComponent: React.FC<MessageRendererProps> = ({
           {/* Streaming Dot Indicator */}
           {message.isStreaming && (
             <div className="inline-flex items-center gap-1 mt-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce" />
-              <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-bounce [animation-delay:150ms]" />
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-bounce [animation-delay:300ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#e15b39] animate-bounce" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#e15b39]/80 animate-bounce [animation-delay:150ms]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#e15b39]/50 animate-bounce [animation-delay:300ms]" />
             </div>
           )}
         </div>
 
         {/* Timestamp */}
         {message.timestamp && (
-          <span className="text-[10px] text-slate-500 mt-1 px-1 font-mono">
+          <span className="text-[10px] text-zinc-400 mt-1 px-1 font-sans">
             {message.timestamp}
           </span>
         )}

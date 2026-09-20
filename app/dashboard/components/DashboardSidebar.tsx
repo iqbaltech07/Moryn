@@ -56,13 +56,13 @@ export default function DashboardSidebar({
       href: "/dashboard/projects",
       active: currentTab ? currentTab === "projects" : pathname.startsWith("/dashboard/projects"),
     },
-    {
-      id: "templates",
-      label: "Templates",
-      icon: Layers,
-      href: "/#features",
-      active: currentTab ? currentTab === "templates" : pathname.startsWith("/dashboard/templates"),
-    },
+    // {
+    //   id: "templates",
+    //   label: t.nav.templates,
+    //   icon: Layers,
+    //   href: "/#features",
+    //   active: currentTab ? currentTab === "templates" : pathname.startsWith("/dashboard/templates"),
+    // },
     {
       id: "settings",
       label: t.nav.settings,
@@ -85,9 +85,8 @@ export default function DashboardSidebar({
 
       {/* Sidebar container */}
       <aside
-        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between p-6 transition-transform duration-200 lg:translate-x-0 ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
-        }`}
+        className={`fixed top-0 bottom-0 left-0 z-50 w-64 bg-white border-r border-neutral-200/80 flex flex-col justify-between p-6 transition-transform duration-200 lg:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+          }`}
       >
         <div>
           {/* Brand Header */}
@@ -96,44 +95,45 @@ export default function DashboardSidebar({
               href="/dashboard"
               className="flex items-center gap-3 group text-decoration-none"
             >
-              {/* Moryn 1:1 Logo */}
-              <div className="w-10 h-10 rounded-xl overflow-hidden border border-neutral-200/80 shadow-2xs group-hover:border-neutral-300 transition-colors relative shrink-0">
+              {/* Moryn 1:1 Logo (Frameless) */}
+              <div className="w-9 h-9 relative shrink-0 flex items-center justify-center">
                 <Image
-                  src="/logo/Moryn-1-1-Light.jpeg"
+                  src="/logo/Moryn-1-1-Light-Transparent.webp"
                   alt="Moryn Logo"
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                  draggable={false}
                   priority
                 />
               </div>
 
-              <div>
-                <h1 className="text-[17px] font-bold text-neutral-900 leading-none tracking-tight">
-                  Moryn
-                </h1>
-                <p className="text-[12px] text-neutral-400 font-medium mt-1 mb-0 leading-none">
-                  Premium Workspace
-                </p>
-              </div>
+              {/* Brand Logo */}
+              <Image
+                src="/logo/Moryn-Light-Mode.webp"
+                alt="Moryn"
+                width={165}
+                height={50}
+                className="h-[40px] w-auto object-contain"
+                draggable={false}
+                priority
+              />
             </Link>
 
             {/* Mobile close button */}
             <button
               onClick={onCloseMobile}
               className="lg:hidden p-1.5 rounded-lg text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition"
-              aria-label="Close menu"
+              aria-label="Close sidebar"
             >
               <X size={18} />
             </button>
           </div>
 
-          {/* Nav List */}
-          <nav className="mt-9 space-y-1.5">
+          {/* Nav Items */}
+          <nav className="mt-8 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = item.active;
-
               return (
                 <Link
                   key={item.id}
@@ -142,16 +142,15 @@ export default function DashboardSidebar({
                     if (onTabChange) onTabChange(item.id);
                     if (onCloseMobile) onCloseMobile();
                   }}
-                  className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-150 ${
-                    isActive
-                      ? "text-[#E05A38] bg-[#FAF3F0] font-semibold"
-                      : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
-                  }`}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-[13.5px] font-medium transition-all duration-150 ${item.active
+                    ? "bg-neutral-900 text-white shadow-2xs"
+                    : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70"
+                    }`}
                 >
                   <Icon
-                    size={19}
-                    strokeWidth={isActive ? 2.2 : 1.8}
-                    className={isActive ? "text-[#E05A38]" : "text-neutral-500"}
+                    size={18}
+                    strokeWidth={item.active ? 2.2 : 1.8}
+                    className={item.active ? "text-white" : "text-neutral-500"}
                   />
                   <span>{item.label}</span>
                 </Link>
@@ -180,7 +179,7 @@ export default function DashboardSidebar({
             ) : (
               <LogOut size={18} className="shrink-0" />
             )}
-            <span>Logout</span>
+            <span>{t.nav.signOut}</span>
           </button>
         </div>
       </aside>

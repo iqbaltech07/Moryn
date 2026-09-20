@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { signIn, useSession } from "@/lib/auth/auth-client";
 import { Loader2, Check } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -37,8 +38,17 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FCFBF8] selection:bg-[#E05A38]/15 text-neutral-900 overflow-x-hidden">
-      <header className="h-[56px] flex items-center justify-center border-b border-transparent shrink-0 relative z-10">
-        <span className="text-[17px] font-bold tracking-tight text-neutral-900">Moryn</span>
+      <header className="h-[76px] sm:h-[84px] flex items-center justify-center border-b border-neutral-200/40 shrink-0 relative z-10">
+        <Link href="/" className="inline-flex items-center hover:opacity-85 transition-opacity">
+          <Image
+            src="/logo/Moryn-Light-Mode.webp"
+            alt="Moryn"
+            width={800}
+            height={200}
+            className="h-11 sm:h-12 md:h-[52px] w-auto object-contain"
+            priority
+          />
+        </Link>
       </header>
 
       <div className="flex-1 flex items-center justify-center relative px-4 py-10 sm:py-16">
@@ -103,7 +113,13 @@ export default function LoginPage() {
           className="hidden lg:block absolute left-[8%] bottom-[17%] w-[190px] rounded-xl bg-white/90 border border-neutral-200/70 shadow-[0_10px_30px_rgba(0,0,0,0.06)] p-4 -rotate-[3deg] pointer-events-none login-float login-float-card"
         >
           <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 rounded-lg bg-[#FAF3F0] flex items-center justify-center text-[#E05A38] text-xs font-bold">M</div>
+            <Image
+              src="/logo/Moryn-1-1-Light-Transparent.webp"
+              alt="Moryn Logo"
+              width={26}
+              height={26}
+              className="w-6.5 h-6.5 object-contain shrink-0"
+            />
             <div>
               <div className="h-1.5 w-20 rounded-full bg-neutral-800/80" />
               <div className="h-1.5 w-14 rounded-full bg-neutral-200 mt-1.5" />
@@ -131,6 +147,16 @@ export default function LoginPage() {
             <div className="absolute top-0 inset-x-6 h-px bg-gradient-to-r from-transparent via-[#E05A38]/20 to-transparent" aria-hidden="true" />
 
             <div className="text-center mb-7">
+              <div className="inline-flex items-center justify-center mb-4">
+                <Image
+                  src="/logo/Moryn-1-1-Light-Transparent.webp"
+                  alt="Moryn Logo"
+                  width={48}
+                  height={48}
+                  className="w-12 h-12 object-contain"
+                  priority
+                />
+              </div>
               <h1 className="text-[22px] sm:text-2xl font-bold tracking-tight text-neutral-900">
                 Welcome to Moryn
               </h1>
@@ -199,7 +225,15 @@ export default function LoginPage() {
 
       <footer className="border-t border-neutral-200/60 bg-white/60 backdrop-blur-sm">
         <div className="max-w-[1240px] mx-auto px-6 sm:px-8 h-[56px] flex items-center justify-between gap-6">
-          <span className="text-[15px] font-bold tracking-tight text-neutral-900">Moryn</span>
+          <Link href="/" className="inline-flex items-center hover:opacity-85 transition-opacity">
+            <Image
+              src="/logo/Moryn-Light-Mode.webp"
+              alt="Moryn"
+              width={800}
+              height={200}
+              className="h-7 sm:h-8 w-auto object-contain"
+            />
+          </Link>
           <nav className="hidden sm:flex items-center gap-5 text-[11px] font-semibold tracking-widest uppercase text-neutral-400">
             <Link href="#" className="hover:text-neutral-700 transition">
               Privacy

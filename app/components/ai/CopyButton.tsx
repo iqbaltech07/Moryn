@@ -29,10 +29,10 @@ export const CopyButton: React.FC<CopyButtonProps> = ({ content, className = "",
       onClick={handleCopy}
       aria-label={copied ? "Copied to clipboard" : "Copy to clipboard"}
       title={copied ? "Copied!" : "Copy code"}
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-all duration-150 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 ${
+      className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-md transition-all duration-150 focus:outline-none ${
         copied
-          ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
-          : "bg-slate-800/60 hover:bg-slate-700/60 text-slate-400 hover:text-slate-200 border border-slate-700/50"
+          ? "bg-emerald-500/15 text-emerald-600 border border-emerald-500/30"
+          : "bg-white/90 hover:bg-white text-zinc-600 hover:text-zinc-900 border border-zinc-200/90 shadow-xs"
       } ${className}`}
     >
       {copied ? (

@@ -1,81 +1,176 @@
 "use client";
 
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
-  GitBranch,
-  PenTool,
-  MessageSquareCode,
-  SquareKanban,
-  FileText,
-  Code2,
   Terminal,
+  Sparkles,
+  Bot,
+  Cpu,
   Workflow,
-  Globe,
-  Send,
+  Code2,
+  Check,
+  Copy,
+  Zap,
 } from "lucide-react";
 import { useState } from "react";
 
-interface ToolItem {
+interface AgentPlatform {
   id: string;
   name: string;
   category: string;
-  icon: typeof GitBranch;
+  protocol: string;
+  icon: typeof Terminal;
   color: string;
   bg: string;
 }
 
-const ROW_ONE: ToolItem[] = [
-  { id: "github", name: "GitHub", category: "Version Control", icon: GitBranch, color: "#24292f", bg: "#f0f2f5" },
-  { id: "figma", name: "Figma", category: "UI/UX Design", icon: PenTool, color: "#ea4c89", bg: "#fdf0f5" },
-  { id: "slack", name: "Slack", category: "Collaboration", icon: MessageSquareCode, color: "#4a154b", bg: "#f7f1f7" },
-  { id: "jira", name: "Jira", category: "Sprint Backlog", icon: SquareKanban, color: "#0052cc", bg: "#edf4fe" },
-  { id: "notion", name: "Notion", category: "Docs & Specs", icon: FileText, color: "#141817", bg: "#f5f3ef" },
+const ROW_ONE: AgentPlatform[] = [
+  {
+    id: "cursor",
+    name: "Cursor",
+    category: "AI Coding Agent",
+    protocol: ".cursorrules & Agent Skills",
+    icon: Terminal,
+    color: "#e85d3f",
+    bg: "#fef3f0",
+  },
+  {
+    id: "windsurf",
+    name: "Windsurf",
+    category: "Cascade AI Agent",
+    protocol: "Global & Workspace Rules",
+    icon: Sparkles,
+    color: "#0d9488",
+    bg: "#f0fdfa",
+  },
+  {
+    id: "claude-code",
+    name: "Claude Code",
+    category: "Anthropic CLI Agent",
+    protocol: "CLAUDE.md & Custom Skills",
+    icon: Bot,
+    color: "#d97706",
+    bg: "#fffbeb",
+  },
 ];
 
-const ROW_TWO: ToolItem[] = [
-  { id: "vscode", name: "VS Code", category: "IDE Sync", icon: Code2, color: "#007acc", bg: "#ebf5fb" },
-  { id: "cursor", name: "Cursor", category: "AI Coding Agent", icon: Terminal, color: "#e85d3f", bg: "#fef3f0" },
-  { id: "linear", name: "Linear", category: "Issue Engine", icon: Workflow, color: "#5e6ad2", bg: "#f1f2fc" },
-  { id: "vercel", name: "Vercel", category: "Cloud Deploy", icon: Globe, color: "#000000", bg: "#f4f4f4" },
-  { id: "postman", name: "Postman", category: "API Testing", icon: Send, color: "#ff6c37", bg: "#fff3ee" },
+const ROW_TWO: AgentPlatform[] = [
+  {
+    id: "antigravity",
+    name: "Google Antigravity",
+    category: "AGY Coding Agent",
+    protocol: ".agents/skills & AGENTS.md",
+    icon: Cpu,
+    color: "#4f46e5",
+    bg: "#eef2ff",
+  },
+  {
+    id: "cline",
+    name: "Cline / Roo Code",
+    category: "Autonomous Agent",
+    protocol: "Autonomous Task Execution",
+    icon: Workflow,
+    color: "#2563eb",
+    bg: "#eff6ff",
+  },
+  {
+    id: "copilot",
+    name: "GitHub Copilot",
+    category: "Agent Mode Workspace",
+    protocol: "Copilot Instructions Sync",
+    icon: Code2,
+    color: "#24292f",
+    bg: "#f6f8fa",
+  },
 ];
 
 export default function IntegrationsSection() {
-  const [hoveredTool, setHoveredTool] = useState<string | null>(null);
+  const [hoveredAgent, setHoveredAgent] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCommand = () => {
+    navigator.clipboard.writeText("npx moryn init");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <section id="integrations" className="py-24 px-4 md:px-8 bg-[#fcfbf8] relative overflow-hidden">
       <div className="max-w-[1140px] mx-auto text-center">
-        
+
         {/* Section Header */}
-        <div className="max-w-[720px] mx-auto mb-16">
+        <div className="max-w-[760px] mx-auto mb-10">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#f5f2ea] border border-[#141817]/6 text-[11px] font-mono font-semibold uppercase tracking-wider text-[#e85d3f] mb-4">
-            Integrations
+            <Zap size={12} className="text-[#e85d3f]" />
+            Moryn NPM & AI Agent Ecosystem
           </div>
           <h2 className="font-serif text-[34px] sm:text-[44px] md:text-[50px] font-bold text-[#141817] tracking-[-0.025em] leading-[1.12] mb-4">
-            Connect integrations <br className="hidden sm:inline" />
-            you use every day
+            Connect your AI Coding Agents <br className="hidden sm:inline" />
+            via Moryn NPM
           </h2>
           <p className="text-base sm:text-lg text-[#57575c] leading-relaxed">
-            Moryn acts as the central intelligence layer, seamlessly connecting requirements and architectures across your development toolchain.
+            Run a single command in your local workspace. Moryn automatically injects PRD architectures, anti-slop design guidelines, and live Kanban synchronization directly into your AI coding agents.
           </p>
+        </div>
+
+        {/* Quick CLI Command Pill */}
+        <div className="flex justify-center mb-14">
+          <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white border border-[#141817]/10 shadow-[0_4px_20px_rgba(20,24,23,0.06)] transition hover:border-[#e85d3f]/40">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded bg-[#e85d3f]/10 border border-[#e85d3f]/20 text-[#e85d3f] font-mono text-xs font-bold">
+              npm
+            </div>
+            <code className="font-mono text-xs sm:text-sm font-bold text-[#141817] tracking-tight">
+              npx moryn init
+            </code>
+            <button
+              onClick={handleCopyCommand}
+              className="ml-2 flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#f5f2ea] hover:bg-[#ebe7dc] text-[#141817] text-xs font-medium transition cursor-pointer border border-[#141817]/6 active:scale-95"
+              title="Copy command to clipboard"
+            >
+              {copied ? (
+                <>
+                  <Check size={12} className="text-emerald-600" />
+                  <span className="text-[11px] font-mono font-semibold text-emerald-600">Copied!</span>
+                </>
+              ) : (
+                <>
+                  <Copy size={12} className="text-[#737b78]" />
+                  <span className="text-[11px] font-mono text-[#57575c]">Copy</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* ── Interconnected Architecture Network ── */}
         <div className="relative flex flex-col items-center">
-          
-          {/* Central Root Moryn Node */}
+
+          {/* Central Root Moryn NPM Node */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
             viewport={{ once: true }}
-            className="relative z-20 p-3 rounded-2xl bg-white border border-[#141817]/10 shadow-[0_4px_24px_rgba(20,24,23,0.08)] mb-2"
+            className="relative z-20 flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-white border border-[#141817]/12 shadow-[0_6px_24px_rgba(20,24,23,0.09)] mb-2"
           >
-            <div className="grid grid-cols-2 gap-1 w-8 h-8">
-              <div className="rounded-[4px] bg-[#e85d3f]" />
-              <div className="rounded-[4px] bg-[#f59e0b]" />
-              <div className="rounded-[4px] bg-[#0d9488]" />
-              <div className="rounded-[4px] bg-[#3b82f6]" />
+            <Image
+              src="/logo/Moryn-1-1-Light-Transparent.webp"
+              alt="Moryn Logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 object-contain shrink-0"
+              priority
+            />
+            <div className="text-left">
+              <div className="font-mono font-bold text-xs text-[#141817] tracking-tight flex items-center gap-1.5">
+                <span>npx moryn</span>
+                <span className="text-[9px] font-semibold uppercase px-1.5 py-0.2 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  CLI Hub
+                </span>
+              </div>
+              <div className="text-[10px] text-[#737b78] font-mono">
+                Auto-Skill & Kanban Injection
+              </div>
             </div>
           </motion.div>
 
@@ -83,35 +178,33 @@ export default function IntegrationsSection() {
           <div className="w-[1.5px] h-8 bg-gradient-to-b from-[#141817]/20 to-[#d9ddd9] z-10" />
 
           {/* ── Desktop & Tablet Interconnected Node Mesh ── */}
-          <div className="relative w-full max-w-[960px] pt-4 pb-2">
-            
+          <div className="relative w-full max-w-[860px] pt-4 pb-2">
+
             {/* SVG Connector Bus Grid (Desktop) */}
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none hidden md:block"
               preserveAspectRatio="none"
-              viewBox="0 0 960 380"
+              viewBox="0 0 860 380"
               fill="none"
             >
               {/* Top Central Drop from Moryn */}
-              <line x1="480" y1="0" x2="480" y2="70" stroke="#d9ddd9" strokeWidth="1.5" strokeDasharray="3 3" />
+              <line x1="430" y1="0" x2="430" y2="70" stroke="#d9ddd9" strokeWidth="1.5" strokeDasharray="3 3" />
 
-              {/* Horizontal Bus connecting Row 1 (centers: x=96, 288, 480, 672, 864, y=70) */}
-              <line x1="96" y1="70" x2="864" y2="70" stroke="#d9ddd9" strokeWidth="1.5" />
+              {/* Horizontal Bus connecting Row 1 (centers: x=143, 430, 717, y=70) */}
+              <line x1="143" y1="70" x2="717" y2="70" stroke="#d9ddd9" strokeWidth="1.5" />
 
-              {/* Vertical Droppers connecting Row 1 to Row 2 (y=70 to y=270) */}
-              <line x1="96" y1="70" x2="96" y2="270" stroke="#d9ddd9" strokeWidth="1.5" />
-              <line x1="288" y1="70" x2="288" y2="270" stroke="#d9ddd9" strokeWidth="1.5" />
-              <line x1="480" y1="70" x2="480" y2="270" stroke="#d9ddd9" strokeWidth="1.5" />
-              <line x1="672" y1="70" x2="672" y2="270" stroke="#d9ddd9" strokeWidth="1.5" />
-              <line x1="864" y1="70" x2="864" y2="270" stroke="#d9ddd9" strokeWidth="1.5" />
+              {/* Vertical Droppers connecting Row 1 to Row 2 (y=70 to y=265) */}
+              <line x1="143" y1="70" x2="143" y2="265" stroke="#d9ddd9" strokeWidth="1.5" />
+              <line x1="430" y1="70" x2="430" y2="265" stroke="#d9ddd9" strokeWidth="1.5" />
+              <line x1="717" y1="70" x2="717" y2="265" stroke="#d9ddd9" strokeWidth="1.5" />
 
-              {/* Horizontal Bus connecting Row 2 (centers: y=270) */}
-              <line x1="96" y1="270" x2="864" y2="270" stroke="#d9ddd9" strokeWidth="1.5" />
+              {/* Horizontal Bus connecting Row 2 (centers: y=265) */}
+              <line x1="143" y1="265" x2="717" y2="265" stroke="#d9ddd9" strokeWidth="1.5" />
 
               {/* Junction Dots at all intersections */}
               {[
-                { x: 96, y: 70 }, { x: 288, y: 70 }, { x: 480, y: 70 }, { x: 672, y: 70 }, { x: 864, y: 70 },
-                { x: 96, y: 270 }, { x: 288, y: 270 }, { x: 480, y: 270 }, { x: 672, y: 270 }, { x: 864, y: 270 },
+                { x: 143, y: 70 }, { x: 430, y: 70 }, { x: 717, y: 70 },
+                { x: 143, y: 265 }, { x: 430, y: 265 }, { x: 717, y: 265 },
               ].map((pt, i) => (
                 <g key={i}>
                   <circle cx={pt.x} cy={pt.y} r="3.5" fill="#fcfbf8" stroke="#e85d3f" strokeWidth="1.5" />
@@ -120,78 +213,86 @@ export default function IntegrationsSection() {
               ))}
             </svg>
 
-            {/* Row 1 Nodes (5 items) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 relative z-10 mb-8 md:mb-14">
-              {ROW_ONE.map((tool, idx) => {
-                const Icon = tool.icon;
-                const isHovered = hoveredTool === tool.id;
+            {/* Row 1 Nodes (3 AI Agent platforms) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-7 relative z-10 mb-8 md:mb-14">
+              {ROW_ONE.map((agent, idx) => {
+                const Icon = agent.icon;
+                const isHovered = hoveredAgent === agent.id;
                 return (
                   <motion.div
-                    key={tool.id}
+                    key={agent.id}
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: idx * 0.05 }}
-                    onMouseEnter={() => setHoveredTool(tool.id)}
-                    onMouseLeave={() => setHoveredTool(null)}
+                    transition={{ duration: 0.4, delay: idx * 0.08 }}
+                    onMouseEnter={() => setHoveredAgent(agent.id)}
+                    onMouseLeave={() => setHoveredAgent(null)}
                     whileHover={{ y: -4, scale: 1.02 }}
-                    className={`bg-white p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center text-center cursor-pointer shadow-xs ${
-                      isHovered
-                        ? "border-[#e85d3f] shadow-[0_8px_24px_rgba(232,93,63,0.14)]"
+                    className={`bg-white p-5 rounded-2xl border transition-all duration-200 flex flex-col items-center text-center cursor-pointer shadow-xs ${isHovered
+                        ? "border-[#e85d3f] shadow-[0_10px_28px_rgba(232,93,63,0.14)]"
                         : "border-[#141817]/8 hover:border-[#141817]/18 hover:shadow-md"
-                    }`}
+                      }`}
                   >
                     {/* Tool Icon */}
                     <div
-                      style={{ backgroundColor: tool.bg, color: tool.color }}
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-2.5 transition-transform duration-200 group-hover:scale-105 shadow-2xs"
+                      style={{ backgroundColor: agent.bg, color: agent.color }}
+                      className="w-13 h-13 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-105 shadow-2xs"
                     >
-                      <Icon size={22} strokeWidth={2.2} />
+                      <Icon size={24} strokeWidth={2.2} />
                     </div>
-                    <div className="font-semibold text-xs text-[#141817] mb-0.5">
-                      {tool.name}
+                    <div className="font-bold text-sm text-[#141817] mb-0.5">
+                      {agent.name}
                     </div>
-                    <div className="text-[10px] font-medium text-[#737b78] truncate w-full">
-                      {tool.category}
+                    <div className="text-[11px] font-medium text-[#737b78] mb-2.5">
+                      {agent.category}
+                    </div>
+                    <div className="w-full pt-2 border-t border-[#141817]/6 flex items-center justify-center">
+                      <span className="text-[10px] font-mono text-[#57575c] truncate px-2 py-0.5 rounded bg-[#fcfbf8] border border-[#141817]/6">
+                        {agent.protocol}
+                      </span>
                     </div>
                   </motion.div>
                 );
               })}
             </div>
 
-            {/* Row 2 Nodes (5 items) */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 relative z-10">
-              {ROW_TWO.map((tool, idx) => {
-                const Icon = tool.icon;
-                const isHovered = hoveredTool === tool.id;
+            {/* Row 2 Nodes (3 AI Agent platforms) */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-7 relative z-10">
+              {ROW_TWO.map((agent, idx) => {
+                const Icon = agent.icon;
+                const isHovered = hoveredAgent === agent.id;
                 return (
                   <motion.div
-                    key={tool.id}
+                    key={agent.id}
                     initial={{ opacity: 0, y: 16 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: 0.25 + idx * 0.05 }}
-                    onMouseEnter={() => setHoveredTool(tool.id)}
-                    onMouseLeave={() => setHoveredTool(null)}
+                    transition={{ duration: 0.4, delay: 0.2 + idx * 0.08 }}
+                    onMouseEnter={() => setHoveredAgent(agent.id)}
+                    onMouseLeave={() => setHoveredAgent(null)}
                     whileHover={{ y: -4, scale: 1.02 }}
-                    className={`bg-white p-4 rounded-2xl border transition-all duration-200 flex flex-col items-center text-center cursor-pointer shadow-xs ${
-                      isHovered
-                        ? "border-[#e85d3f] shadow-[0_8px_24px_rgba(232,93,63,0.14)]"
+                    className={`bg-white p-5 rounded-2xl border transition-all duration-200 flex flex-col items-center text-center cursor-pointer shadow-xs ${isHovered
+                        ? "border-[#e85d3f] shadow-[0_10px_28px_rgba(232,93,63,0.14)]"
                         : "border-[#141817]/8 hover:border-[#141817]/18 hover:shadow-md"
-                    }`}
+                      }`}
                   >
                     {/* Tool Icon */}
                     <div
-                      style={{ backgroundColor: tool.bg, color: tool.color }}
-                      className="w-12 h-12 rounded-xl flex items-center justify-center mb-2.5 transition-transform duration-200 group-hover:scale-105 shadow-2xs"
+                      style={{ backgroundColor: agent.bg, color: agent.color }}
+                      className="w-13 h-13 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-105 shadow-2xs"
                     >
-                      <Icon size={22} strokeWidth={2.2} />
+                      <Icon size={24} strokeWidth={2.2} />
                     </div>
-                    <div className="font-semibold text-xs text-[#141817] mb-0.5">
-                      {tool.name}
+                    <div className="font-bold text-sm text-[#141817] mb-0.5">
+                      {agent.name}
                     </div>
-                    <div className="text-[10px] font-medium text-[#737b78] truncate w-full">
-                      {tool.category}
+                    <div className="text-[11px] font-medium text-[#737b78] mb-2.5">
+                      {agent.category}
+                    </div>
+                    <div className="w-full pt-2 border-t border-[#141817]/6 flex items-center justify-center">
+                      <span className="text-[10px] font-mono text-[#57575c] truncate px-2 py-0.5 rounded bg-[#fcfbf8] border border-[#141817]/6">
+                        {agent.protocol}
+                      </span>
                     </div>
                   </motion.div>
                 );
@@ -201,9 +302,11 @@ export default function IntegrationsSection() {
           </div>
 
           {/* Connection Status Indicator */}
-          <div className="mt-10 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#141817]/8 text-xs text-[#57575c] shadow-xs">
-            <span className="w-2 h-2 rounded-full bg-[#059669] animate-pulse" />
-            <span className="font-mono text-[11px]">10 Interconnected Toolchain Nodes</span>
+          <div className="mt-12 inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-[#141817]/8 text-xs text-[#57575c] shadow-xs">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="font-mono text-[11px] font-medium">
+              Connected via <span className="text-[#141817] font-semibold">npx moryn init</span> • Automated Skill Injection & Live Kanban Sync
+            </span>
           </div>
 
         </div>

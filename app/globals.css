@@ -4,23 +4,23 @@
    MORYN DESIGN TOKENS — TAILWIND V4 @theme
    ========================================== */
 @theme inline {
-  --color-brand-ink: #141817;
+  --color-brand-ink: #18181b;
   --color-brand-orange: #e85d3f;
 
   --color-background: #fcfbf8;
   --color-surface: #f5f2ea;
   --color-surface-raised: #ffffff;
 
-  --color-foreground: #141817;
-  --color-foreground-secondary: #4d5552;
-  --color-foreground-muted: #737b78;
-  --color-foreground-subtle: #9ca3a0;
+  --color-foreground: #18181b;
+  --color-foreground-secondary: #3f3f46;
+  --color-foreground-muted: #71717a;
+  --color-foreground-subtle: #a1a1aa;
 
   --color-border: #d9ddd9;
   --color-border-subtle: #e8ebe8;
   --color-border-strong: #b9bfbc;
 
-  --color-primary: #141817;
+  --color-primary: #18181b;
   --color-primary-foreground: #fcfbf8;
 
   --color-accent: #e85d3f;
@@ -32,6 +32,11 @@
   --color-warning: #b7791f;
   --color-error: #c63d3d;
   --color-info: #416b8d;
+
+  --font-sans: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
 }
 
 /* ==========================================
@@ -39,23 +44,23 @@
    ========================================== */
 :root {
   /* Core Brand & Semantic Colors */
-  --color-brand-ink: #141817;
+  --color-brand-ink: #18181b;
   --color-brand-orange: #e85d3f;
 
   --color-background: #fcfbf8;
   --color-surface: #f5f2ea;
   --color-surface-raised: #ffffff;
 
-  --color-foreground: #141817;
-  --color-foreground-secondary: #4d5552;
-  --color-foreground-muted: #737b78;
-  --color-foreground-subtle: #9ca3a0;
+  --color-foreground: #18181b;
+  --color-foreground-secondary: #3f3f46;
+  --color-foreground-muted: #71717a;
+  --color-foreground-subtle: #a1a1aa;
 
   --color-border: #d9ddd9;
   --color-border-subtle: #e8ebe8;
   --color-border-strong: #b9bfbc;
 
-  --color-primary: #141817;
+  --color-primary: #18181b;
   --color-primary-foreground: #fcfbf8;
 
   --color-accent: #e85d3f;
@@ -90,14 +95,15 @@
   --border-hairline: var(--color-border-subtle);
   --border-subtle: var(--color-border);
   --border-strong: var(--color-border-strong);
+  --border-zinc-soft: #e4e4e7;
 
   /* Grid line color for drafting background */
   --grid-line: rgba(20, 24, 23, 0.06);
 
-  /* Typography */
-  --font-display: var(--font-fraunces), "Georgia", serif;
-  --font-body: var(--font-ibm-plex-sans), "Arial", sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), "Courier New", monospace;
+  /* Typography — Smooth, friendly modern neo-grotesque & rounded monospace */
+  --font-display: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "Courier New", monospace;
 
   /* Border radius */
   --radius-xs: 2px;
@@ -270,31 +276,48 @@ body {
   font-family: var(--font-body);
 }
 
-.markdown-preview h1 {
-  font-family: var(--font-display);
+.markdown-preview h1,
+.prd-content h1 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
   font-size: 1.75rem;
   font-weight: 700;
+  letter-spacing: -0.025em;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-hairline);
   color: var(--color-foreground);
 }
 
-.markdown-preview h2 {
-  font-family: var(--font-display);
+.markdown-preview h2,
+.prd-content h2 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
   font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
   margin-top: 1.75rem;
   margin-bottom: 0.5rem;
   color: var(--color-accent);
 }
 
-.markdown-preview h3 {
+.markdown-preview h3,
+.prd-content h3 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
   font-size: 1.05rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin-top: 1.25rem;
   margin-bottom: 0.4rem;
   color: var(--color-foreground);
+}
+
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6,
+.prd-content h4,
+.prd-content h5,
+.prd-content h6 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
+  font-weight: 600;
 }
 
 .markdown-preview p {
@@ -447,7 +470,7 @@ button { font-family: inherit; }
 
 /* Base toast styling — all variants */
 [data-sonner-toaster] [data-sonner-toast] {
-  font-family: var(--font-body, var(--font-ibm-plex-sans), Arial, sans-serif) !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), Arial, sans-serif) !important;
   font-size: 13px !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 16px rgba(20, 24, 23, 0.08), 0 1px 4px rgba(20, 24, 23, 0.04) !important;
@@ -479,5 +502,451 @@ button { font-family: inherit; }
 [data-sonner-toaster] [data-sonner-toast] [data-close-button] {
   background: inherit !important;
   color: var(--color-foreground-muted, #737b78) !important;
+}
+
+/* ==============================
+   MERMAID DIAGRAM THEME & TEXT CONTRAST FIX
+   ============================== */
+.mermaid-diagram-viewer,
+.mermaid,
+[data-mermaid-viewer] {
+  color: #ffffff !important;
+  background-color: #1a1c23;
+}
+
+.mermaid-diagram-viewer svg,
+.mermaid svg,
+[data-mermaid-viewer] svg {
+  color: #ffffff !important;
+}
+
+/* Ensure all text inside SVG has crisp pure white color */
+.mermaid svg text,
+.mermaid svg tspan,
+.mermaid svg text *,
+.mermaid-diagram-viewer svg text,
+.mermaid-diagram-viewer svg tspan,
+.mermaid-diagram-viewer svg text *,
+[data-mermaid-viewer] svg text,
+[data-mermaid-viewer] svg tspan,
+[data-mermaid-viewer] svg text * {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  stroke: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+}
+
+/* Force HTML elements inside foreignObject to be crisp pure white */
+.mermaid svg foreignObject,
+.mermaid-diagram-viewer svg foreignObject,
+[data-mermaid-viewer] svg foreignObject {
+  overflow: visible !important;
+  color: #ffffff !important;
+}
+
+.mermaid svg foreignObject div,
+.mermaid svg foreignObject span,
+.mermaid svg foreignObject p,
+.mermaid svg .nodeLabel,
+.mermaid svg .label,
+.mermaid svg .edgeLabel,
+.mermaid-diagram-viewer svg foreignObject div,
+.mermaid-diagram-viewer svg foreignObject span,
+.mermaid-diagram-viewer svg foreignObject p,
+.mermaid-diagram-viewer svg .nodeLabel,
+.mermaid-diagram-viewer svg .label,
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg foreignObject div,
+[data-mermaid-viewer] svg foreignObject span,
+[data-mermaid-viewer] svg foreignObject p,
+[data-mermaid-viewer] svg .nodeLabel,
+[data-mermaid-viewer] svg .label,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+}
+
+/* Node shapes (rect, polygon, circle) styling for contrast */
+.mermaid-diagram-viewer svg .node rect,
+.mermaid-diagram-viewer svg .node circle,
+.mermaid-diagram-viewer svg .node ellipse,
+.mermaid-diagram-viewer svg .node polygon,
+.mermaid-diagram-viewer svg .node path,
+[data-mermaid-viewer] svg .node rect,
+[data-mermaid-viewer] svg .node circle,
+[data-mermaid-viewer] svg .node ellipse,
+[data-mermaid-viewer] svg .node polygon,
+[data-mermaid-viewer] svg .node path {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Hover effect on nodes */
+.mermaid-diagram-viewer svg .node:hover rect,
+.mermaid-diagram-viewer svg .node:hover polygon,
+.mermaid-diagram-viewer svg .node:hover circle,
+[data-mermaid-viewer] svg .node:hover rect,
+[data-mermaid-viewer] svg .node:hover polygon,
+[data-mermaid-viewer] svg .node:hover circle {
+  fill: #2c3240 !important;
+  stroke: #818cf8 !important;
+}
+
+/* Edge labels (arrows text) */
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #e2e8f0 !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel foreignObject div,
+.mermaid-diagram-viewer svg .edgeLabel foreignObject span,
+.mermaid-diagram-viewer svg .edgeLabel span,
+[data-mermaid-viewer] svg .edgeLabel foreignObject div,
+[data-mermaid-viewer] svg .edgeLabel foreignObject span,
+[data-mermaid-viewer] svg .edgeLabel span {
+  color: #e2e8f0 !important;
+  background: #1e222b !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel rect,
+[data-mermaid-viewer] svg .edgeLabel rect {
+  fill: #1e222b !important;
+  stroke: rgba(255, 255, 255, 0.08) !important;
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Lines & Arrows */
+.mermaid-diagram-viewer svg .flowchart-link,
+.mermaid-diagram-viewer svg path.flowchart-link,
+.mermaid-diagram-viewer svg .edge-thickness-normal,
+.mermaid-diagram-viewer svg path.link,
+[data-mermaid-viewer] svg .flowchart-link,
+[data-mermaid-viewer] svg path.flowchart-link,
+[data-mermaid-viewer] svg .edge-thickness-normal,
+[data-mermaid-viewer] svg path.link {
+  stroke: #94a3b8 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg marker path,
+[data-mermaid-viewer] svg marker path {
+  fill: #94a3b8 !important;
+  stroke: #94a3b8 !important;
+}
+
+/* Clusters / Subgraphs */
+.mermaid-diagram-viewer svg .cluster rect,
+[data-mermaid-viewer] svg .cluster rect {
+  fill: rgba(20, 23, 31, 0.7) !important;
+  stroke: #3b4252 !important;
+  stroke-dasharray: 4 4 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg .cluster span,
+.mermaid-diagram-viewer svg .cluster .nodeLabel,
+[data-mermaid-viewer] svg .cluster span,
+[data-mermaid-viewer] svg .cluster .nodeLabel {
+  color: #e2e8f0 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+/* Entity Relationship (erDiagram) */
+.mermaid-diagram-viewer svg .er.entityBox,
+[data-mermaid-viewer] svg .er.entityBox {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+}
+
+.mermaid-diagram-viewer svg .er.entityLabel,
+[data-mermaid-viewer] svg .er.entityLabel {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxOdd,
+[data-mermaid-viewer] svg .er.attributeBoxOdd {
+  fill: #1a1d26 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxEven,
+[data-mermaid-viewer] svg .er.attributeBoxEven {
+  fill: #222632 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.relationshipLine,
+[data-mermaid-viewer] svg .er.relationshipLine {
+  stroke: #94a3b8 !important;
+}
+
+/* ==========================================
+   AI CHAT MARKDOWN TYPOGRAPHY — HITAM ZINC
+   ========================================== */
+.ai-markdown-content {
+  color: #18181b !important;
+}
+
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3,
+.ai-markdown-content h4,
+.ai-markdown-content h5,
+.ai-markdown-content h6 {
+  color: #18181b !important;
+}
+
+.ai-markdown-content p {
+  color: #27272a !important;
+}
+/* Ensure all text inside SVG has crisp pure white color */
+.mermaid svg text,
+.mermaid svg tspan,
+.mermaid svg text *,
+.mermaid-diagram-viewer svg text,
+.mermaid-diagram-viewer svg tspan,
+.mermaid-diagram-viewer svg text *,
+[data-mermaid-viewer] svg text,
+[data-mermaid-viewer] svg tspan,
+[data-mermaid-viewer] svg text * {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  stroke: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+}
+
+/* Force HTML elements inside foreignObject to be crisp pure white */
+.mermaid svg foreignObject,
+.mermaid-diagram-viewer svg foreignObject,
+[data-mermaid-viewer] svg foreignObject {
+  overflow: visible !important;
+  color: #ffffff !important;
+}
+
+.mermaid svg foreignObject div,
+.mermaid svg foreignObject span,
+.mermaid svg foreignObject p,
+.mermaid svg .nodeLabel,
+.mermaid svg .label,
+.mermaid svg .edgeLabel,
+.mermaid-diagram-viewer svg foreignObject div,
+.mermaid-diagram-viewer svg foreignObject span,
+.mermaid-diagram-viewer svg foreignObject p,
+.mermaid-diagram-viewer svg .nodeLabel,
+.mermaid-diagram-viewer svg .label,
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg foreignObject div,
+[data-mermaid-viewer] svg foreignObject span,
+[data-mermaid-viewer] svg foreignObject p,
+[data-mermaid-viewer] svg .nodeLabel,
+[data-mermaid-viewer] svg .label,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+}
+
+/* Node shapes (rect, polygon, circle) styling for contrast */
+.mermaid-diagram-viewer svg .node rect,
+.mermaid-diagram-viewer svg .node circle,
+.mermaid-diagram-viewer svg .node ellipse,
+.mermaid-diagram-viewer svg .node polygon,
+.mermaid-diagram-viewer svg .node path,
+[data-mermaid-viewer] svg .node rect,
+[data-mermaid-viewer] svg .node circle,
+[data-mermaid-viewer] svg .node ellipse,
+[data-mermaid-viewer] svg .node polygon,
+[data-mermaid-viewer] svg .node path {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Hover effect on nodes */
+.mermaid-diagram-viewer svg .node:hover rect,
+.mermaid-diagram-viewer svg .node:hover polygon,
+.mermaid-diagram-viewer svg .node:hover circle,
+[data-mermaid-viewer] svg .node:hover rect,
+[data-mermaid-viewer] svg .node:hover polygon,
+[data-mermaid-viewer] svg .node:hover circle {
+  fill: #2c3240 !important;
+  stroke: #818cf8 !important;
+}
+
+/* Edge labels (arrows text) */
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #e2e8f0 !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel foreignObject div,
+.mermaid-diagram-viewer svg .edgeLabel foreignObject span,
+.mermaid-diagram-viewer svg .edgeLabel span,
+[data-mermaid-viewer] svg .edgeLabel foreignObject div,
+[data-mermaid-viewer] svg .edgeLabel foreignObject span,
+[data-mermaid-viewer] svg .edgeLabel span {
+  color: #e2e8f0 !important;
+  background: #1e222b !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel rect,
+[data-mermaid-viewer] svg .edgeLabel rect {
+  fill: #1e222b !important;
+  stroke: rgba(255, 255, 255, 0.08) !important;
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Lines & Arrows */
+.mermaid-diagram-viewer svg .flowchart-link,
+.mermaid-diagram-viewer svg path.flowchart-link,
+.mermaid-diagram-viewer svg .edge-thickness-normal,
+.mermaid-diagram-viewer svg path.link,
+[data-mermaid-viewer] svg .flowchart-link,
+[data-mermaid-viewer] svg path.flowchart-link,
+[data-mermaid-viewer] svg .edge-thickness-normal,
+[data-mermaid-viewer] svg path.link {
+  stroke: #94a3b8 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg marker path,
+[data-mermaid-viewer] svg marker path {
+  fill: #94a3b8 !important;
+  stroke: #94a3b8 !important;
+}
+
+/* Clusters / Subgraphs */
+.mermaid-diagram-viewer svg .cluster rect,
+[data-mermaid-viewer] svg .cluster rect {
+  fill: rgba(20, 23, 31, 0.7) !important;
+  stroke: #3b4252 !important;
+  stroke-dasharray: 4 4 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg .cluster span,
+.mermaid-diagram-viewer svg .cluster .nodeLabel,
+[data-mermaid-viewer] svg .cluster span,
+[data-mermaid-viewer] svg .cluster .nodeLabel {
+  color: #e2e8f0 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+/* Entity Relationship (erDiagram) */
+.mermaid-diagram-viewer svg .er.entityBox,
+[data-mermaid-viewer] svg .er.entityBox {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+}
+
+.mermaid-diagram-viewer svg .er.entityLabel,
+[data-mermaid-viewer] svg .er.entityLabel {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxOdd,
+[data-mermaid-viewer] svg .er.attributeBoxOdd {
+  fill: #1a1d26 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxEven,
+[data-mermaid-viewer] svg .er.attributeBoxEven {
+  fill: #222632 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.relationshipLine,
+[data-mermaid-viewer] svg .er.relationshipLine {
+  stroke: #94a3b8 !important;
+}
+
+/* ==========================================
+   AI CHAT MARKDOWN TYPOGRAPHY — HITAM ZINC
+   ========================================== */
+.ai-markdown-content {
+  color: #18181b !important;
+}
+
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3,
+.ai-markdown-content h4,
+.ai-markdown-content h5,
+.ai-markdown-content h6 {
+  color: #18181b !important;
+}
+
+.ai-markdown-content p {
+  color: #27272a !important;
+}
+
+.ai-markdown-content li {
+  color: #27272a !important;
+}
+
+.ai-markdown-content strong,
+.ai-markdown-content b {
+  color: #09090b !important;
+  font-weight: 700;
+}
+
+.ai-markdown-content em,
+.ai-markdown-content i {
+  color: #18181b !important;
+  font-style: italic;
+  background: transparent !important;
+}
+
+.ai-markdown-content mark {
+  background: rgba(225, 91, 57, 0.15) !important;
+  color: #18181b !important;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 

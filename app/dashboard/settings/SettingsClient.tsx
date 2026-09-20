@@ -404,10 +404,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
           {/* Header */}
           <div className="mb-8">
             <h1 className="text-3xl sm:text-[34px] font-bold text-neutral-900 tracking-[-0.03em] leading-tight">
-              Settings & Integrations
+              {t.settings.title}
             </h1>
             <p className="text-base text-neutral-500 font-normal mt-1 leading-relaxed">
-              Manage your workspace credentials, personal API keys, and custom AI model failovers.
+              {t.settings.subtitle}
             </p>
           </div>
 
@@ -422,7 +422,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
               }`}
             >
               <Key size={16} />
-              <span>Workspace API Key</span>
+              <span>{t.settings.tabWorkspaceKey}</span>
             </button>
 
             <button
@@ -434,7 +434,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
               }`}
             >
               <Sparkles size={16} />
-              <span>Custom AI Keys</span>
+              <span>{t.settings.tabCustomKeys}</span>
             </button>
 
             <button
@@ -532,7 +532,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                     Run Moryn directly in your terminal or provide your key to the Antigravity IDE MCP server config:
                   </p>
                   <div className="bg-[#18181B] text-neutral-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
-                    <code>npx @iqbaltech/moryn sync --key {apiKey || "YOUR_MORYN_API_KEY"}</code>
+                    <code>npx moryn login --token {apiKey || "YOUR_MORYN_API_KEY"}</code>
                   </div>
                 </div>
               </div>

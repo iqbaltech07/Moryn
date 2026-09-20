@@ -50,7 +50,7 @@ function promptInput(query) {
     });
 }
 async function loginCommand(options) {
-    let token = options.token?.trim() || process.env.MORYN_API_KEY?.trim() || process.env.PIARDIFY_API_KEY?.trim();
+    let token = options.token?.trim() || options.key?.trim() || process.env.MORYN_API_KEY?.trim() || process.env.PIARDIFY_API_KEY?.trim();
     if (!token && !options.json && process.stdin.isTTY) {
         console.log("\n  Moryn CLI Login");
         console.log("  ==================");

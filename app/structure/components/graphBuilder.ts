@@ -136,10 +136,15 @@ export function buildGraph(
   const totalH = totalCategories * ROW_HEIGHT + Math.max(0, totalCategories - 1) * GAP_Y;
 
   // 1. Root Node
+  const rootY =
+    totalCategories % 2 === 1
+      ? ((totalCategories - 1) / 2) * (ROW_HEIGHT + GAP_Y)
+      : Math.max(0, (totalH - ROW_HEIGHT) / 2);
+
   nodes.push({
     id: "root",
     type: "root",
-    position: { x: ROOT_X, y: totalH / 2 - 40 },
+    position: { x: ROOT_X, y: rootY },
     data: {
       label: data.title || "App Blueprint",
       description: data.description,
@@ -227,6 +232,76 @@ export function buildGraph(
         });
       }
     }
+  });
+
+  return { nodes, edges };
+}
+
+export function buildSkeletonGraph(): { nodes: Node[]; edges: Edge[] } {
+  const nodes: Node[] = [];
+  const edges: Edge[] = [];
+
+  const ROOT_X = 40;
+  const CAT_X = 420;
+  const SUB_X = 760;
+
+  const ROW_HEIGHT = 180;
+  const GAP_Y = 48;
+
+  const totalCategories = 3;
+  const totalH = totalCategories * ROW_HEIGHT + Math.max(0, totalCategories - 1) * GAP_Y;
+
+  // Root Node
+  nodes.push({
+    id: "root-skeleton",
+    type: "root",
+    position: { x: ROOT_X, y: 1 * (ROW_HEIGHT + GAP_Y) },
+    data: {
+      isSkeleton: true,
+    },
+  });
+
+  // 3 Category & Subfeature pairs
+  [0, 1, 2].forEach((idx) => {
+    const catId = `cat-skeleton-${idx}`;
+    const subId = `sub-skeleton-${idx}`;
+    const posY = idx * (ROW_HEIGHT + GAP_Y);
+
+    nodes.push({
+      id: catId,
+      type: "category",
+      position: { x: CAT_X, y: posY },
+      data: {
+        isSkeleton: true,
+        index: idx,
+      },
+    });
+
+    edges.push({
+      id: `e-root-${catId}`,
+      source: "root-skeleton",
+      target: catId,
+      type: "colored",
+      style: { stroke: "var(--border-strong)", strokeWidth: 1.8, opacity: 0.6 },
+    });
+
+    nodes.push({
+      id: subId,
+      type: "subfeature",
+      position: { x: SUB_X, y: posY },
+      data: {
+        isSkeleton: true,
+        index: idx,
+      },
+    });
+
+    edges.push({
+      id: `e-${catId}-${subId}`,
+      source: catId,
+      target: subId,
+      type: "colored",
+      style: { stroke: "var(--border-strong)", strokeWidth: 1.8, opacity: 0.6 },
+    });
   });
 
   return { nodes, edges };

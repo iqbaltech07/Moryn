@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -8,6 +8,7 @@ import { FolderGit2, Lightbulb, Pencil, X, Check, Loader2, ChevronDown } from "l
 import { toast } from "sonner";
 import { apiClient } from "@/lib/utils/apiClient";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useTranslation } from "@/lib/i18n";
 
 interface ProjectInfo {
   id: string;
@@ -21,6 +22,7 @@ export default function ProjectHeaderBrand({
 }: {
   projectId: string | null;
 }) {
+  const { t } = useTranslation();
   const [project, setProject] = useState<ProjectInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -128,7 +130,7 @@ export default function ProjectHeaderBrand({
       );
       updateProjectLocally({ appName: finalName, appIdea: finalIdea });
       setIsEditingModalOpen(false);
-      toast.success("Project info updated successfully!");
+      toast.success(t.projectModal.savedSuccess);
 
       window.dispatchEvent(
         new CustomEvent("projectUpdated", {
@@ -136,7 +138,7 @@ export default function ProjectHeaderBrand({
         })
       );
     } catch {
-      toast.error("Connection error while updating project info");
+      toast.error(t.projectModal.saveError);
     } finally {
       setIsSaving(false);
     }
@@ -166,11 +168,12 @@ export default function ProjectHeaderBrand({
           <Image
             src="/logo/Moryn-Light-Mode.webp"
             alt="Moryn"
-            width={120}
-            height={32}
+            width={140}
+            height={44}
             priority
+            draggable={false}
             style={{
-              height: 24,
+              height: 32,
               width: "auto",
               objectFit: "contain",
               display: "block",
@@ -327,7 +330,7 @@ export default function ProjectHeaderBrand({
                   }}
                 >
                   <Pencil size={13} strokeWidth={2} />
-                  <span>Edit Project Details</span>
+                  <span>{t.projectModal.editDetails}</span>
                 </button>
               </div>
             )}
@@ -404,7 +407,7 @@ export default function ProjectHeaderBrand({
                         margin: 0,
                       }}
                     >
-                      Edit Project Information
+                      {t.projectModal.editInfo}
                     </h3>
                     <p
                       style={{
@@ -415,7 +418,7 @@ export default function ProjectHeaderBrand({
                         marginTop: 2,
                       }}
                     >
-                      Update project name & core idea description
+                      {t.projectModal.updateSubtitle}
                     </p>
                   </div>
                 </div>
@@ -456,13 +459,13 @@ export default function ProjectHeaderBrand({
                     }}
                   >
                     <FolderGit2 size={12} />
-                    Project / App Name
+                    {t.projectModal.nameLabel}
                   </label>
                   <input
                     type="text"
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
-                    placeholder="Enter Project Name (e.g. Moryn)"
+                    placeholder={t.projectModal.namePlaceholder}
                     required
                     autoFocus
                     style={{
@@ -497,12 +500,12 @@ export default function ProjectHeaderBrand({
                     }}
                   >
                     <Lightbulb size={12} />
-                    Project Idea Description
+                    {t.projectModal.ideaLabel}
                   </label>
                   <textarea
                     value={editIdea}
                     onChange={(e) => setEditIdea(e.target.value)}
-                    placeholder="Describe your project idea..."
+                    placeholder={t.projectModal.ideaPlaceholder}
                     rows={3}
                     style={{
                       width: "100%",
@@ -543,7 +546,7 @@ export default function ProjectHeaderBrand({
                       color: "var(--fg-secondary)",
                     }}
                   >
-                    Cancel
+                    {t.common.cancel}
                   </button>
                   <button
                     type="submit"
@@ -569,12 +572,12 @@ export default function ProjectHeaderBrand({
                     {isSaving ? (
                       <>
                         <Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} />
-                        Savingâ€¦
+                        {t.projectModal.saving}
                       </>
                     ) : (
                       <>
                         <Check size={13} strokeWidth={2.5} />
-                        Save Changes
+                        {t.projectModal.saveChanges}
                       </>
                     )}
                   </button>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -8,7 +8,14 @@ import { ArrowRight } from "lucide-react";
 import { McpConnectModal } from "../components/modals";
 import { ProjectDetailSkeleton } from "../components/shared";
 import { ProjectDetailData } from "./types";
-import { parseMarkdownSections, parseColorTokens } from "./utils/parser";
+import {
+  parseMarkdownSections,
+  parseColorTokens,
+  parseOrSynthesizeDesignData,
+  DEFAULT_COLOR_TOKENS,
+  DEFAULT_ACCORDION_SECTIONS,
+} from "./utils/parser";
+import type { PaletteInfo } from "./utils/parser";
 import ProjectHeaderCard from "./components/ProjectHeaderCard";
 import ColorTokensTable from "./components/ColorTokensTable";
 import DesignAccordions from "./components/DesignAccordions";
@@ -16,6 +23,7 @@ import DesignDropzone from "./components/DesignDropzone";
 import { DESIGN_TEMPLATES_METADATA } from "@/lib/design/designTemplates";
 import { apiClient } from "@/lib/utils/apiClient";
 import { useProjectStore } from "@/stores/useProjectStore";
+import { useTranslation } from "@/lib/i18n";
 
 export { DEFAULT_COLOR_TOKENS, DEFAULT_ACCORDION_SECTIONS } from "./utils/parser";
 export type { ProjectDetailData, ColorToken } from "./types";
@@ -23,9 +31,14 @@ export type { ProjectDetailData, ColorToken } from "./types";
 function ProjectDetailContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
+  const { t } = useTranslation();
 
   const { project, isLoading, error, fetchProject, setProject } = useProjectStore();
-  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({ dos_and_donts: true, overview: true });
+  const [openAccordions, setOpenAccordions] = useState<Record<string, boolean>>({
+    "aesthetic-direction": true,
+    overview: true,
+    dos_and_donts: true,
+  });
   const [showMcpModal, setShowMcpModal] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -107,26 +120,23 @@ function ProjectDetailContent() {
     }
   }, [project?.formInputs]);
 
-  const rawDesignData = useMemo(() => {
-    const raw = project?.designData || "";
-    if (raw.startsWith("{") && raw.includes("rawMarkdown")) {
-      try {
-        return JSON.parse(raw).rawMarkdown || raw;
-      } catch {
-        return raw;
-      }
-    }
-    return raw;
-  }, [project?.designData]);
+  // Resilient parsing: synthesizes tokens & sections if DB designData is palette JSON or empty
+  const synthesized = useMemo(() => {
+    return parseOrSynthesizeDesignData(
+      project?.designData || "",
+      project?.appName || "Stratum AI",
+      project?.appIdea || ""
+    );
+  }, [project?.designData, project?.appName, project?.appIdea]);
 
-  const sections = useMemo(() => parseMarkdownSections(rawDesignData), [rawDesignData]);
-  const colorTokens = useMemo(() => parseColorTokens(rawDesignData), [rawDesignData]);
-  const hasDesignData = useMemo(() => !!(rawDesignData && rawDesignData.trim()), [rawDesignData]);
+  const { sections, colorTokens, paletteInfo } = synthesized;
+  const hasDesignData = useMemo(() => {
+    return !!(project?.appName || project?.designData);
+  }, [project?.appName, project?.designData]);
 
   const btn: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    padding: "6px 14px",
     padding: "6px 12px",
     borderRadius: "var(--radius-md)",
     fontFamily: "var(--font-body)",
@@ -187,14 +197,14 @@ function ProjectDetailContent() {
               transition: "opacity 0.15s, transform 0.1s",
             }}
           >
-            <span>Next Step</span>
+            <span>{t.design.nextStep}</span>
             <ArrowRight size={14} strokeWidth={2.2} />
           </Link>
         </div>
       </header>
 
-      {/* â”€â”€ Main Content â”€â”€ */}
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+      {/* ── Main Content ── */}
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "88px 24px 48px" }}>
         {isLoading ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
             <div style={{ background: "var(--bg-surface)", padding: 28, borderRadius: "var(--radius-lg)", border: "1px solid var(--border-hairline)" }}>
@@ -245,6 +255,7 @@ function ProjectDetailContent() {
                   formInputs={formInputs}
                   isUploading={isUploading}
                   onFileUpload={handleFileUpload}
+                  paletteInfo={paletteInfo}
                 />
                 <ColorTokensTable colorTokens={colorTokens} />
                 <DesignAccordions

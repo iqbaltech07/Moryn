@@ -1,11 +1,13 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Loader2, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   ReactFlow,
+  ReactFlowProvider,
+  useReactFlow,
   Background,
   Controls,
   useNodesState,
@@ -21,14 +23,14 @@ import { useProjectStore } from "@/stores/useProjectStore";
 import "@xyflow/react/dist/style.css";
 import StepNavbar from "../components/layout/StepNavbar";
 import ProjectHeaderBrand from "../components/layout/ProjectHeaderBrand";
-import { StructureSkeleton } from "../components/shared";
+import { useTranslation } from "@/lib/i18n";
 
 import { RootNode } from "./components/RootNode";
 import { CategoryNode } from "./components/CategoryNode";
 import { SubFeatureGroupNode } from "./components/SubFeatureGroupNode";
 import { TasksGroupNode } from "./components/TasksGroupNode";
 import { ColoredEdge } from "./components/ColoredEdge";
-import { buildGraph } from "./components/graphBuilder";
+import { buildGraph, buildSkeletonGraph } from "./components/graphBuilder";
 import type { StrukturData, StrukturNode, StrukturChild, TaskItem } from "./components/types";
 
 const nodeTypes = {
@@ -43,6 +45,8 @@ function StrukturPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
+  const { fitView } = useReactFlow();
+  const { t } = useTranslation();
 
   const [rawData, setRawData] = useState<StrukturData | null>(null);
   const [tasksList, setTasksList] = useState<TaskItem[]>([]);
@@ -52,8 +56,8 @@ function StrukturPageContent() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>(buildSkeletonGraph().nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(buildSkeletonGraph().edges);
 
   const rawDataRef = useRef<StrukturData | null>(null);
   rawDataRef.current = rawData;
@@ -256,6 +260,11 @@ function StrukturPageContent() {
         const { nodes: n, edges: e } = buildGraph(json, allTasksList);
         setNodes(n);
         setEdges(e);
+
+        // Smoothly adjust viewport to frame newly loaded architecture
+        setTimeout(() => {
+          fitView({ duration: 800, padding: 0.18 });
+        }, 120);
       } catch {
         setError("Failed to connect to the server.");
       } finally {
@@ -351,7 +360,7 @@ function StrukturPageContent() {
     if (!projectId) return;
     const rootNode = nodes.find((n) => n.type === "root");
     if (!rootNode) {
-      toast.error("Root node is missing!");
+      toast.error(t.structure.rootMissing);
       return;
     }
     const categoryNodes = nodes.filter((n) => n.type === "category");
@@ -390,9 +399,9 @@ function StrukturPageContent() {
         }));
       });
       setIsEditing(false);
-      toast.success("Structure saved!");
+      toast.success(t.structure.savedSuccess);
     } catch {
-      toast.error("Failed to save structure.");
+      toast.error(t.structure.saveError);
     } finally {
       setIsSaving(false);
     }
@@ -449,14 +458,14 @@ function StrukturPageContent() {
                 onClick={() => toggleEditMode(false)}
                 style={{ ...btn, color: "#f87171", borderColor: "rgba(248,113,113,0.35)", background: "rgba(248,113,113,0.08)" }}
               >
-                Cancel
+                {t.structure.cancel}
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
                 style={{ ...btn, color: "var(--color-circuit)", borderColor: "rgba(79,209,197,0.35)", background: "rgba(79,209,197,0.08)" }}
               >
-                {isSaving ? "Savingâ€¦" : "Save & Render"}
+                {isSaving ? t.structure.saving : t.structure.saveAndRender}
               </button>
             </>
           ) : (
@@ -465,7 +474,7 @@ function StrukturPageContent() {
               disabled={isLoading || !rawData}
               style={{ ...btn, color: "var(--color-mist)", opacity: isLoading || !rawData ? 0.4 : 1 }}
             >
-              Edit Mode
+              {t.structure.editMode}
             </button>
           )}
           <button
@@ -489,7 +498,7 @@ function StrukturPageContent() {
               transition: "opacity 0.15s, transform 0.1s",
             }}
           >
-            <span>Next Step</span>
+            <span>{t.structure.nextStep}</span>
             <ArrowRight size={14} strokeWidth={2.2} />
           </button>
         </div>
@@ -497,47 +506,11 @@ function StrukturPageContent() {
 
       {/* â”€â”€ Canvas â”€â”€ */}
       <div style={{ flex: 1, position: "relative" }}>
-        {/* Loading overlay */}
-        {isLoading && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              zIndex: 10,
-              background: "var(--color-background)",
-            }}
-          >
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "var(--radius-lg, 8px)",
-                border: "1px solid var(--color-signal)",
-                background: "rgba(255,182,39,0.08)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                marginBottom: 18,
-                animation: "spin 0.8s linear infinite",
-              }}
-            >
-              <Loader2 size={22} style={{ color: "var(--color-signal)" }} strokeWidth={2} />
-            </div>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--fg-muted)" }}>
-              AI is analyzing architectureâ€¦
-            </p>
-          </div>
-        )}
-
         {/* Error overlay */}
         {error && !isLoading && (
           <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
             <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "#f87171", marginBottom: 16 }}>{error}</p>
-            <button onClick={() => { setHasStarted(false); setError(null); }} style={{ ...btn, color: "var(--fg-secondary)" }}>
+            <button onClick={() => { setHasStarted(false); setError(null); setNodes(buildSkeletonGraph().nodes); setEdges(buildSkeletonGraph().edges); }} style={{ ...btn, color: "var(--fg-secondary)" }}>
               Try Again
             </button>
           </div>
@@ -586,7 +559,7 @@ function StrukturPageContent() {
         )}
 
         {/* React Flow Canvas */}
-        {!isLoading && !error && (
+        {!error && (
           <ReactFlow
             nodes={nodes}
             edges={edges}
@@ -596,6 +569,7 @@ function StrukturPageContent() {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView
+            fitViewOptions={{ padding: 0.18, duration: 600 }}
             minZoom={0.2}
             nodesConnectable={isEditing}
             elementsSelectable={isEditing}
@@ -610,6 +584,13 @@ function StrukturPageContent() {
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes morynSkeletonPulse {
+          0%, 100% { opacity: 0.45; }
+          50% { opacity: 0.95; }
+        }
+        .moryn-skeleton-bar {
+          animation: morynSkeletonPulse 1.8s ease-in-out infinite;
+        }
         .react-flow__controls-button {
           background: var(--bg-elevated) !important;
           border-color: var(--border-hairline) !important;
@@ -630,8 +611,10 @@ function StrukturPageContent() {
 
 export default function StrukturPage() {
   return (
-    <Suspense fallback={<StructureSkeleton />}>
-      <StrukturPageContent />
+    <Suspense fallback={null}>
+      <ReactFlowProvider>
+        <StrukturPageContent />
+      </ReactFlowProvider>
     </Suspense>
   );
 }

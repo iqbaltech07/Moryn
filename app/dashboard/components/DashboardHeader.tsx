@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
-import { Search, Bell, Menu } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 interface DashboardHeaderProps {
   userName?: string | null;
@@ -21,6 +21,7 @@ export default function DashboardHeader({
 }: DashboardHeaderProps) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const { t } = useTranslation();
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchValue(e.target.value);
@@ -48,7 +49,7 @@ export default function DashboardHeader({
               type="text"
               value={searchValue}
               onChange={handleSearchChange}
-              placeholder="Search projects..."
+              placeholder={t.dashboard.searchProjects}
               autoFocus
               onBlur={() => {
                 if (!searchValue) setSearchOpen(false);
@@ -75,19 +76,12 @@ export default function DashboardHeader({
           </button>
         )}
 
-        <button
-          className="p-2 rounded-xl text-neutral-600 hover:text-neutral-900 hover:bg-white/80 transition-colors relative"
-          aria-label="Notifications"
-        >
-          <Bell size={18} strokeWidth={2} />
-          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#E05A38]" />
-        </button>
 
         <button
           onClick={onNewProject}
           className="ml-1 inline-flex h-9 items-center rounded-lg bg-[#1D211F] px-4 text-xs font-semibold text-white transition-colors hover:bg-[#343936] cursor-pointer"
         >
-          New Project
+          {t.nav.newProject}
         </button>
       </div>
     </header>

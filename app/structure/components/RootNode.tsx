@@ -1,7 +1,72 @@
-﻿import { Position, Handle } from "@xyflow/react";
+import { Position, Handle } from "@xyflow/react";
 import { FileText } from "lucide-react";
 
 export function RootNode({ id, data }: { id: string; data: any }) {
+  if (data.isSkeleton) {
+    return (
+      <>
+        <div
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px dashed var(--border-strong)",
+            borderRadius: 12,
+            padding: "16px 20px",
+            minWidth: 210,
+            maxWidth: 240,
+            boxShadow: "var(--shadow-card)",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              color: "var(--fg-muted)",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            PERENCANAAN
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <div
+              className="moryn-skeleton-bar"
+              style={{
+                width: "72%",
+                height: 7,
+                borderRadius: 4,
+                background: "var(--border-hairline)",
+              }}
+            />
+            <div
+              className="moryn-skeleton-bar"
+              style={{
+                width: "48%",
+                height: 7,
+                borderRadius: 4,
+                background: "var(--border-subtle)",
+              }}
+            />
+          </div>
+        </div>
+        <Handle
+          type="source"
+          position={Position.Right}
+          isConnectable={false}
+          style={{
+            background: "var(--border-strong)",
+            border: "2px solid var(--bg-elevated)",
+            width: 10,
+            height: 10,
+            right: -5,
+          }}
+        />
+      </>
+    );
+  }
+
   return (
     <>
       <div

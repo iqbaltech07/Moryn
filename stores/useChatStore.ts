@@ -29,6 +29,7 @@ interface ChatStore {
 
   setCurrentProjectId: (projectId: string) => void;
   addMessage: (msg: ChatMessage) => void;
+  removeActionsFromMessage: (messageId: string) => void;
   setIsAiEditing: (isEditing: boolean) => void;
   setSelectedModel: (model: string) => void;
   setAiPrompt: (prompt: string) => void;
@@ -59,6 +60,22 @@ export const useChatStore = create<ChatStore>()(
           const id = state.currentProjectId || "default";
           const currentList = state.projectChats[id] || [];
           const updatedList = [...currentList, msg];
+          return {
+            chatMessages: updatedList,
+            projectChats: {
+              ...state.projectChats,
+              [id]: updatedList,
+            },
+          };
+        }),
+
+      removeActionsFromMessage: (messageId: string) =>
+        set((state) => {
+          const id = state.currentProjectId || "default";
+          const currentList = state.projectChats[id] || [];
+          const updatedList = currentList.map((msg) =>
+            msg.id === messageId ? { ...msg, actions: undefined } : msg
+          );
           return {
             chatMessages: updatedList,
             projectChats: {

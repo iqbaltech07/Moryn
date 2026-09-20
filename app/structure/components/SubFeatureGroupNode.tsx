@@ -1,9 +1,94 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { Position, Handle } from "@xyflow/react";
 import { LayoutGrid, ChevronRight } from "lucide-react";
 import type { StrukturChild } from "./types";
 
 export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
+  if (data.isSkeleton) {
+    return (
+      <>
+        <Handle
+          type="target"
+          position={Position.Left}
+          isConnectable={false}
+          style={{
+            background: "var(--border-strong)",
+            border: "2px solid var(--bg-elevated)",
+            width: 8,
+            height: 8,
+            left: -4,
+          }}
+        />
+        <div
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px dashed var(--border-strong)",
+            borderRadius: 12,
+            padding: "14px 16px",
+            minWidth: 230,
+            maxWidth: 260,
+            boxShadow: "var(--shadow-card)",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              color: "var(--fg-muted)",
+              textTransform: "uppercase",
+              marginBottom: 10,
+            }}
+          >
+            SUB FITUR
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[
+              { width: data.index === 0 ? "82%" : data.index === 1 ? "75%" : "80%" },
+              { width: data.index === 0 ? "65%" : data.index === 1 ? "70%" : "62%" },
+              { width: data.index === 0 ? "54%" : data.index === 1 ? "60%" : "50%" },
+            ].map((pill, pIdx) => (
+              <div
+                key={pIdx}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "5px 10px",
+                  borderRadius: 9999,
+                  border: "1px solid var(--border-hairline)",
+                  background: "var(--bg-surface)",
+                }}
+              >
+                <div
+                  style={{
+                    width: 5,
+                    height: 5,
+                    borderRadius: "50%",
+                    background: "var(--fg-muted)",
+                    opacity: 0.4,
+                    flexShrink: 0,
+                  }}
+                />
+                <div
+                  className="moryn-skeleton-bar"
+                  style={{
+                    width: pill.width,
+                    height: 6,
+                    borderRadius: 3,
+                    background: "var(--border-hairline)",
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </>
+    );
+  }
+
   const children: StrukturChild[] = data.children || [];
   const color = data.color || "var(--color-circuit)";
   const [expanded, setExpanded] = useState(false);

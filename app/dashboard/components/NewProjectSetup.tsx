@@ -361,7 +361,7 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
               onClick={() => setStep(1)}
               className="px-5 py-2.5 rounded-xl border border-neutral-300 bg-white hover:bg-neutral-50 text-neutral-700 font-semibold text-xs transition cursor-pointer"
             >
-              &larr; Back to Concept
+              &larr; {t.setup.backConcept}
             </button>
 
             <button
@@ -374,7 +374,7 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
               }}
               className="px-5 py-2.5 rounded-xl bg-[#E05A38] hover:bg-[#d04a28] text-white font-semibold text-xs shadow-2xs transition flex items-center gap-2 cursor-pointer"
             >
-              <span>Continue to Personalize</span>
+              <span>{t.setup.continuePersonalize}</span>
               <ArrowRight size={14} />
             </button>
           </div>

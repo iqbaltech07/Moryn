@@ -1,19 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo } from "react";
+import { useTranslation } from "@/lib/i18n";
 
 interface DashboardGreetingProps {
   userName?: string | null;
 }
 
 export default function DashboardGreeting({ userName }: DashboardGreetingProps) {
-  const [salutation] = useState(() => {
-    if (typeof window === "undefined") return "Good morning";
+  const { t } = useTranslation();
+
+  const salutation = useMemo(() => {
     const hour = new Date().getHours();
-    if (hour >= 5 && hour < 12) return "Good morning";
-    if (hour >= 12 && hour < 18) return "Good afternoon";
-    return "Good evening";
-  });
+    if (hour >= 5 && hour < 12) return t.dashboard.greetingMorning;
+    if (hour >= 12 && hour < 18) return t.dashboard.greetingAfternoon;
+    return t.dashboard.greetingEvening;
+  }, [t]);
 
   const displayName = userName ? userName.trim().split(" ")[0] : "Iqbal";
 
@@ -23,7 +25,7 @@ export default function DashboardGreeting({ userName }: DashboardGreetingProps) 
         {salutation}, {displayName}.
       </h1>
       <p className="text-base text-neutral-500 font-normal mt-1.5 leading-relaxed">
-        What are you building today?
+        {t.dashboard.greetingSub}
       </p>
     </div>
   );

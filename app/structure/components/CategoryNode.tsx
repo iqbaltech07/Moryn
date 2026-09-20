@@ -1,10 +1,10 @@
-﻿import { Position, Handle } from "@xyflow/react";
+import { Position, Handle } from "@xyflow/react";
 import { Trash2, LayoutGrid, Search, Users, Target, Bell, Shield, Zap, Layers } from "lucide-react";
 
 export const PHASE_COLORS: Record<number, { border: string; badge: string; text: string }> = {
-  1: { border: "var(--color-signal)",  badge: "FASE 1 Â· Core",   text: "#ffffff" },
-  2: { border: "var(--color-circuit)", badge: "FASE 2 Â· Growth", text: "#ffffff" },
-  3: { border: "#6b7280",              badge: "FASE 3 Â· Future", text: "#ffffff" },
+  1: { border: "var(--color-signal)",  badge: "FASE 1 · Core",   text: "#ffffff" },
+  2: { border: "var(--color-circuit)", badge: "FASE 2 · Growth", text: "#ffffff" },
+  3: { border: "#6b7280",              badge: "FASE 3 · Future", text: "#ffffff" },
 };
 
 export function getCategoryIcon(label: string, idx: number) {
@@ -21,6 +21,83 @@ export function getCategoryIcon(label: string, idx: number) {
 }
 
 export function CategoryNode({ id, data }: { id: string; data: any }) {
+  if (data.isSkeleton) {
+    return (
+      <>
+        <Handle
+          type="target"
+          position={Position.Left}
+          isConnectable={false}
+          style={{
+            background: "var(--border-strong)",
+            border: "2px solid var(--bg-elevated)",
+            width: 9,
+            height: 9,
+            left: -4.5,
+          }}
+        />
+        <div
+          style={{
+            background: "var(--bg-elevated)",
+            border: "1px dashed var(--border-strong)",
+            borderRadius: 12,
+            padding: "16px 20px",
+            minWidth: 210,
+            maxWidth: 240,
+            boxShadow: "var(--shadow-card)",
+            position: "relative",
+          }}
+        >
+          <div
+            style={{
+              fontFamily: "var(--font-mono, monospace)",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.14em",
+              color: "var(--fg-muted)",
+              textTransform: "uppercase",
+              marginBottom: 12,
+            }}
+          >
+            . FITUR .
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+            <div
+              className="moryn-skeleton-bar"
+              style={{
+                width: data.index === 1 ? "78%" : "68%",
+                height: 7,
+                borderRadius: 4,
+                background: "var(--border-hairline)",
+              }}
+            />
+            <div
+              className="moryn-skeleton-bar"
+              style={{
+                width: data.index === 1 ? "42%" : "50%",
+                height: 7,
+                borderRadius: 4,
+                background: "var(--border-subtle)",
+              }}
+            />
+          </div>
+        </div>
+        <Handle
+          type="source"
+          position={Position.Right}
+          isConnectable={false}
+          style={{
+            background: "var(--border-strong)",
+            border: "2px solid var(--bg-elevated)",
+            width: 9,
+            height: 9,
+            right: -4.5,
+          }}
+        />
+      </>
+    );
+  }
+
   const phase = PHASE_COLORS[data.phase] || PHASE_COLORS[1];
   const color = data.color || phase.border;
   const IconComponent = getCategoryIcon(data.label || "", data.index || 0);

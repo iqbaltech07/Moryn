@@ -63,6 +63,8 @@ async function main() {
       break;
 
     case "login":
+    case "sync":
+    case "auth":
       await loginCommand(options);
       break;
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import MarkdownRenderer, { TocItem } from "../components/shared/MarkdownRenderer";
 import { MessageRenderer } from "../components/ai/MessageRenderer";
+import { ModelSelectorDropdown } from "../components/ai/ModelSelectorDropdown";
 import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
 import { UpgradeModal } from "../components/modals";
 import { PrdPreviewSkeleton } from "../components/shared";
@@ -19,16 +20,14 @@ import {
   Database,
   Trash2,
   ArrowRight,
+  ArrowUp,
+  ChevronDown,
   Pencil,
   Copy,
   Download,
   Check,
   FileText,
-  BookOpen,
-  Users,
-  Folder,
-  Clock,
-  TrendingUp,
+  Minimize2,
   Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -37,22 +36,68 @@ import { useChatStore, ChatAction } from "@/stores/useChatStore";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useUiStore } from "@/stores/useUiStore";
 import { isTextGenerationModel, type AiModelOption } from "@/lib/ai/models";
+import { useTranslation } from "@/lib/i18n";
 
-function getTocIcon(text: string, index: number) {
-  const t = text.toLowerCase();
-  if (t.includes("overview") || t.includes("objective") || t.includes("ringkasan")) return BookOpen;
-  if (t.includes("user") || t.includes("pain") || t.includes("pengguna") || t.includes("persona")) return Users;
-  if (t.includes("flow") || t.includes("alur") || t.includes("journey") || t.includes("arsitektur")) return Folder;
-  if (t.includes("requirement") || t.includes("fungsional") || t.includes("kebutuhan") || t.includes("fitur")) return Clock;
-  if (t.includes("tech") || t.includes("konteks") || t.includes("stack") || t.includes("data") || t.includes("context")) return TrendingUp;
-  const defaults = [BookOpen, Users, Folder, Clock, TrendingUp];
-  return defaults[index % defaults.length] || FileText;
+const SECTION_TITLE_MAP: Record<number, string> = {
+  1: "1. Overview",
+  2: "2. Requirements",
+  3: "3. Core Features",
+  4: "4. User Flow",
+  5: "5. Architecture",
+  6: "6. Database Schema",
+  7: "7. Tech Stack",
+  8: "8. API Endpoints",
+  9: "9. Testing & CI/CD",
+  10: "10. Roadmap",
+};
+
+const KEYWORD_MAP: Array<{ regex: RegExp; title: string }> = [
+  { regex: /overview|ringkasan|eksekutif|sasaran/i, title: "1. Overview" },
+  { regex: /requirement|kebutuhan|persona/i, title: "2. Requirements" },
+  { regex: /core feature|fitur inti|fitur utama/i, title: "3. Core Features" },
+  { regex: /user flow|alur pengguna/i, title: "4. User Flow" },
+  { regex: /architecture|arsitektur/i, title: "5. Architecture" },
+  { regex: /database|basis data|skema/i, title: "6. Database Schema" },
+  { regex: /tech stack|teknologi/i, title: "7. Tech Stack" },
+  { regex: /api|endpoint/i, title: "8. API Endpoints" },
+  { regex: /testing|pengujian|ci\/cd|observab/i, title: "9. Testing & CI/CD" },
+  { regex: /roadmap|milestone|rencana rilis/i, title: "10. Roadmap" },
+];
+
+function getSimplifiedTocTitle(rawText: string, level: number): string {
+  if (level === 2) {
+    const numMatch = rawText.match(/^\s*(\d+)\./);
+    if (numMatch) {
+      const num = parseInt(numMatch[1], 10);
+      if (SECTION_TITLE_MAP[num]) {
+        return SECTION_TITLE_MAP[num];
+      }
+    }
+    for (const item of KEYWORD_MAP) {
+      if (item.regex.test(rawText)) {
+        return item.title;
+      }
+    }
+    if (numMatch) {
+      const num = numMatch[1];
+      const rest = rawText.replace(/^\s*\d+\.\s*/, "").trim();
+      return `${num}. ${rest.slice(0, 16)}${rest.length > 16 ? "…" : ""}`;
+    }
+    return rawText.slice(0, 18).trim() + (rawText.length > 18 ? "…" : "");
+  }
+
+  // Level 3 (Sub-sections under Core Features, e.g. "Fase 1 — ...")
+  return rawText
+    .replace(/^#+\s*/, "")
+    .replace(/^\s*\d+\.\d+\s*/, "")
+    .trim();
 }
 
 function PreviewPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
+  const { t, isId } = useTranslation();
   const [markdown, setMarkdown] = useState<string>("");
   const [toc, setToc] = useState<TocItem[]>([]);
   const [activeTocId, setActiveTocId] = useState<string>("");
@@ -66,6 +111,22 @@ function PreviewPageContent() {
   const [projectInfo, setProjectInfo] = useState<{ appName: string; appIdea: string } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const chatBottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(true);
+
+  // Dynamic auto-expanding input height adjustment (1 line -> fulltext/desc)
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    textarea.style.height = "auto";
+    if (!textarea.value || !textarea.value.includes("\n")) {
+      textarea.style.height = "20px";
+      return;
+    }
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, 20), 140);
+    textarea.style.height = `${newHeight}px`;
+  }, []);
 
   // Dynamic Gemini Models State (Fetched 100% dynamically from API)
   const [geminiModels, setGeminiModels] = useState<AiModelOption[]>([]);
@@ -79,6 +140,7 @@ function PreviewPageContent() {
   const {
     chatMessages,
     addMessage,
+    removeActionsFromMessage,
     aiPrompt,
     setAiPrompt,
     isAiEditing,
@@ -90,6 +152,10 @@ function PreviewPageContent() {
   } = useChatStore();
   const { updateProjectLocally } = useProjectStore();
   const { setShowUpgradeModal } = useUiStore();
+
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [aiPrompt, adjustTextareaHeight]);
 
   // Load project details for header card & metadata
   useEffect(() => {
@@ -217,14 +283,31 @@ function PreviewPageContent() {
         actions: (data as any).actions || undefined,
       });
     } catch (err: any) {
-      addMessage({ id: (Date.now() + 1).toString(), role: "assistant", content: `âŒ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      addMessage({ id: (Date.now() + 1).toString(), role: "assistant", content: `❌ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
     } finally { setIsAiEditing(false); }
   };
 
-  const handleActionClick = (action: ChatAction) => {
+  const handleActionClick = (action: ChatAction, messageId?: string) => {
     if (isAiEditing) return;
+
+    // Remove action buttons from the message immediately after click
+    if (messageId) {
+      removeActionsFromMessage(messageId);
+    }
+
     if (action.actionType === "send_prompt" && action.prompt) {
-      handleAiSubmit(action.prompt);
+      // Enrich prompt with actual section context to prevent hallucination
+      const sectionHeaders = markdown
+        .split("\n")
+        .filter((line: string) => /^#{1,3}\s/.test(line.trim()));
+      const sectionCount = sectionHeaders.filter((h: string) => /^##?\s/.test(h.trim())).length;
+      const sectionList = sectionHeaders
+        .map((h: string) => h.trim())
+        .join(", ");
+
+      const enrichedPrompt = `${action.prompt}\n\n[CONTEXT: PRD saat ini memiliki ${sectionCount} section utama: ${sectionList}. Jangan membuat section baru yang tidak relevan. Jika menambahkan section, nomor berikutnya adalah ${sectionCount + 1}.]`;
+
+      handleAiSubmit(enrichedPrompt);
     } else if (action.actionType === "copy_text" && action.payload) {
       navigator.clipboard.writeText(action.payload);
       toast.success("Disalin ke clipboard!");
@@ -299,9 +382,9 @@ function PreviewPageContent() {
       setMarkdown(editContent);
       updateProjectLocally({ prdData: editContent });
       setIsEditing(false);
-      toast.success("PRD saved!");
+      toast.success(t.prd.savedSuccess);
     } catch {
-      toast.error("Failed to save PRD.");
+      toast.error(t.prd.saveError);
     } finally {
       setIsSaving(false);
     }
@@ -350,7 +433,7 @@ function PreviewPageContent() {
               transition: "opacity 0.15s, transform 0.1s",
             }}
           >
-            <span>Next Step</span>
+            <span>{t.prd.nextStep}</span>
             <ArrowRight size={14} strokeWidth={2.2} />
           </button>
         </div>
@@ -369,6 +452,8 @@ function PreviewPageContent() {
           flexDirection: "column",
           height: "100%",
           overflow: "hidden",
+          overflowX: "hidden",
+          boxSizing: "border-box",
         }}>
           {/* Top Document Header Card */}
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "16px 16px 14px" }}>
@@ -404,7 +489,7 @@ function PreviewPageContent() {
                 fontWeight: 500,
                 marginTop: 2,
               }}>
-                PRD Documentation
+                {t.prd.documentation}
               </div>
             </div>
           </div>
@@ -431,7 +516,7 @@ function PreviewPageContent() {
                     cursor: "pointer",
                   }}
                 >
-                  Cancel
+                  {t.prd.cancel}
                 </button>
                 <button
                   type="button"
@@ -453,7 +538,7 @@ function PreviewPageContent() {
                     cursor: isSaving ? "not-allowed" : "pointer",
                   }}
                 >
-                  {isSaving ? "Savingâ€¦" : "Save PRD"}
+                  {isSaving ? t.prd.saving : t.prd.savePrd}
                 </button>
               </div>
             ) : (
@@ -480,7 +565,7 @@ function PreviewPageContent() {
                 }}
               >
                 <Pencil size={13} strokeWidth={2.2} />
-                <span>Edit Mode</span>
+                <span>{t.prd.editMode}</span>
               </button>
             )}
 
@@ -535,51 +620,123 @@ function PreviewPageContent() {
             fontSize: "10px",
             fontWeight: 700,
             letterSpacing: "0.12em",
+            color: "var(--fg-muted, #71717a)",
             textTransform: "uppercase",
-            color: "var(--fg-muted, #9ca3af)",
+            flexShrink: 0,
           }}>
-            CONTENTS
+            {t.prd.contents}
           </div>
 
           {/* TOC Items */}
           <div style={{
             flex: 1,
             overflowY: "auto",
+            overflowX: "hidden",
             padding: "0 10px 14px",
             display: "flex",
             flexDirection: "column",
             gap: 3,
+            width: "100%",
+            boxSizing: "border-box",
           }}>
             {toc.length === 0 && isGenerating && (
               <div style={{ padding: "8px 12px", fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
-                Generating contentsâ€¦
+                Generating contents…
               </div>
             )}
-            {toc.map((item, idx) => {
+            {toc.map((item) => {
               const isActive = activeTocId === item.id;
-              const Icon = getTocIcon(item.text, idx);
+              const isMain = item.level === 2;
+              const displayTitle = getSimplifiedTocTitle(item.text, item.level);
+
+              if (isMain) {
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => scrollToHeading(item.id)}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      maxWidth: "100%",
+                      boxSizing: "border-box",
+                      overflow: "hidden",
+                      textAlign: "left",
+                      padding: "7px 10px",
+                      borderRadius: 6,
+                      fontFamily: "var(--font-body)",
+                      fontSize: "11px",
+                      fontWeight: isActive ? 700 : 500,
+                      letterSpacing: "0.01em",
+                      color: isActive ? "#ffffff" : "var(--fg-secondary, #4b5563)",
+                      background: isActive ? "#e15b39" : "transparent",
+                      border: "none",
+                      cursor: "pointer",
+                      transition: "all 0.12s",
+                      marginTop: 2,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.03)";
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                    }}
+                  >
+                    <span
+                      style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        flexShrink: 0,
+                        maxWidth: "calc(100% - 20px)",
+                      }}
+                    >
+                      {displayTitle}
+                    </span>
+                    <div
+                      style={{
+                        flex: 1,
+                        height: 2,
+                        borderRadius: 1,
+                        background: isActive
+                          ? "rgba(255, 255, 255, 0.45)"
+                          : "var(--border-zinc-soft, #e4e4e7)",
+                        marginLeft: 8,
+                        minWidth: 8,
+                      }}
+                    />
+                  </button>
+                );
+              }
+
+              // Sub-sections (Level 3 - Fase 1, Fase 2, etc.)
               return (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => scrollToHeading(item.id)}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 9,
+                    display: "block",
                     width: "100%",
+                    maxWidth: "100%",
+                    boxSizing: "border-box",
+                    overflow: "hidden",
                     textAlign: "left",
-                    padding: "7px 12px",
-                    borderRadius: 8,
+                    padding: "5px 10px 5px 22px",
+                    borderRadius: 6,
                     fontFamily: "var(--font-body)",
-                    fontSize: "11px",
-                    fontWeight: isActive ? 700 : 500,
-                    letterSpacing: "0.02em",
-                    color: isActive ? "#ffffff" : "var(--fg-secondary, #4b5563)",
-                    background: isActive ? "#e15b39" : "transparent",
+                    fontSize: "10.5px",
+                    lineHeight: 1.35,
+                    fontWeight: isActive ? 600 : 400,
+                    color: isActive ? "#e15b39" : "var(--fg-muted, #6b7280)",
+                    background: isActive ? "rgba(225, 91, 57, 0.08)" : "transparent",
                     border: "none",
                     cursor: "pointer",
                     transition: "all 0.12s",
+                    whiteSpace: "normal",
+                    wordBreak: "break-word",
+                    overflowWrap: "anywhere",
                   }}
                   onMouseEnter={(e) => {
                     if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.03)";
@@ -588,10 +745,7 @@ function PreviewPageContent() {
                     if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
                   }}
                 >
-                  <Icon size={14} style={{ flexShrink: 0, opacity: isActive ? 1 : 0.75 }} />
-                  <span style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {item.text.replace(/^[0-9]+(\.[0-9]+)*\s*/, "")}
-                  </span>
+                  {displayTitle}
                 </button>
               );
             })}
@@ -610,7 +764,7 @@ function PreviewPageContent() {
             flexShrink: 0,
           }}>
             <span>{toc.length} sections</span>
-            <span>â€¢</span>
+            <span>•</span>
             <span>{wordCount.toLocaleString()} words</span>
           </div>
         </aside>
@@ -620,7 +774,7 @@ function PreviewPageContent() {
           {isEditing ? (
             <div style={{ padding: 32, height: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
               <p style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
-                Markdown edit â€” saved changes sync with task list
+                Markdown edit — saved changes sync with task list
               </p>
               <textarea
                 value={editContent}
@@ -639,56 +793,42 @@ function PreviewPageContent() {
             </div>
           ) : (
             <div style={{ maxWidth: 780, margin: "0 auto", padding: "48px 36px 120px" }}>
-              {isGenerating ? (
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: 400, gap: 16 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: "var(--radius-lg)",
-                    border: "1px solid #e15b39", background: "rgba(225,91,57,0.08)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    animation: "spin 0.8s linear infinite",
-                  }}>
-                    <Loader2 size={20} style={{ color: "#e15b39" }} strokeWidth={2} />
-                  </div>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--fg-muted)", letterSpacing: "0.02em" }}>
-                    Writing Product Requirements Documentâ€¦
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <MarkdownRenderer
-                    content={markdown}
-                    onTocUpdate={(newToc) => { setToc(newToc); if (newToc.length > 0 && !activeTocId) setActiveTocId(newToc[0].id); }}
-                    className="markdown-preview"
-                  />
-                </>
-              )}
+              <MarkdownRenderer
+                content={markdown}
+                onTocUpdate={(newToc) => { setToc(newToc); if (newToc.length > 0 && !activeTocId) setActiveTocId(newToc[0].id); }}
+                className="markdown-preview"
+              />
             </div>
           )}
         </div>
 
-        {/* â”€â”€ AI Chat Sidebar â”€â”€ */}
+        {/* ── AI Chat Sidebar ── */}
         <aside style={{
-          width: 380, flexShrink: 0,
-          borderLeft: "1px solid var(--border-hairline, #e5e7eb)",
+          width: isChatOpen ? 450 : 0,
+          minWidth: isChatOpen ? 450 : 0,
+          flexShrink: 0,
+          borderLeft: isChatOpen ? "1px solid var(--border-hairline, #e5e7eb)" : "none",
           background: "var(--bg-surface, #fcfbf9)",
           display: "flex", flexDirection: "column", height: "100%",
           position: "relative", overflow: "hidden",
+          transition: "width 0.22s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+          visibility: isChatOpen ? "visible" : "hidden",
         }}>
           {/* Header */}
           <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--border-hairline, #e5e7eb)", flexShrink: 0 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                 <div style={{
-                  width: 30, height: 30, borderRadius: 8,
+                  width: 32, height: 32, borderRadius: "50%",
                   border: "none", background: "rgba(225,91,57,0.12)",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   color: "#e15b39",
                 }}>
-                  <Bot size={16} />
+                  <Bot size={17} />
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>Moryn AI</p>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "#16a34a", margin: 0, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>â— CONTEXT READY</p>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "#16a34a", margin: 0, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>● CONTEXT READY</p>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -732,13 +872,43 @@ function PreviewPageContent() {
                     <span>Clear</span>
                   </button>
                 )}
-                <Sparkles size={14} style={{ color: "var(--fg-muted, #9ca3af)" }} />
+                <button
+                  type="button"
+                  onClick={() => setIsChatOpen(false)}
+                  title="Sembunyikan panel chat AI"
+                  aria-label="Sembunyikan panel chat AI"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    width: 26,
+                    height: 26,
+                    borderRadius: "var(--radius-xs, 4px)",
+                    border: "1px solid transparent",
+                    background: "transparent",
+                    color: "var(--fg-muted, #9ca3af)",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = "#e15b39";
+                    (e.currentTarget as HTMLElement).style.background = "rgba(225, 91, 57, 0.08)";
+                    (e.currentTarget as HTMLElement).style.borderColor = "rgba(225, 91, 57, 0.2)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.color = "var(--fg-muted, #9ca3af)";
+                    (e.currentTarget as HTMLElement).style.background = "transparent";
+                    (e.currentTarget as HTMLElement).style.borderColor = "transparent";
+                  }}
+                >
+                  <Minimize2 size={15} />
+                </button>
               </div>
             </div>
           </div>
 
           {/* Messages */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "14px 12px", display: "flex", flexDirection: "column", gap: 12 }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "14px 14px", display: "flex", flexDirection: "column", gap: 12 }}>
             {chatMessages.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {/* Suggested actions from mockup */}
@@ -760,12 +930,15 @@ function PreviewPageContent() {
                     background: "#e15b39",
                     color: "#ffffff",
                     fontFamily: "var(--font-body)",
-                    fontSize: "11px",
+                    fontSize: "11.5px",
                     fontWeight: 700,
                     cursor: "pointer",
                     textAlign: "left",
                     boxShadow: "0 1px 2px rgba(225,91,57,0.2)",
+                    transition: "opacity 0.15s",
                   }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.9"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
                 >
                   <span>Review for missing edge cases</span>
                   <ArrowRight size={13} strokeWidth={2.2} />
@@ -785,19 +958,22 @@ function PreviewPageContent() {
                     background: "#e15b39",
                     color: "#ffffff",
                     fontFamily: "var(--font-body)",
-                    fontSize: "11px",
+                    fontSize: "11.5px",
                     fontWeight: 700,
                     cursor: "pointer",
                     textAlign: "left",
                     boxShadow: "0 1px 2px rgba(225,91,57,0.2)",
+                    transition: "opacity 0.15s",
                   }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.9"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
                 >
                   <span>Generate technical constraints</span>
                   <ArrowRight size={13} strokeWidth={2.2} />
                 </button>
 
                 {/* Additional quick prompts */}
-                <div style={{ marginTop: 6, display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ marginTop: 4, display: "flex", flexDirection: "column", gap: 6 }}>
                   {[
                     { icon: <Lightbulb size={12} />, label: "Brainstorm", text: "Apa ide fitur gamifikasi yang menarik untuk app ini?" },
                     { icon: <PenLine size={12} />, label: "Edit PRD", text: "Tambahkan section FAQ dan Troubleshooting ke PRD" },
@@ -830,12 +1006,12 @@ function PreviewPageContent() {
             )}
             {isAiEditing && (
               <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
-                <div style={{ width: 24, height: 24, borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <Bot size={11} style={{ color: "var(--color-circuit)" }} />
+                <div style={{ width: 26, height: 26, borderRadius: "50%", background: "rgba(225,91,57,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#e15b39" }}>
+                  <Bot size={13} />
                 </div>
-                <div style={{ padding: "10px 14px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ padding: "8px 14px", border: "1px solid var(--border-hairline)", borderRadius: "12px", background: "var(--bg-elevated, #ffffff)", display: "flex", alignItems: "center", gap: 4 }}>
                   {[0, 0.2, 0.4].map((d, i) => (
-                    <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--color-circuit)", display: "inline-block", animation: `dotBounce 1.2s ease-in-out ${d}s infinite` }} />
+                    <span key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: "#e15b39", display: "inline-block", animation: `dotBounce 1.2s ease-in-out ${d}s infinite` }} />
                   ))}
                 </div>
               </div>
@@ -844,119 +1020,172 @@ function PreviewPageContent() {
           </div>
 
           {/* Input area */}
-          <div style={{ padding: "10px 12px 12px", borderTop: "1px solid var(--border-hairline)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 8 }}>
-            {/* Model selector */}
-            <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 10px", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-xs)", background: "var(--bg-elevated)", width: "fit-content", maxWidth: "100%" }}>
-              <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--color-circuit)", flexShrink: 0 }} />
-              <select
-                value={selectedModel || "gemini-2.5-flash"}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                disabled={isAiEditing}
-                style={{
-                  padding: "2px 0",
-                  border: "none",
-                  background: "transparent",
-                  color: "var(--fg-secondary)",
-                  fontFamily: "var(--font-body)",
-                  fontSize: 11,
-                  outline: "none",
-                  cursor: "pointer",
-                  fontWeight: 600,
-                  letterSpacing: "0.04em",
-                  WebkitAppearance: "none",
-                  appearance: "none",
-                }}
-              >
-                <optgroup label="Google Gemini">
-                  {geminiModels.length > 0 ? (
-                    geminiModels.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))
-                  ) : (
-                    <option value={selectedModel || "gemini-2.5-flash"}>
-                      {isGeminiLoading ? "Memuat model Gemini..." : (selectedModel || "gemini-2.5-flash")}
-                    </option>
-                  )}
-                </optgroup>
+          <div style={{ padding: "10px 14px 12px", borderTop: "1px solid var(--border-hairline, #e5e7eb)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 7 }}>
+            {/* Model selector dropdown */}
+            <ModelSelectorDropdown
+              selectedModel={selectedModel || "gemini-2.5-flash"}
+              onSelectModel={(modelId) => setSelectedModel(modelId)}
+              geminiModels={geminiModels}
+              openRouterFreeModels={openRouterFreeModels}
+              openRouterRankedModels={openRouterRankedModels}
+              isGeminiLoading={isGeminiLoading}
+              isOpenRouterLoading={isOpenRouterLoading}
+              disabled={isAiEditing}
+            />
 
-                {openRouterFreeModels.length > 0 && (
-                  <optgroup label={`Free Models (${openRouterFreeModels.length})`}>
-                    {openRouterFreeModels.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name} (Free)
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
+            {/* Symmetrical Auto-expanding Input Box */}
+            {(() => {
+              const isMultiLine = Boolean(aiPrompt && (aiPrompt.includes("\n") || (textareaRef.current && textareaRef.current.scrollHeight > 30)));
 
-                {openRouterRankedModels.length > 0 && (
-                  <optgroup label={`Top 20 Ranked Models (${openRouterRankedModels.length})`}>
-                    {openRouterRankedModels.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
+              return (
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleAiSubmit(); }}
+                  style={{
+                    display: "flex",
+                    alignItems: isMultiLine ? "flex-end" : "center",
+                    gap: 8,
+                    padding: isMultiLine ? "8px 6px 6px 14px" : "6px 6px 6px 14px",
+                    borderRadius: "12px",
+                    border: isInputFocused ? "1px solid rgba(225, 91, 57, 0.45)" : "1px solid var(--border-hairline, #e5e7eb)",
+                    background: "var(--bg-elevated, #ffffff)",
+                    boxShadow: isInputFocused ? "0 0 0 2px rgba(225, 91, 57, 0.08)" : "none",
+                    transition: "border-color 0.15s, box-shadow 0.15s",
+                    minHeight: isMultiLine ? undefined : 44,
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <textarea
+                    ref={textareaRef}
+                    value={aiPrompt}
+                    onChange={(e) => {
+                      setAiPrompt(e.target.value);
+                      adjustTextareaHeight();
+                    }}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleAiSubmit();
+                      }
+                    }}
+                    placeholder={t.prd.askAiPlaceholder}
+                    disabled={isAiEditing}
+                    rows={1}
+                    style={{
+                      flex: 1,
+                      resize: "none",
+                      outline: "none",
+                      border: "none",
+                      background: "transparent",
+                      color: "var(--fg-primary, #18181b)",
+                      fontFamily: "var(--font-body)",
+                      fontSize: 13,
+                      lineHeight: "20px",
+                      height: isMultiLine ? undefined : "20px",
+                      minHeight: "20px",
+                      maxHeight: 140,
+                      overflowY: aiPrompt.split("\n").length > 3 ? "auto" : "hidden",
+                      padding: isMultiLine ? "2px 0" : 0,
+                      margin: 0,
+                      boxSizing: "border-box",
+                      display: "block",
+                      verticalAlign: "middle",
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isAiEditing || !aiPrompt.trim()}
+                    title="Kirim pesan"
+                    aria-label="Kirim pesan"
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "8px",
+                      flexShrink: 0,
+                      background: "#e15b39",
+                      border: "none",
+                      color: "#ffffff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      cursor: isAiEditing || !aiPrompt.trim() ? "not-allowed" : "pointer",
+                      opacity: isAiEditing || !aiPrompt.trim() ? 0.35 : 1,
+                      transition: "all 0.15s ease",
+                      marginBottom: isMultiLine ? 1 : 0,
+                    }}
+                  >
+                    {isAiEditing ? (
+                      <Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} />
+                    ) : (
+                      <ArrowUp size={15} strokeWidth={2.4} />
+                    )}
+                  </button>
+                </form>
+              );
+            })()}
 
-                {openRouterFreeModels.length === 0 && openRouterRankedModels.length === 0 && isOpenRouterLoading && (
-                  <optgroup label="OpenRouter">
-                    <option value="" disabled>
-                      Memuat model OpenRouterâ€¦
-                    </option>
-                  </optgroup>
-                )}
-              </select>
+            {/* Helper footer text without Attach Context */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2px" }}>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted, #9ca3af)", letterSpacing: "0.02em" }}>
+                Shift + Enter for new line
+              </span>
             </div>
-            {/* Textarea + send */}
-            <form onSubmit={(e) => { e.preventDefault(); handleAiSubmit(); }} style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
-              <textarea
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAiSubmit(); } }}
-                placeholder="Brainstorm atau instruksikan edit PRDâ€¦"
-                disabled={isAiEditing}
-                rows={aiPrompt.split("\n").length > 1 || aiPrompt.length > 55 ? Math.min(aiPrompt.split("\n").length, 4) : 1}
-                style={{
-                  flex: 1, resize: "none", outline: "none",
-                  background: "var(--bg-elevated)", border: "1px solid var(--border-hairline)",
-                  borderRadius: "var(--radius-md)", color: "var(--fg-primary)",
-                  fontFamily: "var(--font-body)", fontSize: 12, lineHeight: 1.5, padding: "8px 12px",
-                  maxHeight: 120, overflowY: "auto",
-                  transition: "border-color 0.12s",
-                }}
-                onFocus={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--color-circuit)"; }}
-                onBlur={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--border-hairline)"; }}
-              />
-              <button type="submit" disabled={isAiEditing || !aiPrompt.trim()} style={{
-                width: 34, height: 34, borderRadius: "var(--radius-md)", flexShrink: 0,
-                background: (!isAiEditing && aiPrompt.trim()) ? "var(--color-signal)" : "var(--bg-elevated)",
-                border: "1px solid var(--border-hairline)",
-                color: (!isAiEditing && aiPrompt.trim()) ? "#ffffff" : "var(--fg-muted)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: isAiEditing || !aiPrompt.trim() ? "not-allowed" : "pointer",
-                opacity: isAiEditing || !aiPrompt.trim() ? 0.4 : 1,
-                transition: "all 0.15s",
-              }}>
-                {isAiEditing ? <Loader2 size={14} style={{ animation: "spin 0.8s linear infinite" }} /> : <Send size={14} />}
-              </button>
-            </form>
-            <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted)", textAlign: "center", letterSpacing: "0.02em" }}>
-              Enter to send Â· Shift+Enter new line
-            </p>
           </div>
         </aside>
+
+        {/* Floating Reopen Button when chat is closed */}
+        {!isChatOpen && (
+          <button
+            type="button"
+            onClick={() => setIsChatOpen(true)}
+            title="Buka panel chat Moryn AI"
+            aria-label="Buka panel chat Moryn AI"
+            style={{
+              position: "fixed",
+              bottom: 50,
+              right: 24,
+              zIndex: 40,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "10px 18px",
+              borderRadius: 9999,
+              background: "#ffffff",
+              border: "1px solid rgba(225, 91, 57, 0.35)",
+              boxShadow: "0 6px 20px rgba(225, 91, 57, 0.16), 0 2px 6px rgba(0,0,0,0.06)",
+              color: "#e15b39",
+              fontFamily: "var(--font-body)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              cursor: "pointer",
+              transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 8px 24px rgba(225, 91, 57, 0.24)";
+              (e.currentTarget as HTMLElement).style.background = "#fff8f6";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "translateY(0)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 20px rgba(225, 91, 57, 0.16), 0 2px 6px rgba(0,0,0,0.06)";
+              (e.currentTarget as HTMLElement).style.background = "#ffffff";
+            }}
+          >
+            <Sparkles size={15} />
+            <span>Moryn AI</span>
+          </button>
+        )}
       </div>
 
       {/* Status bar */}
       <footer style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 16px", flexShrink: 0, borderTop: "1px solid var(--border-hairline)", background: "var(--bg-surface)" }}>
         <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
-          {markdown.length.toLocaleString()} chars Â· {markdown.split("\n").length} lines
+          {markdown.length.toLocaleString()} chars · {markdown.split("\n").length} lines
         </span>
         <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
-          {appName} Â· Moryn
+          {appName} · Moryn
         </span>
       </footer>
 

@@ -92,9 +92,19 @@ function parseMarkdown(
   const renderer = new Renderer();
   renderer.heading = ({ text, depth }: { text: string; depth: number }) => {
     const id = `${idPrefix}${headingIdx++}`;
-    const isMainNumberedSection = /^\s*\d+\.\s/.test(text);
-    if (isMainNumberedSection) {
-      tocItems.push({ id, text, level: depth });
+    const cleanText = text.replace(/<[^>]*>/g, "").trim();
+    const isMainNumberedSection = /^\s*\d+\.\s/.test(cleanText);
+    const isStandardMainSection = depth === 2 && (
+      isMainNumberedSection ||
+      /^(overview|requirements|core features|user flow|architecture|database schema|tech stack|api endpoints|ringkasan|kebutuhan|spesifikasi|alur|arsitektur|skema|teknologi|endpoint)/i.test(cleanText)
+    );
+    const isPhaseSubSection = /^(fase|phase|fitur|feature)\s*\d+/i.test(cleanText);
+    const isSubNumberedSection = /^\s*\d+\.\d+\s/.test(cleanText);
+
+    if (isStandardMainSection) {
+      tocItems.push({ id, text: cleanText, level: 2 });
+    } else if (depth === 3 && (isPhaseSubSection || isSubNumberedSection)) {
+      tocItems.push({ id, text: cleanText, level: 3 });
     }
     return `<h${depth} id="${id}">${text}</h${depth}>\n`;
   };
@@ -131,7 +141,7 @@ function parseMarkdown(
         .replace(/&quot;/g, '"')
         .replace(/&#39;/g, "'");
 
-      return `<div class="not-prose">\n    <div class="mermaid">\n${source}\n    </div>\n</div>`;
+      return `<div class="not-prose">\n    <div class="mermaid" style="color: #ffffff !important; background: #1a1c23;">\n${source}\n    </div>\n</div>`;
     }
     return originalCode(token);
   };
@@ -226,9 +236,28 @@ const InnerMarkdownRenderer = forwardRef<HTMLDivElement, MarkdownRendererProps>(
       if (!mermaidInitialized) {
         mermaid.initialize({
           startOnLoad: false,
-          theme: "dark",
+          theme: "base",
           securityLevel: "loose",
-          fontFamily: "inherit",
+          fontFamily: "var(--font-body, var(--font-plus-jakarta-sans), sans-serif)",
+          themeVariables: {
+            darkMode: true,
+            background: "#1a1c23",
+            mainBkg: "#232732",
+            primaryColor: "#232732",
+            primaryTextColor: "#ffffff",
+            primaryBorderColor: "#525c6e",
+            lineColor: "#94a3b8",
+            secondaryColor: "#1e222b",
+            tertiaryColor: "#1a1d26",
+            textColor: "#ffffff",
+            nodeBorder: "#525c6e",
+            nodeTextColor: "#ffffff",
+            edgeLabelBackground: "#1e222b",
+            clusterBkg: "#14171f",
+            clusterBorder: "#3b4252",
+            defaultLinkColor: "#94a3b8",
+            titleColor: "#ffffff",
+          },
         });
         mermaidInitialized = true;
       }
@@ -266,15 +295,30 @@ const InnerMarkdownRenderer = forwardRef<HTMLDivElement, MarkdownRendererProps>(
 
                 if (!ignore && divRef.current) {
                   foundNodes.forEach((node) => {
-                    const svgHtml = node.innerHTML;
+                    let svgHtml = node.innerHTML;
                     node.innerHTML = ""; // clear node for React portal
                     const root = createRoot(node);
                     activeRoots.current.push(root);
+
+                    // Post-process svgHtml to guarantee 100% crisp pure white text in all nodes & labels
+                    svgHtml = svgHtml
+                      .replace(/<foreignObject([^>]*)>([\s\S]*?)<\/foreignObject>/gi, (_match, attrs, content) => {
+                        const styledContent = content
+                          .replace(/<div([^>]*)style="([^"]*)"/gi, '<div$1style="$2; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;"')
+                          .replace(/<div((?!style)[^>]*)>/gi, '<div$1 style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">')
+                          .replace(/<span([^>]*)style="([^"]*)"/gi, '<span$1style="$2; color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;"')
+                          .replace(/<span((?!style)[^>]*)>/gi, '<span$1 style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">')
+                          .replace(/<p((?!style)[^>]*)>/gi, '<p$1 style="color: #ffffff !important; -webkit-text-fill-color: #ffffff !important;">');
+                        return `<foreignObject${attrs}>${styledContent}</foreignObject>`;
+                      })
+                      .replace(/fill="currentColor"/gi, 'fill="#ffffff"')
+                      .replace(/<text\b(?![^>]*\bfill=)([^>]*)>/gi, '<text fill="#ffffff" $1>')
+                      .replace(/<tspan\b(?![^>]*\bfill=)([^>]*)>/gi, '<tspan fill="#ffffff" $1>');
                     
                     root.render(
                       <ZoomableDiagram
                         svgHtml={svgHtml}
-                        wrapperClassName="relative group w-full h-full min-h-[400px] border border-neutral-800 rounded-xl overflow-hidden bg-[#1a1c23]"
+                        wrapperClassName="mermaid-diagram-viewer relative group w-full h-full min-h-[400px] border border-neutral-800 rounded-xl overflow-hidden bg-[#1a1c23]"
                         contentClassName="w-full flex justify-center items-center cursor-grab active:cursor-grabbing p-4 min-h-[400px]"
                         wrapperStyle={{ width: "100%", height: "100%", minHeight: "400px" }}
                         minScale={0.2}

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, Clock, Layers, Sparkles, TrendingUp, Cpu } from "lucide-react";
 
@@ -14,20 +15,22 @@ export default function HeroSection({ onSeeExample }: { onSeeExample: () => void
       />
 
       <div className="max-w-[1240px] w-full mx-auto relative flex flex-col items-center text-center z-10">
-        
-        {/* ── Center 4-Square Emblem ── */}
+
+        {/* ── Center Moryn 1:1 Logo (Tanpa Bingkai Avatar) ── */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-6 inline-flex p-2.5 rounded-2xl bg-white shadow-[0_2px_12px_rgba(20,24,23,0.06)] border border-[#141817]/6"
+          className="mb-6 inline-flex items-center justify-center"
         >
-          <div className="grid grid-cols-2 gap-1 w-6 h-6">
-            <div className="rounded-[3px] bg-[#e85d3f]" />
-            <div className="rounded-[3px] bg-[#f59e0b]" />
-            <div className="rounded-[3px] bg-[#0d9488]" />
-            <div className="rounded-[3px] bg-[#3b82f6]" />
-          </div>
+          <Image
+            src="/logo/Moryn-1-1-Light-Transparent.webp"
+            alt="Moryn Logo"
+            width={52}
+            height={52}
+            className="w-13 h-13 object-contain select-none"
+            priority
+          />
         </motion.div>
 
         {/* ── Main Headline ── */}

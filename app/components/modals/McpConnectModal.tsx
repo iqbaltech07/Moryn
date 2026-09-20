@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Terminal, X, ShieldCheck, Cpu, MessageSquareText, Key, Lock } from "lucide-react";
+import { Copy, Check, Terminal, X, Lock, FileCode2 } from "lucide-react";
 import { apiClient } from "@/lib/utils/apiClient";
 
 interface McpConnectModalProps {
@@ -148,386 +148,112 @@ Tolong jalankan alur kerja otomatisasi berikut:
 
   return (
     <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 250,
-        background: "rgba(8,11,20,0.88)",
-        backdropFilter: "blur(6px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 20,
-      }}
+      className="fixed inset-0 z-[250] flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4 sm:p-6"
+      onClick={onClose}
     >
       <div
-        style={{
-          background: "var(--bg-surface)",
-          border: "1px solid var(--border-hairline)",
-          borderRadius: "var(--radius-lg)",
-          maxWidth: 620,
-          width: "100%",
-          overflow: "hidden",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
-          display: "flex",
-          flexDirection: "column",
-        }}
+        className="w-full max-w-[640px] bg-[var(--bg-elevated)] border border-[var(--border-hairline)] shadow-xl flex flex-col"
+        style={{ borderRadius: "var(--radius-lg)", maxHeight: "90vh" }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Top rule */}
-        <div aria-hidden="true" style={{ height: 2, background: "var(--color-signal)" }} />
-
-        {/* Header */}
-        <div
-          style={{
-            padding: "20px 24px 16px",
-            borderBottom: "1px solid var(--border-hairline)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 34,
-                height: 34,
-                borderRadius: "var(--radius-md)",
-                background: "rgba(255,182,39,0.1)",
-                border: "1px solid rgba(255,182,39,0.3)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Cpu size={18} style={{ color: "var(--color-signal)" }} />
-            </div>
-            <div>
-              <h3
-                style={{
-                  fontFamily: "var(--font-display)",
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: "var(--fg-primary)",
-                  margin: 0,
-                  lineHeight: 1.2,
-                }}
-              >
-                Integrasikan AI Agent via NPX CLI & Agent Skill
-              </h3>
-              <p
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  color: "var(--color-mist)",
-                  margin: "3px 0 0",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                Zero-Friction Distribution & Automatic Skill Provisioning
-              </p>
-            </div>
+        {/* Header - Editorial/Utilitarian */}
+        <div className="px-6 py-5 border-b border-[var(--border-hairline)] flex items-center justify-between">
+          <div className="flex flex-col">
+            <h2 className="font-[family-name:var(--font-body)] text-lg font-semibold text-[var(--fg-primary)] tracking-tight">
+              Agent Connection Protocol
+            </h2>
           </div>
-
           <button
             onClick={onClose}
-            style={{
-              padding: 6,
-              background: "transparent",
-              border: "none",
-              color: "var(--fg-muted)",
-              cursor: "pointer",
-              borderRadius: "var(--radius-xs)",
-            }}
+            className="p-1.5 text-[var(--fg-muted)] hover:text-[var(--fg-primary)] hover:bg-[var(--bg-surface)] rounded-[var(--radius-sm)] transition-colors"
+            title="Tutup"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        {/* Content */}
-        <div style={{ padding: "20px 24px", overflowY: "auto", maxHeight: "calc(80vh - 120px)" }}>
-          {/* API Key Sensored Box & Copy Button */}
-          <div
-            style={{
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-hairline)",
-              borderRadius: "var(--radius-md)",
-              padding: "12px 16px",
-              marginBottom: 16,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 12,
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-                <Key size={12} style={{ color: "var(--color-signal)" }} />
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "var(--fg-muted)",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  User Secret API Key
-                </span>
-                <span
-                  style={{
-                    fontSize: 9,
-                    fontFamily: "var(--font-mono)",
-                    color: "var(--color-mist)",
-                    background: "rgba(255,255,255,0.05)",
-                    padding: "1px 6px",
-                    borderRadius: "var(--radius-xs)",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 3,
-                  }}
-                >
-                  <Lock size={9} /> Sensored on UI
-                </span>
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8">
+          
+          {/* Section: API Key */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--fg-secondary)] tracking-widest uppercase flex items-center gap-2">
+                Authentication Token
+              </span>
+              <span className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--fg-muted)] bg-[var(--bg-surface)] px-2 py-0.5 rounded-[var(--radius-xs)] border border-[var(--border-hairline)] flex items-center gap-1.5">
+                <Lock size={10} /> Sensored on UI
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-[var(--radius-md)] px-4 py-2.5 overflow-hidden">
+                <div className="font-[family-name:var(--font-mono)] text-sm text-[var(--fg-primary)] truncate select-none">
+                  {sensoredApiKeyDisplay}
+                </div>
               </div>
-              <div
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 12,
-                  color: "var(--color-signal)",
-                  letterSpacing: "0.12em",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  userSelect: "none",
-                }}
+              <button
+                onClick={handleCopyKey}
+                disabled={isLoadingKey}
+                className="shrink-0 h-full px-4 py-2.5 bg-white border border-[var(--border-strong)] rounded-[var(--radius-md)] font-[family-name:var(--font-mono)] text-xs font-semibold text-[var(--fg-primary)] hover:bg-[var(--bg-surface)] active:bg-[#ebebeb] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
-                {sensoredApiKeyDisplay}
-              </div>
-            </div>
-
-            <button
-              onClick={handleCopyKey}
-              disabled={isLoadingKey}
-              style={{
-                padding: "8px 14px",
-                borderRadius: "var(--radius-md)",
-                border: isCopiedKey ? "1px solid var(--color-circuit)" : "1px solid var(--color-signal)",
-                background: isCopiedKey ? "rgba(79,209,197,0.15)" : "rgba(255,182,39,0.12)",
-                color: isCopiedKey ? "var(--color-circuit)" : "var(--color-signal)",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                cursor: isLoadingKey ? "not-allowed" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                whiteSpace: "nowrap",
-                transition: "all 0.15s ease",
-              }}
-            >
-              {isCopiedKey ? <Check size={14} /> : <Copy size={14} />}
-              {isCopiedKey ? "API Key Disalin!" : "Salin API Key"}
-            </button>
-          </div>
-
-          <p
-            style={{
-              fontFamily: "var(--font-body)",
-              fontSize: 12,
-              color: "var(--fg-primary)",
-              lineHeight: 1.6,
-              marginBottom: 16,
-            }}
-          >
-            Jalankan <strong>2 perintah terminal</strong> di bawah ini atau tempelkan prompt setup langsung ke AI Coding Agent Anda (seperti <strong>Antigravity, Cursor, Claude Code</strong>). Perintah <code>npx moryn init</code> akan meng-install <strong>Moryn Agent Skill</strong> dan native 10ms sync helper secara otomatis.
-          </p>
-
-          {/* Terminal Code Block */}
-          <div
-            style={{
-              position: "relative",
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-hairline)",
-              borderRadius: "var(--radius-md)",
-              padding: "14px 16px",
-              marginBottom: 16,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <Terminal size={12} style={{ color: "var(--color-circuit)" }} />
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "var(--color-circuit)",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  1. Perintah Setup Terminal (Pengembang)
-                </span>
-              </div>
-            </div>
-
-            <pre
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 12,
-                color: "var(--color-signal)",
-                lineHeight: 1.6,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                margin: 0,
-                padding: "4px 0",
-              }}
-            >
-              {isLoadingKey ? "# Memuat API Key milik Anda...\nnpx moryn login\nnpx moryn init" : cliCommandsDisplay}
-            </pre>
-          </div>
-
-          {/* Prompt Agent Block */}
-          <div
-            style={{
-              position: "relative",
-              background: "var(--bg-elevated)",
-              border: "1px solid var(--border-hairline)",
-              borderRadius: "var(--radius-md)",
-              padding: "14px 16px",
-              marginBottom: 20,
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <MessageSquareText size={12} style={{ color: "var(--color-signal)" }} />
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "var(--color-signal)",
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  2. Prompt Setup AI Agent (Salin & Paste ke Chat Agent)
-                </span>
-              </div>
-            </div>
-
-            <pre
-              style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                color: "var(--fg-secondary)",
-                lineHeight: 1.5,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-                margin: 0,
-                maxHeight: 140,
-                overflowY: "auto",
-              }}
-            >
-              {isLoadingKey ? "Memuat prompt setup..." : aiPromptDisplay}
-            </pre>
-          </div>
-
-          {/* Badges */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 20 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "4px 10px",
-                borderRadius: "var(--radius-xs)",
-                border: "1px solid rgba(79,209,197,0.3)",
-                background: "rgba(79,209,197,0.06)",
-                fontSize: 10,
-                fontFamily: "var(--font-mono)",
-                color: "var(--color-circuit)",
-              }}
-            >
-              <ShieldCheck size={12} /> Auto Agent Skill Installation
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 5,
-                padding: "4px 10px",
-                borderRadius: "var(--radius-xs)",
-                border: "1px solid var(--border-hairline)",
-                background: "var(--bg-elevated)",
-                fontSize: 10,
-                fontFamily: "var(--font-mono)",
-                color: "var(--color-mist)",
-              }}
-            >
-              10ms Native Realtime Kanban Sync
+                {isCopiedKey ? <Check size={14} className="text-[var(--color-success)]" /> : <Copy size={14} />}
+                {isCopiedKey ? "Copied" : "Copy"}
+              </button>
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button
-              onClick={handleCopyCommand}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--color-circuit)",
-                background: "rgba(79,209,197,0.1)",
-                color: "var(--color-circuit)",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                transition: "opacity 0.15s",
-              }}
-            >
-              {isCopiedCommand ? <Check size={15} /> : <Terminal size={15} />}
-              {isCopiedCommand ? "Command Disalin!" : "Salin Perintah CLI"}
-            </button>
+          <div className="h-px bg-[var(--border-hairline)] w-full"></div>
 
-            <button
-              onClick={handleCopyPrompt}
-              style={{
-                flex: 1,
-                padding: "12px 16px",
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--color-signal)",
-                background: "var(--color-signal)",
-                color: "#ffffff",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                fontWeight: 700,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: 8,
-                transition: "opacity 0.15s",
-              }}
-            >
-              {isCopiedPrompt ? <Check size={15} /> : <Copy size={15} />}
-              {isCopiedPrompt ? "Prompt Agent Disalin!" : "Salin Prompt AI Agent"}
-            </button>
+          {/* Section: Terminal Setup */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--fg-secondary)] tracking-widest uppercase flex items-center gap-2">
+                1. Terminal Environment
+              </span>
+              <button
+                onClick={handleCopyCommand}
+                className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--fg-primary)] bg-white border border-[var(--border-strong)] hover:bg-[var(--bg-surface)] px-2.5 py-1 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                {isCopiedCommand ? <Check size={12} className="text-[var(--color-success)]" /> : <Copy size={12} />}
+                {isCopiedCommand ? "Copied" : "Copy CLI"}
+              </button>
+            </div>
+            <div className="bg-[var(--color-brand-ink)] rounded-[var(--radius-md)] p-4 overflow-x-auto shadow-inner">
+              <pre className="font-[family-name:var(--font-mono)] text-[13px] text-[#e8ebe8] leading-relaxed">
+                {isLoadingKey ? "# Fetching API Key...\n..." : cliCommandsDisplay}
+              </pre>
+            </div>
+            <p className="font-[family-name:var(--font-body)] text-xs text-[var(--fg-muted)] leading-relaxed mt-1">
+              Jalankan perintah ini di terminal root proyek Anda. Perintah ini akan memasang Moryn CLI, login dengan kredensial Anda, dan menyiapkan context files lokal.
+            </p>
           </div>
+
+          {/* Section: Agent Prompt */}
+          <div className="flex flex-col gap-3">
+             <div className="flex items-center justify-between">
+              <span className="font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--fg-secondary)] tracking-widest uppercase flex items-center gap-2">
+                2. Agent Initialization Prompt
+              </span>
+              <button
+                onClick={handleCopyPrompt}
+                className="font-[family-name:var(--font-mono)] text-[10px] text-[var(--color-background)] bg-[var(--color-brand-ink)] hover:bg-[#27272a] px-3 py-1.5 rounded-[var(--radius-sm)] flex items-center gap-1.5 transition-colors shadow-sm"
+              >
+                {isCopiedPrompt ? <Check size={12} /> : <Copy size={12} />}
+                {isCopiedPrompt ? "Copied" : "Copy Prompt"}
+              </button>
+            </div>
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-hairline)] rounded-[var(--radius-md)] p-4 max-h-[160px] overflow-y-auto">
+              <pre className="font-[family-name:var(--font-mono)] text-xs text-[var(--fg-secondary)] leading-relaxed whitespace-pre-wrap">
+                {isLoadingKey ? "Menyiapkan prompt..." : aiPromptDisplay}
+              </pre>
+            </div>
+             <p className="font-[family-name:var(--font-body)] text-xs text-[var(--fg-muted)] leading-relaxed mt-1">
+              Paste prompt ini secara langsung ke AI Assistant Anda (Antigravity, Cursor, Claude, dll) untuk memulai alur kerja PRD terpandu secara otomatis.
+            </p>
+          </div>
+
         </div>
       </div>
     </div>
   );
 }
-

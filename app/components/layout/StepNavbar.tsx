@@ -1,15 +1,10 @@
-﻿"use client";
+"use client";
 
+import React from "react";
 import Link from "next/link";
+import { useTranslation } from "@/lib/i18n";
 
 export type WorkflowStep = "struktur" | "prd" | "design" | "task";
-
-const STEPS: { id: WorkflowStep; label: string; path: string }[] = [
-  { id: "struktur", label: "Structure", path: "/structure" },
-  { id: "prd",      label: "PRD",       path: "/prd" },
-  { id: "design",   label: "Design",    path: "/design" },
-  { id: "task",     label: "Task",      path: "/task" },
-];
 
 export default function StepNavbar({
   currentStep,
@@ -18,7 +13,14 @@ export default function StepNavbar({
   currentStep: WorkflowStep;
   projectId: string | null;
 }) {
-  const currentIdx = STEPS.findIndex((s) => s.id === currentStep);
+  const { t } = useTranslation();
+
+  const steps: { id: WorkflowStep; label: string; path: string }[] = [
+    { id: "struktur", label: t.workflow.stepStructure, path: "/structure" },
+    { id: "prd",      label: t.workflow.stepPrd,       path: "/prd" },
+    { id: "design",   label: t.workflow.stepDesign,    path: "/design" },
+    { id: "task",     label: t.workflow.stepTask,      path: "/task" },
+  ];
 
   return (
     <div
@@ -28,72 +30,94 @@ export default function StepNavbar({
         transform: "translateX(-50%)",
         display: "flex",
         alignItems: "center",
-        gap: 4,
         zIndex: 10,
         whiteSpace: "nowrap",
       }}
     >
-      {STEPS.map((step, i) => {
-        const isDone = i < currentIdx;
+      {steps.map((step, i) => {
         const isActive = step.id === currentStep;
         const href = `${step.path}${projectId ? `?projectId=${projectId}` : ""}`;
         const clickable = !!projectId;
 
         return (
-          <Link
-            key={step.id}
-            href={clickable ? href : "#"}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              padding: isActive ? "5px 13px 5px 7px" : "5px 9px",
-              borderRadius: "9999px",
-              background: isActive ? "#e15b39" : "transparent",
-              textDecoration: "none",
-              pointerEvents: clickable ? "auto" : "none",
-              transition: "all 0.15s ease",
-            }}
-          >
-            {/* Step circle */}
-            <div
+          <React.Fragment key={step.id}>
+            <Link
+              href={clickable ? href : "#"}
               style={{
-                width: 18,
-                height: 18,
-                borderRadius: "50%",
-                display: "flex",
+                display: "inline-flex",
                 alignItems: "center",
-                justifyContent: "center",
-                fontFamily: "var(--font-body)",
-                fontSize: "10px",
-                fontWeight: 700,
-                flexShrink: 0,
-                background: isActive ? "#ffffff" : "transparent",
-                color: isActive ? "#e15b39" : isDone ? "#e15b39" : "#6b7280",
-                border: isActive
-                  ? "none"
-                  : isDone
-                  ? "1.5px solid #e15b39"
-                  : "1.5px solid #9ca3af",
-                boxSizing: "border-box",
+                gap: 7,
+                padding: isActive ? "3px 13px 3px 4px" : "3px 0",
+                borderRadius: "9999px",
+                background: isActive ? "rgba(225, 91, 57, 0.08)" : "transparent",
+                border: isActive ? "1px solid rgba(225, 91, 57, 0.25)" : "1px solid transparent",
+                textDecoration: "none",
+                pointerEvents: clickable ? "auto" : "none",
+                cursor: clickable ? "pointer" : "default",
+                transition: "opacity 0.15s ease",
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive && clickable) {
+                  (e.currentTarget as HTMLElement).style.opacity = "0.75";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive && clickable) {
+                  (e.currentTarget as HTMLElement).style.opacity = "1";
+                }
               }}
             >
-              {i + 1}
-            </div>
+              {/* Step circle */}
+              <div
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontFamily: "var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontSize: "11px",
+                  fontWeight: isActive ? 700 : 600,
+                  flexShrink: 0,
+                  background: isActive ? "#e15b39" : "#ffffff",
+                  color: isActive ? "#ffffff" : "#64748b",
+                  border: isActive ? "none" : "1px solid #cbd5e1",
+                  boxSizing: "border-box",
+                }}
+              >
+                {i + 1}
+              </div>
 
-            {/* Label */}
-            <span
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: "12px",
-                fontWeight: isActive ? 700 : 600,
-                letterSpacing: "-0.01em",
-                color: isActive ? "#ffffff" : isDone ? "var(--fg-primary, #111827)" : "#6b7280",
-              }}
-            >
-              {step.label}
-            </span>
-          </Link>
+              {/* Label */}
+              <span
+                style={{
+                  fontFamily: "var(--font-body), -apple-system, BlinkMacSystemFont, sans-serif",
+                  fontSize: "11px",
+                  fontWeight: isActive ? 700 : 600,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  color: isActive ? "#e15b39" : "#64748b",
+                  lineHeight: 1,
+                }}
+              >
+                {step.label}
+              </span>
+            </Link>
+
+            {/* Connecting Step Line */}
+            {i < steps.length - 1 && (
+              <div
+                style={{
+                  width: 20,
+                  height: 1,
+                  background: "#e2e8f0",
+                  flexShrink: 0,
+                  margin: "0 10px",
+                }}
+              />
+            )}
+          </React.Fragment>
         );
       })}
     </div>

@@ -7,6 +7,7 @@ import DashboardGreeting from "./components/DashboardGreeting";
 import DashboardHeroCard from "./components/DashboardHeroCard";
 import DashboardProjectCard, { DashboardProjectItem } from "./components/DashboardProjectCard";
 import NewProjectSetup from "./components/NewProjectSetup";
+import { useTranslation } from "@/lib/i18n";
 
 interface DashboardClientProps {
   userName?: string | null;
@@ -56,6 +57,7 @@ export default function DashboardClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("overview");
   const [showNewProject, setShowNewProject] = useState(initialShowSetup);
+  const { t, isId } = useTranslation();
 
   // Determine items to display
   let itemsToDisplay: DashboardProjectItem[] = [];
@@ -65,7 +67,7 @@ export default function DashboardClient({
       id: p.id,
       appName: p.appName,
       appIdea: p.appIdea,
-      status: p.status === "FINISHED" ? "Finish" : "Unfinish",
+      status: p.status === "FINISHED" ? t.dashboard.finished : t.dashboard.unfinished,
       href: `/design?projectId=${p.id}`,
     }));
   } else {
@@ -118,11 +120,11 @@ export default function DashboardClient({
               <section className="mb-16">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[11px] font-bold tracking-[0.14em] text-neutral-400 uppercase">
-                    YOUR PROJECTS
+                    {t.dashboard.allProjects.toUpperCase()}
                   </span>
                   {projects.length > 0 && (
                     <span className="text-xs text-neutral-400 font-medium">
-                      {itemsToDisplay.length} project{itemsToDisplay.length === 1 ? "" : "s"}
+                      {itemsToDisplay.length} {isId ? "project" : (itemsToDisplay.length === 1 ? "project" : "projects")}
                     </span>
                   )}
                 </div>
@@ -130,10 +132,14 @@ export default function DashboardClient({
                 {itemsToDisplay.length === 0 ? (
                   <div className="bg-white rounded-2xl border border-neutral-200/70 p-12 text-center">
                     <p className="text-base font-semibold text-neutral-800">
-                      No projects matching &ldquo;{searchQuery}&rdquo;
+                      {searchQuery
+                        ? (isId ? `Tidak ada project yang cocok dengan "${searchQuery}"` : `No projects matching "${searchQuery}"`)
+                        : t.dashboard.emptyProjects}
                     </p>
                     <p className="text-sm text-neutral-400 mt-1">
-                      Try searching for another keyword or clear the search filter.
+                      {searchQuery
+                        ? (isId ? "Coba cari dengan kata kunci lain atau bersihkan filter pencarian." : "Try searching for another keyword or clear the search filter.")
+                        : t.dashboard.emptyProjectsDesc}
                     </p>
                   </div>
                 ) : (

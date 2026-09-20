@@ -57,6 +57,8 @@ async function main() {
             await (0, clean_js_1.cleanCommand)(options);
             break;
         case "login":
+        case "sync":
+        case "auth":
             await (0, login_js_1.loginCommand)(options);
             break;
         case "init":

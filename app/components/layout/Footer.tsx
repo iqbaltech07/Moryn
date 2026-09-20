@@ -72,7 +72,7 @@ export default function Footer() {
                 </li>
                 <li>
                   <Link href="/#integrations" className="text-sm text-[#57575c] hover:text-[#141817] transition">
-                    Integrations
+                    AI Agents & CLI
                   </Link>
                 </li>
                 <li>

@@ -1,71 +1,203 @@
-﻿import React from "react";
+import React from "react";
 import { ColorToken, AccordionSection } from "../types";
 
 export const DEFAULT_COLOR_TOKENS: ColorToken[] = [
-  { token: "primary", hex: "#5645d4", role: "Primary / brand" },
-  { token: "primary-pressed", hex: "#4534b3", role: "Primary / brand" },
-  { token: "primary-deep", hex: "#3a2a99", role: "Primary / brand" },
-  { token: "on-primary", hex: "#ffffff", role: "Text on primary" },
-  { token: "brand-navy", hex: "#0a1530", role: "Primary / brand" },
-  { token: "brand-navy-deep", hex: "#070f24", role: "Primary / brand" },
-  { token: "brand-navy-mid", hex: "#1a2a52", role: "Primary / brand" },
-  { token: "link-blue", hex: "#0075de", role: "Link" },
-  { token: "link-blue-pressed", hex: "#005bab", role: "Link" },
-  { token: "brand-orange", hex: "#dd5b00", role: "Primary / brand" },
-  { token: "brand-orange-deep", hex: "#793400", role: "Primary / brand" },
-  { token: "brand-pink", hex: "#ff64c8", role: "Primary / brand" },
+  { token: "bg-base", hex: "#f8fafc", role: "Primary page background surface (clean off-white)" },
+  { token: "bg-surface", hex: "#ffffff", role: "Pure white card, sidebar, and container background" },
+  { token: "bg-elevated", hex: "#f1f5f9", role: "Hover states, popovers, and elevated panels" },
+  { token: "border-subtle", hex: "#e2e8f0", role: "Crisp subtle hairline borders" },
+  { token: "border-focus", hex: "#3b82f6", role: "Active state & input focus rings" },
+  { token: "accent-primary", hex: "#2563eb", role: "Primary action buttons & active indicators" },
+  { token: "accent-hover", hex: "#1d4ed8", role: "Primary button hover & interactive state" },
+  { token: "fg-primary", hex: "#0f172a", role: "Deep slate high-emphasis text & headings (WCAG AAA)" },
+  { token: "fg-muted", hex: "#64748b", role: "Muted secondary text, metadata & helper copy" },
+  { token: "brand-primary", hex: "#141817", role: "Primary brand anchor & dark element surface" },
+  { token: "brand-secondary", hex: "#737b78", role: "Secondary brand tone & neutral accent" },
+  { token: "brand-accent", hex: "#2563eb", role: "Vibrant accent for highlights and active tabs" },
 ];
 
-export const DEFAULT_ACCORDION_SECTIONS: AccordionSection[] = [
-  {
-    id: "overview",
-    title: "Overview",
-    content: "Overview dari arsitektur UI/UX dan prinsip desain utama produk ini.",
-  },
-  {
-    id: "colors",
-    title: "Colors",
-    content: "Sistem pewarnaan menggunakan curated HSL/HEX palette dengan kontras tinggi untuk mode gelap dan terang.",
-  },
-  {
-    id: "typography",
-    title: "Typography",
-    content: "Typography menggunakan Inter/Outfit untuk heading dan JetBrains Mono untuk tag/token teknis.",
-  },
-  {
-    id: "layout",
-    title: "Layout",
-    content: "Grid sistem 12-kolom dengan padding 24px/32px dan max-width container 1280px.",
-  },
-  {
-    id: "elevation",
-    title: "Elevation & Depth",
-    content: "Menggunakan subtle drop shadows (0 1px 3px rgba(0,0,0,0.06)) dan 1px border hairline stroke.",
-  },
-  {
-    id: "shapes",
-    title: "Shapes",
-    content: "Gunakan {rounded.md} (8px) untuk tombol dan {rounded.lg} (12px) untuk semua rumpun kartu.",
-  },
-  {
-    id: "components",
-    title: "Components",
-    content: "Semua komponen UI bersifat modular, reusable, dan bebas dari ad-hoc styling tanpa preset.",
-  },
-  {
-    id: "dos_and_donts",
-    title: "Do's and Don'ts",
-    content: `
+export interface PaletteInfo {
+  paletteName: string;
+  theme: string;
+  swatches: string[];
+}
+
+export function extractPaletteInfo(input: string): PaletteInfo | null {
+  if (!input || !input.trim()) return null;
+  try {
+    let jsonStr = input;
+    if (jsonStr.startsWith("{") && jsonStr.includes("rawMarkdown")) {
+      const parsed = JSON.parse(jsonStr);
+      if (parsed.rawMarkdown && parsed.rawMarkdown.startsWith("{")) {
+        jsonStr = parsed.rawMarkdown;
+      }
+    }
+    if (jsonStr.startsWith("{") && (jsonStr.includes("paletteName") || jsonStr.includes("swatches"))) {
+      const parsed = JSON.parse(jsonStr);
+      return {
+        paletteName: parsed.paletteName || "Custom Palette",
+        theme: parsed.theme || "Neutral / Balanced",
+        swatches: Array.isArray(parsed.swatches) ? parsed.swatches : ["#141817", "#737b78", "#2563eb"],
+      };
+    }
+  } catch {
+    // Not valid JSON
+  }
+  return null;
+}
+
+export function synthesizeTokensFromPalette(palette: PaletteInfo | null): ColorToken[] {
+  if (!palette || !palette.swatches || palette.swatches.length === 0) {
+    return DEFAULT_COLOR_TOKENS;
+  }
+  const s0 = palette.swatches[0] || "#141817";
+  const s1 = palette.swatches[1] || "#737b78";
+  const s2 = palette.swatches[2] || "#2563eb";
+
+  return [
+    { token: "bg-base", hex: "#f8fafc", role: "Primary page background surface (clean off-white)" },
+    { token: "bg-surface", hex: "#ffffff", role: "Pure white card, sidebar, and container background" },
+    { token: "bg-elevated", hex: "#f1f5f9", role: "Hover states, popovers, and elevated panels" },
+    { token: "border-subtle", hex: "#e2e8f0", role: "Crisp subtle hairline borders" },
+    { token: "border-focus", hex: s2, role: "Active state & input focus rings" },
+    { token: "accent-primary", hex: s2, role: "Primary action buttons & active indicators" },
+    { token: "accent-hover", hex: s2 === "#2563eb" ? "#1d4ed8" : s2, role: "Primary button hover state" },
+    { token: "fg-primary", hex: s0.startsWith("#1") || s0.startsWith("#0") ? s0 : "#0f172a", role: "Deep high-contrast text & headings (WCAG AAA)" },
+    { token: "fg-muted", hex: s1, role: "Muted secondary text, metadata & helper copy" },
+    { token: "brand-primary", hex: s0, role: "Primary brand anchor & contrast base" },
+    { token: "brand-secondary", hex: s1, role: "Secondary brand tone & neutral anchor" },
+    { token: "brand-accent", hex: s2, role: "Active brand accent & interactive focus" },
+  ];
+}
+
+export function generateRichDesignSections(
+  appName: string,
+  appIdea: string,
+  palette?: PaletteInfo | null
+): AccordionSection[] {
+  const pName = palette?.paletteName || "Swiss Grid";
+  const pSwatches = palette?.swatches || ["#141817", "#737b78", "#2563eb"];
+  const accentHex = pSwatches[2] || "#2563eb";
+
+  return [
+    {
+      id: "aesthetic-direction",
+      title: "1. Aesthetic Direction & Brief Inference",
+      content: `
+- **Design Read**: Reading as a modern, high-contrast, visual-first workspace for ${appName || "the application"}.
+- **Product Context**: ${appIdea || "AI-powered workflow product."}
+- **Active Palette**: ${pName} (${pSwatches.join(" | ")})
+- **The Three Dials Configuration**:
+  - \`DESIGN_VARIANCE: 8\` (Asymmetric Bento Grid rhythm & distinctive hierarchy)
+  - \`MOTION_INTENSITY: 6\` (Tactile 150ms cubic-bezier state transitions)
+  - \`VISUAL_DENSITY: 4\` (Airy 4px-grid spacing with comfortable bounds)
+- **Design Locks**:
+  - \`Color Consistency Lock\`: Unified single primary accent (\`${accentHex}\`) across all page surfaces.
+  - \`Shape Consistency Lock\`: Uniform 8px (\`rounded.md\`) for inputs/buttons, 12-16px (\`rounded.lg\`) for cards.
+  - \`Page Theme Lock\`: Locked crisp light mode root surface (\`#f8fafc\`), dark slate text (\`#0f172a\`), zero glare.
+      `.trim(),
+    },
+    {
+      id: "color-tokens",
+      title: "2. Design Tokens & Color System",
+      content: `
+| Token Name | HEX / HSL Value | Role & Purpose |
+| :--- | :--- | :--- |
+| \`bg-base\` | \`#f8fafc\` | Primary page background surface (Clean off-white) |
+| \`bg-surface\` | \`#ffffff\` | Pure white card, sidebar, and container background |
+| \`bg-elevated\` | \`#f1f5f9\` | Hover states, popovers, and elevated panels |
+| \`border-subtle\` | \`#e2e8f0\` | Crisp subtle hairline borders |
+| \`border-focus\` | \`${accentHex}\` | Active state & input focus rings |
+| \`accent-primary\` | \`${accentHex}\` | Primary action buttons & active indicators |
+| \`fg-primary\` | \`${pSwatches[0] || "#0f172a"}\` | Deep slate high emphasis text & headings (WCAG AAA) |
+| \`fg-muted\` | \`${pSwatches[1] || "#64748b"}\` | Muted secondary text, metadata & helper copy |
+| \`brand-accent\` | \`${accentHex}\` | Active brand accent & interactive focus |
+      `.trim(),
+    },
+    {
+      id: "typography",
+      title: "3. Typography & Font Pairing",
+      content: `
+- **Display Font**: Plus Jakarta Sans / Outfit (paired display font for headings & visual punch)
+- **Body Font**: Inter / system-ui (highly readable, neutral body font)
+- **Mono Font**: JetBrains Mono / Geist Mono (for code, tokens, and technical identifiers)
+- **Heading 1**: 2rem (32px), Font-weight 800, Color \`#0f172a\`, Letter-spacing -0.025em
+- **Heading 2**: 1.3rem (20.8px), Font-weight 700, Color \`#1e293b\`, Letter-spacing -0.015em
+- **Body Text**: 14px, Line-height 1.6, Color \`#334155\`, Font-weight 400
+- **Code Token**: Background \`rgba(37,99,235,0.08)\`, Border \`rgba(37,99,235,0.2)\`, Text \`${accentHex}\`
+      `.trim(),
+    },
+    {
+      id: "layout-grid",
+      title: "4. Layout, 4px Grid & Spacing Scale",
+      content: `
+- **Container Max-Width**: 1280px with 24px/32px responsive inline padding.
+- **Grid Scale**: 12-column responsive layout adhering strictly to 4px spacing scale (4px, 8px, 12px, 16px, 24px, 32px, 48px).
+- **Component Gutters**: 16px to 24px gap between cards in bento grids.
+- **Section Spacing**: Generous separation of 40px to 64px between major functional sections.
+      `.trim(),
+    },
+    {
+      id: "elevation",
+      title: "5. Elevation & Layered Shadow Tokens",
+      content: `
+- **Subtle Elevation**: Multi-layered shadow \`0 1px 3px 0 rgba(0,0,0,0.06), 0 1px 2px -1px rgba(0,0,0,0.04)\`.
+- **Card Containers**: 1px crisp border stroke (\`#e2e8f0\`) on pure white background (\`#ffffff\`).
+- **Elevated Popovers**: Soft shadow \`0 10px 25px -3px rgba(15,23,42,0.08)\` for dropdowns, tooltips, and modals.
+- **Interactive Hover**: Gentle -1px translateY translation on hover with smooth 150ms transition.
+      `.trim(),
+    },
+    {
+      id: "border-radius",
+      title: "6. Border Radius & Shape Consistency",
+      content: `
+- **Buttons & Inputs**: 8px (\`rounded.md\`) — uniform corner radius across all form inputs and interactive buttons.
+- **Card Containers**: 12px (\`rounded.lg\`) to 16px (\`rounded.xl\`) for main content cards and preview panels.
+- **Badges & Status Tags**: Full pill (\`rounded-full\` / 9999px) strictly reserved for status indicators.
+      `.trim(),
+    },
+    {
+      id: "component-guidelines",
+      title: "7. Component Guidelines & Curated React Bits",
+      content: `
+- **Modular Architecture**: Self-contained, reusable React components with zero ad-hoc inline styles.
+- **React Bits (reactbits.dev) Standard**:
+  - **Variant Standard**: ALWAYS use the \`TS-TW\` (TypeScript + Tailwind CSS) variant.
+  - **Approved Hero Backgrounds**: Subtle background FX (e.g. \`Aurora Background\` in HSL muted mode, \`Animated Grid / Dot Pattern\` with 1px hairline stroke).
+  - **Approved UI Micro-Interactions**: Restrained, tactile components (e.g. \`Spotlight Card\` with subtle hover stroke, \`Magnet Button\`, \`Blur Text\` reveal).
+  - **Banned Effects**: NO custom mouse cursors, NO oversaturated neon glows, NO unreadable text glitch/jitter FX.
+      `.trim(),
+    },
+    {
+      id: "accessibility",
+      title: "8. Accessibility & WCAG AA Contrast",
+      content: `
+- **Text Contrast**: High contrast (minimum 4.5:1 for body copy, 14:1 for headings) against background surfaces.
+- **Focus Rings**: 2px visible focus ring (\`border-focus\`) with 2px offset for keyboard navigation.
+- **Semantic HTML**: HTML5 semantic markup (\`<header>\`, \`<main>\`, \`<section>\`, \`<article>\`) with valid ARIA attributes.
+      `.trim(),
+    },
+    {
+      id: "dos_and_donts",
+      title: "9. Do's and Don'ts (Anti-Slop Directives)",
+      content: `
 ### Do
-â€¢ Maintain strict color and shape consistency across all page sections.
-â€¢ Pair display font with body font for strong visual hierarchy.
+- Maintain strict color and shape consistency across all page sections.
+- Pair display font with body font for strong visual hierarchy.
+- Use spatial negative space and surface contrast instead of heavy line dividers.
+- Ensure WCAG AA contrast compliance for all text against light surfaces.
 
 ### Don't
-â€¢ Do not hardcode static arbitrary pixel offsets when calculating dynamic container bounds.
-â€¢ Do not use raw default browser red/blue/green colors.
-    `,
-  },
-];
+- Do not use purple-to-blue gradient, gradient text, or neon glows (AI Slop Tell #1).
+- Do not use plain static browser-default backgrounds for Hero Section.
+- Do not repeat identical 3-card grid loops without visual weight variation.
+- Do not use arbitrary hairline dividers under every header and card row.
+      `.trim(),
+    },
+  ];
+}
+
+export const DEFAULT_ACCORDION_SECTIONS: AccordionSection[] = generateRichDesignSections("", "");
 
 // Universal dynamic parser for markdown sections (#, ##)
 export function parseMarkdownSections(mdText: string): AccordionSection[] {
@@ -185,6 +317,48 @@ export function parseColorTokens(mdText: string): ColorToken[] {
   }
 
   return tokens;
+}
+
+export function parseOrSynthesizeDesignData(
+  rawDesignData: string,
+  appName: string = "Stratum AI",
+  appIdea: string = ""
+): {
+  sections: AccordionSection[];
+  colorTokens: ColorToken[];
+  paletteInfo: PaletteInfo | null;
+  rawMarkdown: string;
+} {
+  const paletteInfo = extractPaletteInfo(rawDesignData);
+  let rawMarkdown = rawDesignData || "";
+
+  if (rawMarkdown.startsWith("{") && rawMarkdown.includes("rawMarkdown")) {
+    try {
+      const parsed = JSON.parse(rawMarkdown);
+      rawMarkdown = parsed.rawMarkdown || rawMarkdown;
+    } catch {}
+  }
+
+  const trimmed = rawMarkdown.trim();
+  const isJsonOnly = trimmed.startsWith("{") && trimmed.endsWith("}");
+
+  let sections = isJsonOnly ? [] : parseMarkdownSections(rawMarkdown);
+  let colorTokens = isJsonOnly ? [] : parseColorTokens(rawMarkdown);
+
+  if (sections.length === 0) {
+    sections = generateRichDesignSections(appName, appIdea, paletteInfo);
+  }
+
+  if (colorTokens.length === 0) {
+    colorTokens = synthesizeTokensFromPalette(paletteInfo);
+  }
+
+  if (isJsonOnly || !rawMarkdown.includes("#")) {
+    rawMarkdown = `# Design Guidelines & System Specifications: ${appName || "Project"}\n\n` +
+      sections.map((s) => `## ${s.title}\n\n${s.content}`).join("\n\n");
+  }
+
+  return { sections, colorTokens, paletteInfo, rawMarkdown };
 }
 
 function escapeHtml(str: string): string {

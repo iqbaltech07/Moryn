@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 
 const NAV_LINKS = [
   { label: "Features", href: "/#features" },
-  { label: "Showcase", href: "/#showcase" },
+  { label: "Changelog", href: "/changelog" },
   { label: "How it Works", href: "/#how-it-works" },
   { label: "Leaderboard", href: "/#leaderboard" },
   { label: "Pricing", href: "/#pricing" },
@@ -38,11 +38,10 @@ export default function Navbar() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled
-          ? "bg-[#fcfbf8]/90 backdrop-blur-md border-b border-[#141817]/8 shadow-[0_4px_20px_rgba(20,24,23,0.03)]"
-          : "bg-[#fcfbf8]/70 backdrop-blur-sm border-b border-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled
+        ? "bg-[#fcfbf8]/90 backdrop-blur-md border-b border-[#141817]/8 shadow-[0_4px_20px_rgba(20,24,23,0.03)]"
+        : "bg-[#fcfbf8]/70 backdrop-blur-sm border-b border-transparent"
+        }`}
     >
       <nav className="max-w-[1240px] mx-auto px-6 md:px-8 h-18 flex items-center justify-between">
         {/* Logo */}
@@ -101,14 +100,6 @@ export default function Navbar() {
               >
                 <LayoutGrid size={14} className="opacity-90" />
                 <span>Dashboard</span>
-              </Link>
-
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#e85d3f] hover:bg-[#d84d2f] text-white text-[13px] font-semibold tracking-[-0.01em] shadow-sm transition-all"
-              >
-                <Sparkles size={14} className="opacity-90" />
-                <span>Create PRD</span>
               </Link>
 
               {/* User Dropdown */}

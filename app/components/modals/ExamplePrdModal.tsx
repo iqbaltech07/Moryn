@@ -129,7 +129,7 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
                   letterSpacing: "0.06em",
                 }}
               >
-                REF: PRD-2024-0042 · TaskFlow · 7 sections
+                REF: PRD-2026-0088 · Moryn · 8 sections
               </p>
             </div>
           </div>
@@ -201,6 +201,7 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
             <nav style={{ flex: 1, overflowY: "auto", padding: "8px 8px 16px" }}>
               {toc.map((item) => {
                 const isActive = activeTocId === item.id;
+                const isSub = item.level === 3;
                 return (
                   <button
                     key={item.id}
@@ -210,12 +211,12 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
                       width: "100%",
                       textAlign: "left",
                       fontFamily: "var(--font-mono)",
-                      fontSize: "11px",
+                      fontSize: isSub ? "10px" : "11px",
                       lineHeight: 1.4,
-                      padding: "7px 10px",
+                      padding: isSub ? "5px 10px 5px 20px" : "7px 10px",
                       borderRadius: "var(--radius-sm)",
                       background: isActive ? "var(--bg-elevated)" : "transparent",
-                      color: isActive ? "var(--color-signal)" : "var(--fg-muted)",
+                      color: isActive ? "var(--color-signal)" : (isSub ? "var(--fg-muted)" : "var(--fg-secondary)"),
                       fontWeight: isActive ? 600 : 400,
                       border: "none",
                       borderLeft: isActive
@@ -224,7 +225,7 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
                       cursor: "pointer",
                       transition: "all 0.1s ease",
                       marginBottom: 2,
-                      letterSpacing: "0.03em",
+                      letterSpacing: "0.02em",
                     }}
                   >
                     {item.text}
@@ -247,10 +248,9 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
             <MarkdownRenderer
               content={PRD_TEMPLATE}
               onTocUpdate={(newToc) => {
-                const filtered = newToc.filter((item) => /^\d+\./.test(item.text));
-                setToc(filtered);
-                if (filtered.length > 0 && !activeTocId) {
-                  setActiveTocId(filtered[0].id);
+                setToc(newToc);
+                if (newToc.length > 0 && !activeTocId) {
+                  setActiveTocId(newToc[0].id);
                 }
               }}
               idPrefix="exh-"

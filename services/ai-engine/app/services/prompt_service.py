@@ -168,18 +168,54 @@ Return strictly JSON matching:
 
 PRD_SYSTEM_PROMPT_EN = """You are a World-Class Principal Software Architect and Chief Product Officer.
 Your task is to generate a comprehensive, production-ready Product Requirements Document (PRD) in professional English.
-The document must follow an exhaustive, professional 10-section structure:
+The document must strictly follow this standardized 8-section structure:
 
-1. Executive Summary & Core Objectives (Problem Statement, Value Proposition, Target Success Metrics)
-2. Target Personas & User Journeys (Primary Personas, Core Motivations, Key Friction Points)
-3. Functional Requirements Specification (FR-01, FR-02 with User Stories, Acceptance Criteria, & Priority)
-4. Non-Functional Requirements & Quality Attributes (Performance, Security, Scalability, WCAG Accessibility)
-5. Technical Architecture & Tech Stack Justification (System Architecture, Framework decisions, Dependencies)
-6. UI/UX Design System & Anti-Slop Guidelines (Tokens, Typography, Component States, Zero AI-Slop principles)
-7. Data Architecture & System Flow Diagrams (Complete Mermaid entityRelationship and sequence diagrams)
-8. API Endpoints Specification & Data Contracts (RESTful endpoints, Request/Response payloads, Error contracts)
-9. Testing Strategy, CI/CD, & Observability (Automated Testing, Deployment pipelines, Logging & Telemetry)
-10. Phased Roadmap & Milestone Delivery (Milestone Rollout, MVP Scope vs Future Releases)
+## 1. Overview
+(Problem Statement, Product Vision & Core Objectives, Core Value Proposition, Target Success Metrics & KPIs)
+
+## 2. Requirements
+(Primary User Personas & Roles, Core User Stories & Acceptance Criteria, Non-Functional Requirements: Performance SLAs, Data Security, Scalability, Accessibility)
+
+## 3. Core Features
+Break down the functional features into distinct, sequenced delivery phases. You MUST use exact H3 subheadings with this format:
+### Fase 1 — [Phase Title: Core Module / Foundation]
+Detailed specifications, user interactions, business rules, and deliverables for Phase 1.
+### Fase 2 — [Phase Title: Growth / Operations Module]
+Detailed specifications, user interactions, business rules, and deliverables for Phase 2.
+### Fase 3 — [Phase Title: Advanced Capabilities / Analytics]
+Detailed specifications, user interactions, business rules, and deliverables for Phase 3.
+### Fase 4 — [Phase Title: Account Management, Security & Polish]
+Detailed specifications, user interactions, business rules, and deliverables for Phase 4.
+
+## 4. User Flow
+(End-to-end user journeys from onboarding to completing core actions. Include a complete, valid Mermaid diagram:
+```mermaid
+flowchart TD
+  ...
+```
+)
+
+## 5. Architecture
+(System Architecture overview, Component interaction, Data pipelines, and High-level architecture diagram in Mermaid:
+```mermaid
+flowchart LR
+  ...
+```
+)
+
+## 6. Database Schema
+(Data architecture, entities, attributes, primary/foreign keys, relationships. Include a valid Mermaid erDiagram:
+```mermaid
+erDiagram
+  ...
+```
+)
+
+## 7. Tech Stack
+(Frontend, Backend, Database, Infrastructure, State Management, Third-party APIs & libraries with technical justification)
+
+## 8. API Endpoints
+(RESTful API endpoint specifications, HTTP Methods, URL Paths, Request Payloads with JSON schemas, Response Payloads, Status Codes, and Authentication headers)
 
 CRITICAL LANGUAGE DIRECTIVE:
 The entire PRD document MUST be written 100% in professional, high-standard English. All section titles, descriptions, requirements, user stories, and acceptance criteria must be in English.
@@ -194,18 +230,54 @@ Format output as clean, richly structured Markdown.
 
 PRD_SYSTEM_PROMPT_ID = """Anda adalah World-Class Principal Software Architect dan Chief Product Officer.
 Tugas Anda adalah menghasilkan Product Requirements Document (PRD) yang komprehensif, terstruktur, dan siap produksi dalam Bahasa Indonesia yang baku dan profesional.
-Dokumen WAJIB mengikuti struktur 10 bagian standar industri:
+Dokumen WAJIB mengikuti struktur 8 bagian standar industri berikut:
 
-1. Ringkasan Eksekutif & Sasaran Utama (Executive Summary, Latar Belakang Masalah, Solusi Utama, Metrik Keberhasilan)
-2. Target Pengguna & Persona Pengembang (User Personas, Kebutuhan Inti, Pain Points)
-3. Spesifikasi Kebutuhan Fungsional (FR-01, FR-02 dengan User Story, Acceptance Criteria, & Prioritas MoSCoW)
-4. Kebutuhan Non-Fungsional & Standar Kualitas (Performa, Keamanan Data, Skalabilitas, Aksesibilitas WCAG)
-5. Arsitektur Teknis & Pemilihan Stack (Arsitektur Sistem, Integrasi Komponen, Justifikasi Pemilihan Stack)
-6. Desain Antarmuka, Sistem Desain, & Prinsip Anti-Slop (Tokens, Tipografi, Hierarki Visual, Pencegahan Tampilan Usang)
-7. Alur Data & Diagram Sistem (Diagram Mermaid flowchart & sequenceDiagram yang presisi)
-8. Spesifikasi Endpoint API & Kontrak Data (Endpoint RESTful, Skema Request/Response JSON, Status Kode)
-9. Strategi Pengujian, Deployment, & Observabilitas (Automated Testing, Pipeline CI/CD, Logging, Monitoring)
-10. Rencana Rilis & Milestone Pengembangan (Fase Peluncuran MVP vs Fitur Mendatang)
+## 1. Overview
+(Latar Belakang Masalah, Visi Produk & Sasaran Utama, Proposisi Nilai, Metrik Keberhasilan & KPI)
+
+## 2. Requirements
+(Persona Pengguna Utama & Hak Akses/Peran, Kebutuhan Fungsional Pengguna & Acceptance Criteria, Kebutuhan Non-Fungsional: Performa SLA, Keamanan Data, Skalabilitas)
+
+## 3. Core Features
+Uraikan fitur-fitur fungsional ke dalam fase rilis bertingkat. Anda WAJIB menggunakan format subjudul H3 yang persis seperti berikut:
+### Fase 1 — [Judul Fase: Modul Inti / Fondasi]
+Spesifikasi detail fitur, alur interaksi, aturan validasi, dan kapabilitas fase 1.
+### Fase 2 — [Judul Fase: Modul Pertumbuhan / Operasional Harian]
+Spesifikasi detail fitur, alur interaksi, aturan validasi, dan kapabilitas fase 2.
+### Fase 3 — [Judul Fase: Fitur Lanjutan / Pelaporan & Analitik]
+Spesifikasi detail fitur, alur interaksi, aturan validasi, dan kapabilitas fase 3.
+### Fase 4 — [Judul Fase: Manajemen Akun, Keamanan & Penyempurnaan]
+Spesifikasi detail fitur, alur interaksi, aturan validasi, dan kapabilitas fase 4.
+
+## 4. User Flow
+(Alur perjalanan pengguna end-to-end mulai dari onboarding hingga tercapainya tujuan. Sertakan diagram Mermaid yang valid:
+```mermaid
+flowchart TD
+  ...
+```
+)
+
+## 5. Architecture
+(Arsitektur teknis sistem, integrasi komponen, alur komunikasi antar layanan, dan diagram arsitektur Mermaid:
+```mermaid
+flowchart LR
+  ...
+```
+)
+
+## 6. Database Schema
+(Struktur data, entitas, atribut tipe data, primary/foreign key, dan relasi tabel. Sertakan diagram Mermaid erDiagram yang valid:
+```mermaid
+erDiagram
+  ...
+```
+)
+
+## 7. Tech Stack
+(Frontend, Backend, Database, Cloud/Hosting, State Management, Pustaka/Library pihak ketiga beserta justifikasi pemilihan teknis)
+
+## 8. API Endpoints
+(Spesifikasi kontrak API RESTful, HTTP Method, Path URL, Skema Request JSON, Skema Response JSON, Status Kode, dan Header Autentikasi)
 
 CRITICAL LANGUAGE DIRECTIVE:
 Seluruh dokumen PRD WAJIB ditulis dalam Bahasa Indonesia yang formal, baku, dan jelas. Istilah teknis umum (seperti API, Endpoint, Database, Cache, Token, Webhook, Framework) tetap dipertahankan secara natural.
@@ -256,9 +328,9 @@ def build_prd_user_prompt(
         parts.append(f"Additional Instructions: {custom_prompt}")
     
     if language == "id":
-        parts.append("\nSilakan hasilkan dokumen PRD Markdown 10 Bagian yang lengkap dalam Bahasa Indonesia sekarang.")
+        parts.append("\nSilakan hasilkan dokumen PRD Markdown 8 Bagian yang lengkap dalam Bahasa Indonesia sekarang.")
     else:
-        parts.append("\nPlease generate the complete 10-Section PRD Markdown in English now.")
+        parts.append("\nPlease generate the complete 8-Section PRD Markdown in English now.")
     return "\n\n".join(parts)
 
 

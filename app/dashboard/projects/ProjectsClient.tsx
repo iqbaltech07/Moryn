@@ -8,6 +8,7 @@ import DashboardHeader from "../components/DashboardHeader";
 import { apiClient } from "@/lib/utils/apiClient";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/lib/i18n";
 
 export interface ProjectItem {
   id: string;
@@ -34,22 +35,23 @@ export default function ProjectsClient({
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "finished" | "in_progress">("all");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const { t, isId } = useTranslation();
 
   const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    if (!confirm(t.projectsPage.deleteConfirm(name))) return;
 
     setDeletingId(id);
     try {
       await apiClient.projects.delete(id);
       setProjects((prev) => prev.filter((p) => p.id !== id));
-      toast.success("Project deleted successfully");
+      toast.success(t.projectsPage.deletedSuccess);
       router.refresh();
     } catch (err: unknown) {
       const error = err as { message?: string };
-      toast.error(error.message || "Failed to delete project");
+      toast.error(error.message || t.projectsPage.deleteError);
     } finally {
       setDeletingId(null);
     }
@@ -92,10 +94,10 @@ export default function ProjectsClient({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <h1 className="text-3xl sm:text-[34px] font-bold text-neutral-900 tracking-[-0.03em] leading-tight">
-                Projects
+                {t.projectsPage.title}
               </h1>
               <p className="text-base text-neutral-500 font-normal mt-1 leading-relaxed">
-                Manage, inspect, and organize all your product workspaces.
+                {t.projectsPage.subtitle}
               </p>
             </div>
 
@@ -104,7 +106,7 @@ export default function ProjectsClient({
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#E05A38] hover:bg-[#CF4D2C] active:bg-[#B83E1F] text-white text-sm font-medium tracking-tight shadow-xs transition-all duration-150 sm:self-center shrink-0"
             >
               <Plus size={17} strokeWidth={2.2} />
-              <span>New Project</span>
+              <span>{t.projectsPage.newProjectBtn}</span>
             </Link>
           </div>
 
@@ -120,7 +122,7 @@ export default function ProjectsClient({
                     : "text-neutral-500 hover:text-neutral-900"
                 }`}
               >
-                All ({projects.length})
+                {t.projectsPage.allFilter} ({projects.length})
               </button>
               <button
                 onClick={() => setStatusFilter("finished")}
@@ -130,7 +132,7 @@ export default function ProjectsClient({
                     : "text-neutral-500 hover:text-neutral-900"
                 }`}
               >
-                Finished ({finishedCount})
+                {t.projectsPage.finishedFilter} ({finishedCount})
               </button>
               <button
                 onClick={() => setStatusFilter("in_progress")}
@@ -140,7 +142,7 @@ export default function ProjectsClient({
                     : "text-neutral-500 hover:text-neutral-900"
                 }`}
               >
-                In Progress ({inProgressCount})
+                {t.projectsPage.inProgressFilter} ({inProgressCount})
               </button>
             </div>
 
@@ -154,7 +156,7 @@ export default function ProjectsClient({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search projects..."
+                placeholder={t.projectsPage.searchPlaceholder}
                 className="w-full h-9 pl-9 pr-3 rounded-xl bg-white border border-neutral-200 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition"
               />
             </div>
@@ -168,30 +170,32 @@ export default function ProjectsClient({
               </div>
               <h3 className="text-lg font-bold text-neutral-800 mb-1">
                 {searchQuery || statusFilter !== "all"
-                  ? "No matching projects found"
-                  : "No projects created yet"}
+                  ? t.projectsPage.noProjectsFound
+                  : (isId ? "Belum ada project yang dibuat" : "No projects created yet")}
               </h3>
               <p className="text-sm text-neutral-500 max-w-sm mx-auto mb-6">
                 {searchQuery || statusFilter !== "all"
-                  ? "Try resetting your search query or changing the status filter."
-                  : "Turn your first idea into a structured PRD, architecture, and Kanban board."}
+                  ? t.projectsPage.noProjectsFoundDesc
+                  : (isId ? "Mulai rancang ide pertama Anda menjadi PRD, arsitektur, dan Kanban task terstruktur." : "Turn your first idea into a structured PRD, architecture, and Kanban board.")}
               </p>
               <Link
                 href="/dashboard/new-project"
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#E05A38] text-white text-sm font-medium hover:bg-[#CF4D2C] transition shadow-xs"
               >
                 <Plus size={16} />
-                <span>Create First Project</span>
+                <span>{t.dashboard.createProjectBtn}</span>
               </Link>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredProjects.map((project) => {
                 const isFinished = project.status === "FINISHED";
-                const createdFormatted = new Date(project.createdAt).toLocaleDateString(
-                  "en-US",
-                  { month: "short", day: "numeric", year: "numeric" }
-                );
+                const createdDate = new Date(project.createdAt);
+                const createdFormatted = createdDate.toLocaleDateString(isId ? "id-ID" : "en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                });
 
                 return (
                   <Link
@@ -214,7 +218,7 @@ export default function ProjectsClient({
                                 : "bg-neutral-100 text-neutral-600 border border-neutral-200/60"
                             }`}
                           >
-                            {isFinished ? "Finish" : "Unfinish"}
+                            {isFinished ? t.dashboard.finished : t.dashboard.unfinished}
                           </span>
 
                           <button
@@ -247,8 +251,8 @@ export default function ProjectsClient({
                         {createdFormatted}
                       </span>
                       <span className="text-neutral-500 font-medium group-hover:text-[#E05A38] group-hover:translate-x-0.5 transition-all inline-flex items-center gap-1">
-                        Open Project
-                        <ArrowRight size={12} />
+                        {t.projectsPage.openWorkspace}
+                        <ArrowRight size={13} />
                       </span>
                     </div>
                   </Link>
