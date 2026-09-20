@@ -1,14 +1,14 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 
 export type WorkflowStep = "struktur" | "prd" | "design" | "task";
 
 const STEPS: { id: WorkflowStep; label: string; path: string }[] = [
-  { id: "struktur", label: "STRUCTURE", path: "/structure" },
+  { id: "struktur", label: "Structure", path: "/structure" },
   { id: "prd",      label: "PRD",       path: "/prd" },
-  { id: "design",   label: "DESIGN",    path: "/design" },
-  { id: "task",     label: "TASK",      path: "/task" },
+  { id: "design",   label: "Design",    path: "/design" },
+  { id: "task",     label: "Task",      path: "/task" },
 ];
 
 export default function StepNavbar({
@@ -28,7 +28,7 @@ export default function StepNavbar({
         transform: "translateX(-50%)",
         display: "flex",
         alignItems: "center",
-        gap: 16,
+        gap: 4,
         zIndex: 10,
         whiteSpace: "nowrap",
       }}
@@ -47,7 +47,7 @@ export default function StepNavbar({
               display: "flex",
               alignItems: "center",
               gap: 6,
-              padding: isActive ? "4px 12px 4px 6px" : "4px 8px",
+              padding: isActive ? "5px 13px 5px 7px" : "5px 9px",
               borderRadius: "9999px",
               background: isActive ? "#e15b39" : "transparent",
               textDecoration: "none",
@@ -64,7 +64,7 @@ export default function StepNavbar({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-body)",
                 fontSize: "10px",
                 fontWeight: 700,
                 flexShrink: 0,
@@ -84,11 +84,10 @@ export default function StepNavbar({
             {/* Label */}
             <span
               style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: "11px",
+                fontFamily: "var(--font-body)",
+                fontSize: "12px",
                 fontWeight: isActive ? 700 : 600,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
+                letterSpacing: "-0.01em",
                 color: isActive ? "#ffffff" : isDone ? "var(--fg-primary, #111827)" : "#6b7280",
               }}
             >
@@ -100,4 +99,3 @@ export default function StepNavbar({
     </div>
   );
 }
-

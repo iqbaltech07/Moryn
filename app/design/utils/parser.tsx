@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { ColorToken, AccordionSection } from "../types";
 
 export const DEFAULT_COLOR_TOKENS: ColorToken[] = [
@@ -57,12 +57,12 @@ export const DEFAULT_ACCORDION_SECTIONS: AccordionSection[] = [
     title: "Do's and Don'ts",
     content: `
 ### Do
-• Maintain strict color and shape consistency across all page sections.
-• Pair display font with body font for strong visual hierarchy.
+â€¢ Maintain strict color and shape consistency across all page sections.
+â€¢ Pair display font with body font for strong visual hierarchy.
 
 ### Don't
-• Do not hardcode static arbitrary pixel offsets when calculating dynamic container bounds.
-• Do not use raw default browser red/blue/green colors.
+â€¢ Do not hardcode static arbitrary pixel offsets when calculating dynamic container bounds.
+â€¢ Do not use raw default browser red/blue/green colors.
     `,
   },
 ];
@@ -318,8 +318,8 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
       return;
     }
 
-    // 3. Check Bullet List Item: - or * or •
-    const bulletMatch = trimmed.match(/^[-*•]\s+(.+)$/);
+    // 3. Check Bullet List Item: - or * or â€¢
+    const bulletMatch = trimmed.match(/^[-*â€¢]\s+(.+)$/);
     if (bulletMatch) {
       flushKv();
       flushTable();
@@ -334,7 +334,7 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
         title = boldMatch[1].trim();
         desc = boldMatch[2].trim();
       } else {
-        const splitParts = itemText.split(/[:—–]\s*(.+)/);
+        const splitParts = itemText.split(/[:â€”â€“]\s*(.+)/);
         if (splitParts.length >= 2) {
           title = splitParts[0].trim();
           desc = splitParts[1] ? splitParts[1].trim() : "";
@@ -349,7 +349,7 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
         token = tokenMatch[0];
       }
 
-      desc = desc.replace(/^[:—–]\s*/, "");
+      desc = desc.replace(/^[:â€”â€“]\s*/, "");
 
       if (indent >= 2 && currentListItems.length > 0) {
         const parent = currentListItems[currentListItems.length - 1];
@@ -397,7 +397,7 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
                   background: block.isDo ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
                   border: `1px solid ${block.isDo ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
                   color: block.isDo ? "#4ade80" : "#f87171",
-                  fontFamily: "var(--font-mono)",
+                  fontFamily: "var(--font-body)",
                   fontSize: 11,
                   fontWeight: 700,
                   letterSpacing: "0.08em",
@@ -494,8 +494,8 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
               <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--border-hairline)", background: "rgba(255,255,255,0.03)" }}>
-                    <th style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", textTransform: "uppercase", width: "40%" }}>PROPERTY</th>
-                    <th style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", textTransform: "uppercase" }}>VALUE</th>
+                    <th style={{ padding: "10px 14px", fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", textTransform: "uppercase", width: "40%" }}>PROPERTY</th>
+                    <th style={{ padding: "10px 14px", fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", textTransform: "uppercase" }}>VALUE</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -523,7 +523,7 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
                 <thead>
                   <tr style={{ borderBottom: "1px solid var(--border-hairline)", background: "rgba(255,255,255,0.03)" }}>
                     {block.headers.map((cell, cIdx) => (
-                      <th key={cIdx} style={{ padding: "10px 14px", fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", textTransform: "uppercase" }}>
+                      <th key={cIdx} style={{ padding: "10px 14px", fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", textTransform: "uppercase" }}>
                         {cell}
                       </th>
                     ))}
@@ -558,3 +558,4 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
     </div>
   );
 }
+

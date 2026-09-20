@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Position, Handle } from "@xyflow/react";
 import { LayoutGrid, ChevronRight } from "lucide-react";
 import type { StrukturChild } from "./types";
@@ -45,7 +45,7 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
             alignItems: "center",
             gap: 6,
             marginBottom: 10,
-            fontFamily: "var(--font-mono)",
+            fontFamily: "var(--font-body)",
             fontSize: 9,
             fontWeight: 700,
             letterSpacing: "0.08em",
@@ -101,7 +101,7 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
               background: "transparent",
               border: "none",
               color: "var(--color-circuit)",
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-body)",
               fontSize: 9,
               fontWeight: 700,
               cursor: "pointer",
@@ -135,3 +135,4 @@ export function SubFeatureGroupNode({ id, data }: { id: string; data: any }) {
     </>
   );
 }
+

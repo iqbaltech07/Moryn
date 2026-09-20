@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { ColorToken } from "../types";
 
 interface ColorTokensTableProps {
@@ -9,10 +9,10 @@ export default function ColorTokensTable({ colorTokens }: ColorTokensTableProps)
   return (
     <div style={{ marginBottom: 32 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-muted)" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-muted)" }}>
           COLOR TOKENS
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--color-circuit)" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--color-circuit)" }}>
           {colorTokens.length} Tokens Defined
         </span>
       </div>
@@ -21,9 +21,9 @@ export default function ColorTokensTable({ colorTokens }: ColorTokensTableProps)
         <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
           <thead>
             <tr style={{ borderBottom: "1px solid var(--border-hairline)", background: "rgba(255,255,255,0.02)" }}>
-              <th style={{ padding: "12px 18px", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: "var(--fg-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>TOKEN</th>
-              <th style={{ padding: "12px 18px", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: "var(--fg-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>HEX</th>
-              <th style={{ padding: "12px 18px", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: "var(--fg-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>ROLE</th>
+              <th style={{ padding: "12px 18px", fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>TOKEN</th>
+              <th style={{ padding: "12px 18px", fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>HEX</th>
+              <th style={{ padding: "12px 18px", fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", letterSpacing: "0.06em", textTransform: "uppercase" }}>ROLE</th>
             </tr>
           </thead>
           <tbody>
@@ -59,3 +59,4 @@ export default function ColorTokensTable({ colorTokens }: ColorTokensTableProps)
     </div>
   );
 }
+

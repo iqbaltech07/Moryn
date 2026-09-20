@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -104,7 +104,7 @@ function PreviewPageContent() {
           });
         }
       })
-      .catch(() => {});
+      .catch(() => { });
 
     const handleProjectUpdated = (e: Event) => {
       const customEvent = e as CustomEvent;
@@ -200,14 +200,14 @@ function PreviewPageContent() {
         toast.success("PRD berhasil diperbarui!");
         try {
           window.dispatchEvent(new CustomEvent("prdUpdated", { detail: { prdData: newMd } }));
-        } catch {}
+        } catch { }
       }
       let reply = (data as any).reply || data.diffSummary || "Done.";
       if (typeof reply === "string" && reply.trim().startsWith("{") && reply.includes('"reply"')) {
         try {
           const m = reply.match(/"reply"\s*:\s*"([\s\S]*?)"/);
           if (m?.[1]) reply = m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
-        } catch (_) {}
+        } catch (_) { }
       }
       addMessage({
         id: (Date.now() + 1).toString(),
@@ -217,7 +217,7 @@ function PreviewPageContent() {
         actions: (data as any).actions || undefined,
       });
     } catch (err: any) {
-      addMessage({ id: (Date.now() + 1).toString(), role: "assistant", content: `❌ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
+      addMessage({ id: (Date.now() + 1).toString(), role: "assistant", content: `âŒ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
     } finally { setIsAiEditing(false); }
   };
 
@@ -313,7 +313,7 @@ function PreviewPageContent() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100vh", background: "var(--color-background)", color: "var(--fg-primary)" }}>
 
-      {/* ── Topbar ── */}
+      {/* â”€â”€ Topbar â”€â”€ */}
       <header style={{
         display: "flex", alignItems: "center", justifyContent: "space-between",
         padding: "0 24px", height: 56, flexShrink: 0,
@@ -341,7 +341,7 @@ function PreviewPageContent() {
               background: "#e15b39",
               color: "#ffffff",
               border: "none",
-              fontFamily: "var(--font-mono, monospace)",
+              fontFamily: "var(--font-body)",
               fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "0.02em",
@@ -356,10 +356,10 @@ function PreviewPageContent() {
         </div>
       </header>
 
-      {/* ── Body ── */}
+      {/* â”€â”€ Body â”€â”€ */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
 
-        {/* ── Left Sidebar: Document Header, Actions & TOC ── */}
+        {/* â”€â”€ Left Sidebar: Document Header, Actions & TOC â”€â”€ */}
         <aside style={{
           width: 250,
           flexShrink: 0,
@@ -390,7 +390,7 @@ function PreviewPageContent() {
                 fontSize: 14,
                 fontWeight: 700,
                 color: "#e15b39",
-                fontFamily: "var(--font-mono, monospace)",
+                fontFamily: "var(--font-body)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
@@ -425,7 +425,7 @@ function PreviewPageContent() {
                     border: "1px solid rgba(248,113,113,0.35)",
                     background: "rgba(248,113,113,0.08)",
                     color: "#f87171",
-                    fontFamily: "var(--font-mono, monospace)",
+                    fontFamily: "var(--font-body)",
                     fontSize: "11px",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -447,13 +447,13 @@ function PreviewPageContent() {
                     border: "none",
                     background: "#e15b39",
                     color: "#ffffff",
-                    fontFamily: "var(--font-mono, monospace)",
+                    fontFamily: "var(--font-body)",
                     fontSize: "11px",
                     fontWeight: 700,
                     cursor: isSaving ? "not-allowed" : "pointer",
                   }}
                 >
-                  {isSaving ? "Saving…" : "Save PRD"}
+                  {isSaving ? "Savingâ€¦" : "Save PRD"}
                 </button>
               </div>
             ) : (
@@ -471,7 +471,7 @@ function PreviewPageContent() {
                   background: "#e15b39",
                   color: "#ffffff",
                   border: "none",
-                  fontFamily: "var(--font-mono, monospace)",
+                  fontFamily: "var(--font-body)",
                   fontSize: "12px",
                   fontWeight: 700,
                   letterSpacing: "0.04em",
@@ -531,7 +531,7 @@ function PreviewPageContent() {
           {/* CONTENTS Header */}
           <div style={{
             padding: "8px 16px 6px",
-            fontFamily: "var(--font-mono, monospace)",
+            fontFamily: "var(--font-body)",
             fontSize: "10px",
             fontWeight: 700,
             letterSpacing: "0.12em",
@@ -551,8 +551,8 @@ function PreviewPageContent() {
             gap: 3,
           }}>
             {toc.length === 0 && isGenerating && (
-              <div style={{ padding: "8px 12px", fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-muted)" }}>
-                Generating contents…
+              <div style={{ padding: "8px 12px", fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
+                Generating contentsâ€¦
               </div>
             )}
             {toc.map((item, idx) => {
@@ -571,7 +571,7 @@ function PreviewPageContent() {
                     textAlign: "left",
                     padding: "7px 12px",
                     borderRadius: 8,
-                    fontFamily: "var(--font-mono, monospace)",
+                    fontFamily: "var(--font-body)",
                     fontSize: "11px",
                     fontWeight: isActive ? 700 : 500,
                     letterSpacing: "0.02em",
@@ -601,7 +601,7 @@ function PreviewPageContent() {
           <div style={{
             padding: "12px 16px",
             borderTop: "1px solid var(--border-hairline, #e5e7eb)",
-            fontFamily: "var(--font-mono, monospace)",
+            fontFamily: "var(--font-body)",
             fontSize: "10px",
             color: "var(--fg-muted, #9ca3af)",
             display: "flex",
@@ -610,17 +610,17 @@ function PreviewPageContent() {
             flexShrink: 0,
           }}>
             <span>{toc.length} sections</span>
-            <span>•</span>
+            <span>â€¢</span>
             <span>{wordCount.toLocaleString()} words</span>
           </div>
         </aside>
 
-        {/* ── Main document area ── */}
+        {/* â”€â”€ Main document area â”€â”€ */}
         <div ref={contentRef} style={{ flex: 1, minWidth: 0, height: "100%", overflowY: "auto", position: "relative" }}>
           {isEditing ? (
             <div style={{ padding: 32, height: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-                Markdown edit — saved changes sync with task list
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: "var(--fg-muted)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                Markdown edit â€” saved changes sync with task list
               </p>
               <textarea
                 value={editContent}
@@ -649,64 +649,12 @@ function PreviewPageContent() {
                   }}>
                     <Loader2 size={20} style={{ color: "#e15b39" }} strokeWidth={2} />
                   </div>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-muted)", letterSpacing: "0.06em" }}>
-                    Writing Product Requirements Document…
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--fg-muted)", letterSpacing: "0.02em" }}>
+                    Writing Product Requirements Documentâ€¦
                   </p>
                 </div>
               ) : (
                 <>
-                  {/* Top Document Header from mockup */}
-                  <div style={{ marginBottom: 32 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
-                      <span style={{
-                        display: "inline-block",
-                        padding: "3px 8px",
-                        borderRadius: "6px",
-                        background: "var(--bg-elevated, #f3f4f6)",
-                        border: "1px solid var(--border-hairline, #e5e7eb)",
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "10px",
-                        fontWeight: 700,
-                        letterSpacing: "0.06em",
-                        color: "var(--fg-muted, #71717a)",
-                        textTransform: "uppercase",
-                      }}>
-                        DRAFT
-                      </span>
-                      <span style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "11px",
-                        color: "var(--fg-muted, #9ca3af)",
-                      }}>
-                        Last edited recently
-                      </span>
-                    </div>
-
-                    <h1 style={{
-                      fontSize: "36px",
-                      fontWeight: 800,
-                      letterSpacing: "-0.03em",
-                      color: "var(--fg-primary, #111827)",
-                      margin: "0 0 16px",
-                      lineHeight: 1.15,
-                    }}>
-                      {currentProjectName}
-                    </h1>
-
-                    {projectInfo?.appIdea && (
-                      <div style={{
-                        borderLeft: "3px solid #e15b39",
-                        paddingLeft: "16px",
-                        color: "var(--fg-secondary, #4b5563)",
-                        fontSize: "15px",
-                        lineHeight: 1.6,
-                        margin: "16px 0 28px",
-                      }}>
-                        {projectInfo.appIdea}
-                      </div>
-                    )}
-                  </div>
-
                   <MarkdownRenderer
                     content={markdown}
                     onTocUpdate={(newToc) => { setToc(newToc); if (newToc.length > 0 && !activeTocId) setActiveTocId(newToc[0].id); }}
@@ -718,7 +666,7 @@ function PreviewPageContent() {
           )}
         </div>
 
-        {/* ── AI Chat Sidebar ── */}
+        {/* â”€â”€ AI Chat Sidebar â”€â”€ */}
         <aside style={{
           width: 380, flexShrink: 0,
           borderLeft: "1px solid var(--border-hairline, #e5e7eb)",
@@ -740,7 +688,7 @@ function PreviewPageContent() {
                 </div>
                 <div>
                   <p style={{ fontFamily: "var(--font-body)", fontSize: 13, fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>Moryn AI</p>
-                  <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#16a34a", margin: 0, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}>● CONTEXT READY</p>
+                  <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "#16a34a", margin: 0, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase" }}>â— CONTEXT READY</p>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -764,8 +712,8 @@ function PreviewPageContent() {
                       background: "transparent",
                       color: "var(--color-mist)",
                       cursor: "pointer",
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 9,
+                      fontFamily: "var(--font-body)",
+                      fontSize: 10,
                       fontWeight: 600,
                       letterSpacing: "0.05em",
                       textTransform: "uppercase",
@@ -794,7 +742,7 @@ function PreviewPageContent() {
             {chatMessages.length === 0 ? (
               <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                 {/* Suggested actions from mockup */}
-                <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: "var(--fg-muted, #9ca3af)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                <div style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, color: "var(--fg-muted, #9ca3af)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
                   SUGGESTED ACTIONS
                 </div>
 
@@ -811,7 +759,7 @@ function PreviewPageContent() {
                     border: "none",
                     background: "#e15b39",
                     color: "#ffffff",
-                    fontFamily: "var(--font-mono, monospace)",
+                    fontFamily: "var(--font-body)",
                     fontSize: "11px",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -836,7 +784,7 @@ function PreviewPageContent() {
                     border: "none",
                     background: "#e15b39",
                     color: "#ffffff",
-                    fontFamily: "var(--font-mono, monospace)",
+                    fontFamily: "var(--font-body)",
                     fontSize: "11px",
                     fontWeight: 700,
                     cursor: "pointer",
@@ -909,8 +857,8 @@ function PreviewPageContent() {
                   border: "none",
                   background: "transparent",
                   color: "var(--fg-secondary)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 11,
                   outline: "none",
                   cursor: "pointer",
                   fontWeight: 600,
@@ -956,7 +904,7 @@ function PreviewPageContent() {
                 {openRouterFreeModels.length === 0 && openRouterRankedModels.length === 0 && isOpenRouterLoading && (
                   <optgroup label="OpenRouter">
                     <option value="" disabled>
-                      Memuat model OpenRouter…
+                      Memuat model OpenRouterâ€¦
                     </option>
                   </optgroup>
                 )}
@@ -968,7 +916,7 @@ function PreviewPageContent() {
                 value={aiPrompt}
                 onChange={(e) => setAiPrompt(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleAiSubmit(); } }}
-                placeholder="Brainstorm atau instruksikan edit PRD…"
+                placeholder="Brainstorm atau instruksikan edit PRDâ€¦"
                 disabled={isAiEditing}
                 rows={aiPrompt.split("\n").length > 1 || aiPrompt.length > 55 ? Math.min(aiPrompt.split("\n").length, 4) : 1}
                 style={{
@@ -995,8 +943,8 @@ function PreviewPageContent() {
                 {isAiEditing ? <Loader2 size={14} style={{ animation: "spin 0.8s linear infinite" }} /> : <Send size={14} />}
               </button>
             </form>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", textAlign: "center", letterSpacing: "0.06em" }}>
-              Enter to send · Shift+Enter new line
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted)", textAlign: "center", letterSpacing: "0.02em" }}>
+              Enter to send Â· Shift+Enter new line
             </p>
           </div>
         </aside>
@@ -1004,11 +952,11 @@ function PreviewPageContent() {
 
       {/* Status bar */}
       <footer style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 16px", flexShrink: 0, borderTop: "1px solid var(--border-hairline)", background: "var(--bg-surface)" }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", letterSpacing: "0.04em" }}>
-          {markdown.length.toLocaleString()} chars · {markdown.split("\n").length} lines
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
+          {markdown.length.toLocaleString()} chars Â· {markdown.split("\n").length} lines
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", letterSpacing: "0.04em" }}>
-          {appName} · Moryn
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
+          {appName} Â· Moryn
         </span>
       </footer>
 
@@ -1032,3 +980,5 @@ export default function PreviewPage() {
     </Suspense>
   );
 }
+
+

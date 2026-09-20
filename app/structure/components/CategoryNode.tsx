@@ -1,10 +1,10 @@
-import { Position, Handle } from "@xyflow/react";
+﻿import { Position, Handle } from "@xyflow/react";
 import { Trash2, LayoutGrid, Search, Users, Target, Bell, Shield, Zap, Layers } from "lucide-react";
 
 export const PHASE_COLORS: Record<number, { border: string; badge: string; text: string }> = {
-  1: { border: "var(--color-signal)",  badge: "FASE 1 · Core",   text: "#ffffff" },
-  2: { border: "var(--color-circuit)", badge: "FASE 2 · Growth", text: "#ffffff" },
-  3: { border: "#6b7280",              badge: "FASE 3 · Future", text: "#ffffff" },
+  1: { border: "var(--color-signal)",  badge: "FASE 1 Â· Core",   text: "#ffffff" },
+  2: { border: "var(--color-circuit)", badge: "FASE 2 Â· Growth", text: "#ffffff" },
+  3: { border: "#6b7280",              badge: "FASE 3 Â· Future", text: "#ffffff" },
 };
 
 export function getCategoryIcon(label: string, idx: number) {
@@ -66,7 +66,7 @@ export function CategoryNode({ id, data }: { id: string; data: any }) {
         >
           <span
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-body)",
               fontSize: 8,
               fontWeight: 700,
               letterSpacing: "0.1em",
@@ -156,7 +156,7 @@ export function CategoryNode({ id, data }: { id: string; data: any }) {
         <div
           style={{
             marginTop: 8,
-            fontFamily: "var(--font-mono)",
+            fontFamily: "var(--font-body)",
             fontSize: 9,
             color: "var(--fg-muted)",
             display: "flex",
@@ -186,3 +186,4 @@ export function CategoryNode({ id, data }: { id: string; data: any }) {
     </>
   );
 }
+

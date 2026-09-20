@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
@@ -216,7 +216,7 @@ export default function ProjectHeaderBrand({
               >
                 <Loader2 size={13} className="animate-spin" style={{ color: "#e15b39" }} />
                 <span style={{ fontSize: "12px", color: "var(--fg-muted, #71717a)" }}>
-                  Loading…
+                  Loadingâ€¦
                 </span>
               </div>
             ) : (
@@ -408,7 +408,7 @@ export default function ProjectHeaderBrand({
                     </h3>
                     <p
                       style={{
-                        fontFamily: "var(--font-mono)",
+                        fontFamily: "var(--font-body)",
                         fontSize: "10px",
                         color: "var(--fg-muted)",
                         margin: 0,
@@ -444,7 +444,7 @@ export default function ProjectHeaderBrand({
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <label
                     style={{
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-body)",
                       fontSize: "11px",
                       fontWeight: 700,
                       textTransform: "uppercase",
@@ -472,7 +472,7 @@ export default function ProjectHeaderBrand({
                       background: "var(--bg-base)",
                       border: "1px solid var(--border-hairline)",
                       color: "var(--fg-primary)",
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-body)",
                       fontSize: "13px",
                       fontWeight: 600,
                       outline: "none",
@@ -485,7 +485,7 @@ export default function ProjectHeaderBrand({
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   <label
                     style={{
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-body)",
                       fontSize: "11px",
                       fontWeight: 700,
                       textTransform: "uppercase",
@@ -532,7 +532,7 @@ export default function ProjectHeaderBrand({
                     style={{
                       padding: "8px 16px",
                       borderRadius: "var(--radius-md)",
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-body)",
                       fontSize: "11px",
                       fontWeight: 700,
                       letterSpacing: "0.06em",
@@ -551,7 +551,7 @@ export default function ProjectHeaderBrand({
                     style={{
                       padding: "8px 18px",
                       borderRadius: "var(--radius-md)",
-                      fontFamily: "var(--font-mono)",
+                      fontFamily: "var(--font-body)",
                       fontSize: "11px",
                       fontWeight: 700,
                       letterSpacing: "0.06em",
@@ -569,7 +569,7 @@ export default function ProjectHeaderBrand({
                     {isSaving ? (
                       <>
                         <Loader2 size={13} style={{ animation: "spin 0.8s linear infinite" }} />
-                        Saving…
+                        Savingâ€¦
                       </>
                     ) : (
                       <>
@@ -587,3 +587,4 @@ export default function ProjectHeaderBrand({
     </>
   );
 }
+

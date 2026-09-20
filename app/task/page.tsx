@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -25,7 +25,7 @@ import { apiClient } from "@/lib/utils/apiClient";
 import { useKanbanStore } from "@/stores/useKanbanStore";
 import { useUiStore } from "@/stores/useUiStore";
 
-/* ─── Types ─── */
+/* â”€â”€â”€ Types â”€â”€â”€ */
 interface Task {
   id: string;
   title: string;
@@ -78,7 +78,7 @@ const PRIORITY: Record<string, { label: string; color: string; borderColor: stri
   low:    { label: "Low",    color: "var(--color-circuit)", borderColor: "rgba(79,209,197,0.35)", bg: "rgba(79,209,197,0.08)" },
 };
 
-/* ─── Kanban Card ─── */
+/* â”€â”€â”€ Kanban Card â”€â”€â”€ */
 function KanbanTaskCard({
   task,
   index,
@@ -133,8 +133,8 @@ function KanbanTaskCard({
               <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                 <span
                   style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9,
+                    fontFamily: "var(--font-body)",
+                    fontSize: 10,
                     fontWeight: 700,
                     padding: "2px 7px",
                     borderRadius: "var(--radius-xs)",
@@ -147,7 +147,7 @@ function KanbanTaskCard({
                 >
                   {p.label}
                 </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", letterSpacing: "0.04em" }}>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 500, color: "var(--fg-muted)" }}>
                   {task.estimasi}
                 </span>
               </div>
@@ -164,13 +164,13 @@ function KanbanTaskCard({
                       border: "1px solid var(--border-hairline)",
                       background: "rgba(255,255,255,0.03)",
                       color: "var(--fg-muted)",
-                      fontSize: 9,
-                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      fontFamily: "var(--font-body)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    ← Todo
+                    â† Todo
                   </button>
                 )}
                 {task.status !== "in_progress" && (
@@ -183,13 +183,13 @@ function KanbanTaskCard({
                       border: "1px solid rgba(255,182,39,0.35)",
                       background: "rgba(255,182,39,0.1)",
                       color: "var(--color-signal)",
-                      fontSize: 9,
-                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      fontFamily: "var(--font-body)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    ⚡ Prog
+                    âš¡ Prog
                   </button>
                 )}
                 {task.status !== "done" && (
@@ -202,13 +202,13 @@ function KanbanTaskCard({
                       border: "1px solid rgba(79,209,197,0.35)",
                       background: "rgba(79,209,197,0.1)",
                       color: "var(--color-circuit)",
-                      fontSize: 9,
-                      fontFamily: "var(--font-mono)",
+                      fontSize: 10,
+                      fontFamily: "var(--font-body)",
                       cursor: "pointer",
                       transition: "all 0.15s ease",
                     }}
                   >
-                    ✓ Done
+                    âœ“ Done
                   </button>
                 )}
               </div>
@@ -253,9 +253,9 @@ function KanbanTaskCard({
                   <span
                     key={tag}
                     style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 9,
-                      fontWeight: 600,
+                    fontFamily: "var(--font-body)",
+                    fontSize: 10,
+                    fontWeight: 700,
                       padding: "2px 7px",
                       borderRadius: "var(--radius-xs)",
                       border: "1px solid var(--border-hairline)",
@@ -277,7 +277,7 @@ function KanbanTaskCard({
   );
 }
 
-/* ─── Celebration Modal ─── */
+/* â”€â”€â”€ Celebration Modal â”€â”€â”€ */
 function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: () => void }) {
   const RankIcon = RANK_ICONS[result.rank.icon] ?? Award;
   return (
@@ -287,11 +287,11 @@ function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: 
         <div aria-hidden="true" style={{ height: 2, background: "var(--color-signal)" }} />
         <div style={{ padding: "36px 32px", textAlign: "center" }}>
           <PartyPopper size={44} strokeWidth={1.5} style={{ color: "var(--color-signal)", margin: "0 auto 16px" }} />
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--color-signal)", marginBottom: 8 }}>
+          <div style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--color-signal)", marginBottom: 8 }}>
             Project Complete
           </div>
           <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, color: "var(--fg-primary)", marginBottom: 8, letterSpacing: "-0.02em" }}>
-            Project Selesai! 🎉
+            Project Selesai! ðŸŽ‰
           </h2>
           <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--color-mist)", marginBottom: 28, lineHeight: 1.6 }}>
             Semua task berhasil diselesaikan. Points kamu telah diperbarui.
@@ -309,20 +309,20 @@ function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: 
               <RankIcon size={18} color="white" strokeWidth={2} />
             </div>
             <div style={{ textAlign: "left" }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 2px" }}>Current Rank</p>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 2px" }}>Current Rank</p>
               <p style={{ fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>{result.rank.name}</p>
             </div>
             <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 2px" }}>Total Points</p>
+              <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted)", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", margin: "0 0 2px" }}>Total Points</p>
               <p style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 700, color: "var(--color-signal)", margin: 0 }}>{result.newExp.toLocaleString("id-ID")}</p>
             </div>
           </div>
           {/* Actions */}
           <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
+            <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", cursor: "pointer" }}>
               Tutup
             </button>
-            <Link href="/dashboard/settings?tab=account" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+            <Link href="/dashboard/settings?tab=account" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               Lihat Akun <ArrowRight size={12} />
             </Link>
           </div>
@@ -332,7 +332,7 @@ function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: 
   );
 }
 
-/* ─── Main Content ─── */
+/* â”€â”€â”€ Main Content â”€â”€â”€ */
 function TaskPageContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
@@ -414,7 +414,7 @@ function TaskPageContent() {
   const isDirtyRef = useRef(false);
   latestTaskStatusRef.current = taskStatus;
 
-  // 🔄 Smart Real-Time Auto-Sync: Adaptive polling to prevent log flooding and conserve server resources
+  // ðŸ”„ Smart Real-Time Auto-Sync: Adaptive polling to prevent log flooding and conserve server resources
   useEffect(() => {
     if (!projectId || !data) return;
 
@@ -613,7 +613,7 @@ function TaskPageContent() {
         ph.tasks.forEach(t => {
           const statusStr = taskStatus[t.id] === "done" ? "[x]" : "[ ]";
           const stateLabel = (taskStatus[t.id] || "todo").toUpperCase();
-          md += `- ${statusStr} **${t.title}** *(${t.estimasi})* — Status: ${stateLabel} | Priority: ${t.priority}\n  ${t.description}\n\n`;
+          md += `- ${statusStr} **${t.title}** *(${t.estimasi})* â€” Status: ${stateLabel} | Priority: ${t.priority}\n  ${t.description}\n\n`;
         });
       });
       const b = new Blob([md], { type: "text/markdown" });
@@ -635,7 +635,7 @@ function TaskPageContent() {
   const btn: React.CSSProperties = {
     display: "inline-flex", alignItems: "center", gap: 5,
     padding: "5px 10px", borderRadius: "var(--radius-md)",
-    fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
+    fontFamily: "var(--font-body)", fontSize: "12px", fontWeight: 700,
     letterSpacing: "0.08em", textTransform: "uppercase",
     cursor: "pointer", border: "1px solid var(--border-hairline)",
     background: "var(--bg-elevated)", color: "var(--fg-secondary)",
@@ -651,7 +651,7 @@ function TaskPageContent() {
         <McpConnectModal projectId={projectId} appName={data?.phases?.[0]?.name} onClose={() => setShowMcpModal(false)} />
       )}
 
-      {/* ── Topbar ── */}
+      {/* â”€â”€ Topbar â”€â”€ */}
       <header
         style={{
           position: "fixed",
@@ -683,7 +683,7 @@ function TaskPageContent() {
               background: "#e15b39",
               color: "#ffffff",
               border: "none",
-              fontFamily: "var(--font-mono, monospace)",
+              fontFamily: "var(--font-body)",
               fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "0.02em",
@@ -698,18 +698,18 @@ function TaskPageContent() {
 
       <div style={{ paddingTop: 56, display: "flex", height: "100vh" }}>
 
-        {/* ── Left sidebar: phase nav ── */}
+        {/* â”€â”€ Left sidebar: phase nav â”€â”€ */}
         <aside style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border-hairline)", background: "var(--bg-surface)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
           {/* Progress */}
           <div style={{ padding: "20px 14px 16px", borderBottom: "1px solid var(--border-hairline)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-muted)" }}>Progress</span>
+              <span style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-muted)" }}>Progress</span>
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: allDone ? "var(--color-circuit)" : "var(--color-signal)" }}>{progress.pct}%</span>
             </div>
             <div style={{ height: 3, borderRadius: 2, background: "var(--bg-elevated)" }}>
               <div style={{ height: "100%", borderRadius: 2, background: allDone ? "var(--color-circuit)" : "var(--color-signal)", width: `${progress.pct}%`, transition: "width 0.4s ease" }} />
             </div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", marginTop: 6, letterSpacing: "0.04em" }}>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)", marginTop: 6 }}>
               {progress.done} / {progress.total} tasks done
             </p>
           </div>
@@ -717,18 +717,18 @@ function TaskPageContent() {
           {/* Finish CTA */}
           {allDone && !isFinished && (
             <div style={{ padding: "10px 10px 0" }}>
-              <button onClick={handleFinish} disabled={isFinishing} style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-circuit)", background: "rgba(79,209,197,0.1)", color: "var(--color-circuit)", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: isFinishing ? 0.6 : 1 }}>
+              <button onClick={handleFinish} disabled={isFinishing} style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-circuit)", background: "rgba(79,209,197,0.1)", color: "var(--color-circuit)", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: isFinishing ? 0.6 : 1 }}>
                 <CheckCircle2 size={11} />
-                {isFinishing ? "Processing…" : "Finish & Claim Points"}
+                {isFinishing ? "Processingâ€¦" : "Finish & Claim Points"}
               </button>
-              {finishError && <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#f87171", marginTop: 6, textAlign: "center" }}>{finishError}</p>}
+              {finishError && <p style={{ fontFamily: "var(--font-body)", fontSize: 9, color: "#f87171", marginTop: 6, textAlign: "center" }}>{finishError}</p>}
             </div>
           )}
           {isFinished && (
             <div style={{ padding: "10px 10px 0" }}>
               <div style={{ padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid rgba(79,209,197,0.35)", background: "rgba(79,209,197,0.07)", display: "flex", alignItems: "center", gap: 7 }}>
                 <CheckCircle2 size={11} style={{ color: "var(--color-circuit)" }} />
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-circuit)" }}>Complete!</span>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--color-circuit)" }}>Complete!</span>
               </div>
             </div>
           )}
@@ -746,10 +746,10 @@ function TaskPageContent() {
                 <button key={phase.id} onClick={() => setActivePhase(phase.id)} style={{ width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: "var(--radius-md)", border: "none", cursor: "pointer", transition: "all 0.12s", marginBottom: 2, background: isActive ? "rgba(255,182,39,0.08)" : "transparent", borderLeft: isActive ? "2px solid var(--color-signal)" : "2px solid transparent" }}>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: isActive ? "var(--color-signal)" : "var(--fg-muted)" }}>{idx + 1}.</span>
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 700, color: isActive ? "var(--color-signal)" : "var(--fg-muted)" }}>{idx + 1}.</span>
                       <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: isActive ? "var(--fg-primary)" : "var(--fg-secondary)" }}>{phase.name}</span>
                     </div>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", letterSpacing: "0.04em" }}>{done}/{phase.tasks.length}</span>
+                    <span style={{ fontFamily: "var(--font-body)", fontSize: 10, fontWeight: 500, color: "var(--fg-muted)" }}>{done}/{phase.tasks.length}</span>
                   </div>
                 </button>
               );
@@ -768,8 +768,8 @@ function TaskPageContent() {
                   borderRadius: "var(--radius-xs)",
                   border: "1px solid rgba(79,209,197,0.25)",
                   background: "rgba(79,209,197,0.06)",
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "10px",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "11px",
                   color: "var(--color-circuit)",
                   letterSpacing: "0.04em",
                 }}
@@ -822,7 +822,7 @@ function TaskPageContent() {
                 title="Sync tasks with latest PRD and Structure changes"
               >
                 <RefreshCw size={11} className={isSyncing ? "animate-spin" : ""} style={{ color: isSyncing ? "var(--color-signal)" : "var(--fg-muted)" }} />
-                {isSyncing ? "Syncing…" : "Sync Tasks"}
+                {isSyncing ? "Syncingâ€¦" : "Sync Tasks"}
               </button>
 
               <button
@@ -841,7 +841,7 @@ function TaskPageContent() {
           )}
         </aside>
 
-        {/* ── Main Kanban View ── */}
+        {/* â”€â”€ Main Kanban View â”€â”€ */}
         <main style={{ flex: 1, overflowX: "auto", overflowY: "auto", padding: "24px 28px 60px" }}>
 
           {/* Loading */}
@@ -851,7 +851,7 @@ function TaskPageContent() {
                 <Loader2 size={20} style={{ color: "var(--color-signal)" }} strokeWidth={2} />
               </div>
               <div style={{ textAlign: "center" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "var(--fg-primary)", marginBottom: 6 }}>Generating Kanban Tasks…</h3>
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "var(--fg-primary)", marginBottom: 6 }}>Generating Kanban Tasksâ€¦</h3>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--color-mist)" }}>AI is analyzing the PRD and structuring your interactive board</p>
               </div>
             </div>
@@ -861,7 +861,7 @@ function TaskPageContent() {
           {error && !isLoading && (
             <div style={{ textAlign: "center", padding: "60px 0" }}>
               <p style={{ fontFamily: "var(--font-body)", color: "#f87171", marginBottom: 16, fontSize: 13 }}>{error}</p>
-              <button onClick={() => { setHasStarted(false); setError(null); }} style={{ padding: "8px 20px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
+              <button onClick={() => { setHasStarted(false); setError(null); }} style={{ padding: "8px 20px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", cursor: "pointer" }}>
                 Try Again
               </button>
             </div>
@@ -877,9 +877,9 @@ function TaskPageContent() {
                   <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--color-mist)", margin: 0 }}>Claim your Points now for completing this project.</p>
                 </div>
               </div>
-              <button onClick={handleFinish} disabled={isFinishing} style={{ padding: "8px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", flexShrink: 0, opacity: isFinishing ? 0.7 : 1 }}>
+              <button onClick={handleFinish} disabled={isFinishing} style={{ padding: "8px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", flexShrink: 0, opacity: isFinishing ? 0.7 : 1 }}>
                 <Award size={12} />
-                {isFinishing ? "Processing…" : "Finish & Claim +100 Points"}
+                {isFinishing ? "Processingâ€¦" : "Finish & Claim +100 Points"}
               </button>
             </div>
           )}
@@ -891,7 +891,7 @@ function TaskPageContent() {
               <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 24, fontWeight: 700, color: "var(--color-signal)", lineHeight: 1 }}>
+                    <span style={{ fontFamily: "var(--font-display)", fontSize: 28, fontWeight: 800, color: "var(--color-signal)", lineHeight: 1 }}>
                       {(data?.phases.findIndex(p => p.id === activePhase) ?? 0) + 1}.
                     </span>
                     <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "var(--fg-primary)", letterSpacing: "-0.02em" }}>
@@ -906,19 +906,19 @@ function TaskPageContent() {
                 {/* Phase pagination */}
                 <div style={{ display: "flex", gap: 8 }}>
                   {data && data.phases.findIndex(p => p.id === activePhase) > 0 && (
-                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx - 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
-                      ← Prev Phase
+                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx - 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", cursor: "pointer" }}>
+                      â† Prev Phase
                     </button>
                   )}
                   {data && data.phases.findIndex(p => p.id === activePhase) < data.phases.length - 1 && (
-                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx + 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
-                      Next Phase →
+                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx + 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "#ffffff", fontFamily: "var(--font-body)", fontSize: 12, fontWeight: 600, letterSpacing: "-0.01em", textTransform: "none", cursor: "pointer" }}>
+                      Next Phase â†’
                     </button>
                   )}
                 </div>
               </div>
 
-              {/* ── Drag & Drop Kanban Columns ── */}
+              {/* â”€â”€ Drag & Drop Kanban Columns â”€â”€ */}
               <DragDropContext onDragEnd={onDragEnd}>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
                   {KANBAN_COLUMNS.map(col => {
@@ -961,10 +961,10 @@ function TaskPageContent() {
                             />
                             <h3
                               style={{
-                                fontFamily: "var(--font-mono)",
-                                fontSize: 11,
+                                fontFamily: "var(--font-body)",
+                                fontSize: 12,
                                 fontWeight: 700,
-                                letterSpacing: "0.08em",
+                                letterSpacing: "0.04em",
                                 textTransform: "uppercase",
                                 color: col.color,
                                 margin: 0,
@@ -975,7 +975,7 @@ function TaskPageContent() {
                           </div>
                           <span
                             style={{
-                              fontFamily: "var(--font-mono)",
+                              fontFamily: "var(--font-body)",
                               fontSize: 10,
                               fontWeight: 700,
                               padding: "2px 7px",
@@ -1016,9 +1016,9 @@ function TaskPageContent() {
                                     alignItems: "center",
                                     justifyContent: "center",
                                     color: "var(--fg-muted)",
-                                    fontFamily: "var(--font-mono)",
-                                    fontSize: 10,
-                                    letterSpacing: "0.06em",
+                                    fontFamily: "var(--font-body)",
+                                    fontSize: 11,
+                                    fontWeight: 500,
                                     textTransform: "uppercase",
                                   }}
                                 >
@@ -1069,3 +1069,7 @@ export default function TaskPage() {
     </Suspense>
   );
 }
+
+
+
+

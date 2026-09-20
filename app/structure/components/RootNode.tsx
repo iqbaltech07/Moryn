@@ -1,4 +1,4 @@
-import { Position, Handle } from "@xyflow/react";
+﻿import { Position, Handle } from "@xyflow/react";
 import { FileText } from "lucide-react";
 
 export function RootNode({ id, data }: { id: string; data: any }) {
@@ -68,7 +68,7 @@ export function RootNode({ id, data }: { id: string; data: any }) {
             </div>
             <div
               style={{
-                fontFamily: "var(--font-mono)",
+                fontFamily: "var(--font-body)",
                 fontSize: 9,
                 fontWeight: 700,
                 letterSpacing: "0.1em",
@@ -102,7 +102,7 @@ export function RootNode({ id, data }: { id: string; data: any }) {
         <div style={{ marginTop: 8 }}>
           <span
             style={{
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-body)",
               fontSize: 9,
               fontWeight: 700,
               letterSpacing: "0.08em",
@@ -134,3 +134,4 @@ export function RootNode({ id, data }: { id: string; data: any }) {
     </>
   );
 }
+

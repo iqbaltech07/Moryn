@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
@@ -126,14 +126,14 @@ function ProjectDetailContent() {
   const btn: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: 6,
+    padding: "6px 14px",
     padding: "6px 12px",
     borderRadius: "var(--radius-md)",
-    fontFamily: "var(--font-mono)",
-    fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
+    fontFamily: "var(--font-body)",
+    fontSize: "12px",
+    fontWeight: 600,
+    letterSpacing: "-0.01em",
+    textTransform: "none",
     cursor: "pointer",
     border: "1px solid var(--border-hairline)",
     background: "var(--bg-elevated)",
@@ -147,7 +147,7 @@ function ProjectDetailContent() {
         <McpConnectModal projectId={projectId} appName={project?.appName} onClose={() => setShowMcpModal(false)} />
       )}
 
-      {/* ── Topbar ── */}
+      {/* â”€â”€ Topbar â”€â”€ */}
       <header
         style={{
           position: "fixed",
@@ -179,7 +179,7 @@ function ProjectDetailContent() {
               background: "#e15b39",
               color: "#ffffff",
               border: "none",
-              fontFamily: "var(--font-mono, monospace)",
+              fontFamily: "var(--font-body)",
               fontSize: "12px",
               fontWeight: 700,
               letterSpacing: "0.02em",
@@ -193,7 +193,7 @@ function ProjectDetailContent() {
         </div>
       </header>
 
-      {/* ── Main Content ── */}
+      {/* â”€â”€ Main Content â”€â”€ */}
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
         {isLoading ? (
           <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
@@ -270,3 +270,4 @@ export default function ProjectDetailPage() {
     </Suspense>
   );
 }
+

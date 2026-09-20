@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, Suspense, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -405,11 +405,11 @@ function StrukturPageContent() {
     gap: 6,
     padding: "6px 12px",
     borderRadius: "var(--radius-md, 6px)",
-    fontFamily: "var(--font-mono)",
-    fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
+    fontFamily: "var(--font-body)",
+    fontSize: "12px",
+    fontWeight: 600,
+    letterSpacing: "-0.01em",
+    textTransform: "none",
     cursor: "pointer",
     border: "1px solid var(--border-hairline)",
     background: "var(--bg-elevated)",
@@ -419,7 +419,7 @@ function StrukturPageContent() {
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column", background: "var(--color-background)", color: "var(--fg-primary)" }}>
-      {/* ── Topbar ── */}
+      {/* â”€â”€ Topbar â”€â”€ */}
       <header
         style={{
           display: "flex",
@@ -456,7 +456,7 @@ function StrukturPageContent() {
                 disabled={isSaving}
                 style={{ ...btn, color: "var(--color-circuit)", borderColor: "rgba(79,209,197,0.35)", background: "rgba(79,209,197,0.08)" }}
               >
-                {isSaving ? "Saving…" : "Save & Render"}
+                {isSaving ? "Savingâ€¦" : "Save & Render"}
               </button>
             </>
           ) : (
@@ -480,8 +480,8 @@ function StrukturPageContent() {
               background: "#e15b39",
               color: "#ffffff",
               border: "none",
-              fontFamily: "var(--font-mono, monospace)",
-              fontSize: "12px",
+              fontFamily: "var(--font-body)",
+              fontSize: "13px",
               fontWeight: 700,
               letterSpacing: "0.02em",
               cursor: isLoading || !projectId || isEditing ? "not-allowed" : "pointer",
@@ -495,7 +495,7 @@ function StrukturPageContent() {
         </div>
       </header>
 
-      {/* ── Canvas ── */}
+      {/* â”€â”€ Canvas â”€â”€ */}
       <div style={{ flex: 1, position: "relative" }}>
         {/* Loading overlay */}
         {isLoading && (
@@ -527,8 +527,8 @@ function StrukturPageContent() {
             >
               <Loader2 size={22} style={{ color: "var(--color-signal)" }} strokeWidth={2} />
             </div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--fg-muted)", letterSpacing: "0.06em" }}>
-              AI is analyzing architecture…
+            <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--fg-muted)" }}>
+              AI is analyzing architectureâ€¦
             </p>
           </div>
         )}
@@ -564,10 +564,10 @@ function StrukturPageContent() {
           >
             <span
               style={{
-                fontFamily: "var(--font-mono)",
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: "0.1em",
+                fontFamily: "var(--font-body)",
+                fontSize: 11,
+                fontWeight: 600,
+                letterSpacing: "0.04em",
                 textTransform: "uppercase",
                 color: "var(--fg-muted)",
                 alignSelf: "center",
@@ -622,7 +622,7 @@ function StrukturPageContent() {
           fill: var(--fg-primary) !important;
         }
         .react-flow__attribution { display: none; }
-        .react-flow__panel { font-family: var(--font-mono); }
+        .react-flow__panel { font-family: var(--font-body); }
       `}</style>
     </div>
   );
@@ -635,3 +635,8 @@ export default function StrukturPage() {
     </Suspense>
   );
 }
+
+
+
+
+

@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { ChevronDown, ChevronRight, ExternalLink } from "lucide-react";
 import { AccordionSection, ColorToken } from "../types";
 import { renderStructuredAccordionContent } from "../utils/parser";
@@ -27,7 +27,7 @@ export default function DesignAccordions({
   return (
     <div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--fg-muted)" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--fg-muted)" }}>
           DESIGN SPECIFICATIONS & GUIDELINES
         </span>
         {projectId && (
@@ -39,8 +39,8 @@ export default function DesignAccordions({
               display: "inline-flex",
               alignItems: "center",
               gap: 4,
-              fontFamily: "var(--font-mono)",
-              fontSize: 10,
+              fontFamily: "var(--font-body)",
+              fontSize: 11,
               color: "var(--color-circuit)",
               textDecoration: "none",
             }}
@@ -110,3 +110,5 @@ export default function DesignAccordions({
     </div>
   );
 }
+
+

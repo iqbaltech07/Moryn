@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { FileText, Upload } from "lucide-react";
 import { ProjectDetailData } from "../types";
 
@@ -18,14 +18,14 @@ export default function ProjectHeaderCard({
   const btnStyle: React.CSSProperties = {
     display: "inline-flex",
     alignItems: "center",
-    gap: 6,
+    padding: "6px 14px",
     padding: "6px 12px",
     borderRadius: "var(--radius-md)",
-    fontFamily: "var(--font-mono)",
-    fontSize: "10px",
-    fontWeight: 700,
-    letterSpacing: "0.08em",
-    textTransform: "uppercase",
+    fontFamily: "var(--font-body)",
+    fontSize: "12px",
+    fontWeight: 600,
+    letterSpacing: "-0.01em",
+    textTransform: "none",
     cursor: "pointer",
     border: "1px solid var(--border-hairline)",
     background: "var(--bg-elevated)",
@@ -55,10 +55,10 @@ export default function ProjectHeaderCard({
               border: "1px solid var(--border-hairline)",
               background: "rgba(255,182,39,0.08)",
               color: "var(--color-signal)",
-              fontFamily: "var(--font-mono)",
-              fontSize: 9,
-              fontWeight: 700,
-              letterSpacing: "0.1em",
+              fontFamily: "var(--font-body)",
+              fontSize: 11,
+              fontWeight: 600,
+              letterSpacing: "0.04em",
               textTransform: "uppercase",
               marginBottom: 10,
             }}
@@ -103,9 +103,9 @@ export default function ProjectHeaderCard({
               <span
                 key={key}
                 style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: 10,
-                  fontWeight: 600,
+                  fontFamily: "var(--font-body)",
+                  fontSize: 11,
+                  fontWeight: 500,
                   padding: "4px 10px",
                   borderRadius: "var(--radius-xs)",
                   border: "1px solid var(--border-hairline)",

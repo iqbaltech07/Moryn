@@ -1,4 +1,4 @@
-import React from "react";
+﻿import React from "react";
 import { Upload, Sparkles, Layout, Globe, ShieldCheck } from "lucide-react";
 
 interface DesignDropzoneProps {
@@ -60,12 +60,12 @@ export default function DesignDropzone({
         Unggah file <code style={{ color: "var(--color-signal)", fontFamily: "var(--font-mono)" }}>design.md</code> atau pilih template desain bawaan agar AI Agent (Antigravity/Cursor/Windsurf) dapat membaca token warna, typography, layout, dan aturan komponen UI secara otomatis.
       </p>
 
-      {/* 🌟 1-Click Template Selection */}
+      {/* ðŸŒŸ 1-Click Template Selection */}
       {onApplyTemplate && (
         <div style={{ maxWidth: 640, margin: "0 auto 24px", display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
             <Sparkles size={12} style={{ color: "var(--color-signal)" }} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700, color: "var(--color-signal)", letterSpacing: "0.08em", textTransform: "uppercase" }}>
+            <span style={{ fontFamily: "var(--font-body)", fontSize: "11px", fontWeight: 700, color: "var(--color-signal)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
               Preset Template Desain Bawaan (100% Full Spec)
             </span>
           </div>
@@ -93,12 +93,12 @@ export default function DesignDropzone({
                 <span style={{ fontFamily: "var(--font-display)", fontSize: "12px", fontWeight: 700, color: "var(--fg-primary)" }}>
                   SaaS Web App Design System
                 </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", fontWeight: 700, padding: "2px 6px", borderRadius: "3px", background: "rgba(79, 107, 255, 0.2)", color: "#818cf8" }}>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "rgba(79, 107, 255, 0.2)", color: "#818cf8" }}>
                   FULL PRODUCT
                 </span>
               </div>
               <span style={{ fontFamily: "var(--font-body)", fontSize: "10.5px", color: "var(--fg-muted)", lineHeight: 1.3 }}>
-                App Shell, Sidebar, TanStack Table, cmdk (⌘K), Toasts & Skeletons.
+                App Shell, Sidebar, TanStack Table, cmdk (âŒ˜K), Toasts & Skeletons.
               </span>
             </button>
 
@@ -124,7 +124,7 @@ export default function DesignDropzone({
                 <span style={{ fontFamily: "var(--font-display)", fontSize: "12px", fontWeight: 700, color: "var(--fg-primary)" }}>
                   Landing Page Design System
                 </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: "8px", fontWeight: 700, padding: "2px 6px", borderRadius: "3px", background: "rgba(255, 182, 39, 0.2)", color: "var(--color-signal)" }}>
+                <span style={{ fontFamily: "var(--font-body)", fontSize: "9px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "rgba(255, 182, 39, 0.2)", color: "var(--color-signal)" }}>
                   MARKETING
                 </span>
               </div>
@@ -147,11 +147,11 @@ export default function DesignDropzone({
             border: "1px solid var(--color-signal)",
             background: "var(--color-signal)",
             color: "#ffffff",
-            fontFamily: "var(--font-mono)",
-            fontSize: 11,
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
+            fontFamily: "var(--font-body)",
+            fontSize: 13,
+            fontWeight: 600,
+            letterSpacing: "normal",
+            textTransform: "none",
             cursor: isUploading ? "not-allowed" : "pointer",
             boxShadow: "0 4px 14px rgba(255,182,39,0.2)",
           }}
@@ -160,10 +160,11 @@ export default function DesignDropzone({
           <input type="file" accept=".md,.txt" onChange={onFileUpload} style={{ display: "none" }} disabled={isUploading} />
         </label>
 
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10.5, color: "var(--fg-muted)" }}>
+        <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--fg-muted)" }}>
           atau tarik & lepas file ke dalam area kotak di atas
         </span>
       </div>
     </div>
   );
 }
+
