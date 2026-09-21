@@ -8,14 +8,20 @@ export const auth = betterAuth({
   }),
   baseURL: {
     allowedHosts: [
+      "moryn.web.id",
+      "*.moryn.web.id",
       "moryn.vercel.app",
       "piardify.vercel.app",
       "*.vercel.app",
       "localhost:3000",
+      "127.0.0.1:3000",
     ],
     protocol: "auto",
   },
   trustedOrigins: [
+    "https://moryn.web.id",
+    "http://moryn.web.id",
+    "https://*.moryn.web.id",
     "https://localhost:3000",
     "http://localhost:3000",
     "https://*.vercel.app",

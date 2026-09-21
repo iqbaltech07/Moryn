@@ -69,9 +69,11 @@ async def global_exception_handler(request: Request, exc: Exception):
         },
     )
 
-# Include Routers
+# Include Routers (support both /api/v1 and direct routes)
 app.include_router(health_router, prefix=settings.API_V1_STR)
+app.include_router(health_router, prefix="")
 app.include_router(generate_router, prefix=settings.API_V1_STR)
+app.include_router(generate_router, prefix="")
 
 # Root ping
 @app.get("/")
