@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import Image from "next/image";
 import {
   DragDropContext,
   Droppable,
@@ -13,29 +12,31 @@ import {
 import {
   Sprout, Compass, PenLine, LayoutList, Lightbulb,
   Map, Timer, Telescope, Trophy, Wrench,
-  CheckCircle2, PartyPopper, Award, ArrowRight, Check, Loader2,
-  Plus, MoreHorizontal, LayoutGrid, List, Cpu, RefreshCw
+  CheckCircle2, PartyPopper, Award, ArrowRight, Check,
+  Plus, MoreHorizontal, LayoutGrid, List, Cpu, RefreshCw, RotateCw, Download,
+  Terminal, PanelsTopLeft, Server, Layers, ShieldCheck, AlertCircle, X, ChevronRight,
+  Database
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import StepNavbar from "../components/StepNavbar";
-import ProjectHeaderBrand from "../components/ProjectHeaderBrand";
-import McpConnectModal from "../components/McpConnectModal";
-import { apiClient } from "@/lib/apiClient";
-import { useKanbanStore } from "@/stores/useKanbanStore";
+import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
+import { McpConnectModal, UpgradeModal } from "../components/modals";
+import { TaskKanbanSkeleton } from "../components/shared";
+import { apiClient } from "@/lib/utils/apiClient";
+import { useKanbanStore, ColumnId } from "@/stores/useKanbanStore";
 import { useUiStore } from "@/stores/useUiStore";
-import UpgradeModal from "../components/UpgradeModal";
-import { TaskKanbanSkeleton } from "../components/Skeletons";
+import { useTranslation } from "@/lib/i18n";
 
 /* ─── Types ─── */
 interface Task {
   id: string;
   title: string;
   description: string;
-  priority: "high" | "medium" | "low";
+  priority: "high" | "medium" | "low" | "blocker";
   estimasi: string;
   tags: string[];
-  status?: "todo" | "in_progress" | "done";
+  status?: ColumnId;
+  code?: string;
 }
 
 interface Phase {
@@ -48,6 +49,8 @@ interface Phase {
 
 interface TaskData {
   phases: Phase[];
+  savedStatus?: Record<string, any>;
+  error?: string;
 }
 
 interface FinishResult {
@@ -56,42 +59,66 @@ interface FinishResult {
   rank: { id: number; name: string; icon: string; color: string };
 }
 
-type ColumnId = "todo" | "in_progress" | "done";
-
 interface KanbanColumn {
   id: ColumnId;
   title: string;
-  color: string;
-  borderColor: string;
-  bgDot: string;
+  dotColor: string;
+  countBg: string;
+  countText: string;
+  isErrorCol?: boolean;
 }
 
 const KANBAN_COLUMNS: KanbanColumn[] = [
-  { id: "todo",        title: "To Do",       color: "var(--fg-secondary)",   borderColor: "var(--border-strong)",         bgDot: "#8B93A7" },
-  { id: "in_progress", title: "In Progress", color: "var(--color-signal)",   borderColor: "rgba(255,182,39,0.35)",        bgDot: "#FFB627" },
-  { id: "done",        title: "Completed",   color: "var(--color-circuit)",  borderColor: "rgba(79,209,197,0.35)",       bgDot: "#4FD1C5" },
+  { id: "todo",        title: "TO DO",       dotColor: "#71717a", countBg: "bg-neutral-200/70", countText: "text-neutral-700" },
+  { id: "in_progress", title: "IN PROGRESS", dotColor: "#e15b39", countBg: "bg-orange-100",    countText: "text-[#e15b39]" },
+  { id: "done",        title: "COMPLETE",    dotColor: "#10b981", countBg: "bg-emerald-100",   countText: "text-emerald-700" },
+  { id: "error",       title: "ERROR",       dotColor: "#ef4444", countBg: "bg-rose-100",      countText: "text-rose-700", isErrorCol: true },
 ];
 
 const RANK_ICONS: Record<string, LucideIcon> = { Sprout, Compass, PenLine, LayoutList, Lightbulb, Map, Timer, Telescope, Trophy, Wrench };
 
-const PRIORITY: Record<string, { label: string; color: string; borderColor: string; bg: string }> = {
-  high:   { label: "High",   color: "#f87171", borderColor: "rgba(248,113,113,0.35)", bg: "rgba(248,113,113,0.08)" },
-  medium: { label: "Medium", color: "var(--color-signal)", borderColor: "rgba(255,182,39,0.35)", bg: "rgba(255,182,39,0.08)" },
-  low:    { label: "Low",    color: "var(--color-circuit)", borderColor: "rgba(79,209,197,0.35)", bg: "rgba(79,209,197,0.08)" },
-};
+/* ─── Helper: Format Task ID Code (e.g. ENV-101, FE-102) ─── */
+function getTaskCode(phaseName: string, phaseIndex: number, taskIndex: number, customCode?: string): string {
+  if (customCode && /^[A-Z]{2,4}-\d+$/i.test(customCode)) {
+    return customCode.toUpperCase();
+  }
+  const clean = phaseName.replace(/[^a-zA-Z0-9\s]/g, "").trim();
+  const words = clean.split(/\s+/).filter(Boolean);
+  let prefix = "TSK";
+  if (words.length >= 2) {
+    prefix = (words[0].slice(0, 2) + words[1].slice(0, 1)).toUpperCase();
+  } else if (words.length === 1 && words[0].length >= 3) {
+    prefix = words[0].slice(0, 3).toUpperCase();
+  }
+  return `${prefix}-${(phaseIndex + 1) * 100 + (taskIndex + 1)}`;
+}
 
-/* ─── Kanban Card ─── */
+
+
+/* ─── Kanban Card Component ─── */
 function KanbanTaskCard({
   task,
   index,
+  phaseName,
+  phaseIndex,
   onToggleStatus,
 }: {
   task: Task;
   index: number;
+  phaseName: string;
+  phaseIndex: number;
   onToggleStatus: (taskId: string, newStatus: ColumnId) => void;
 }) {
-  const p = PRIORITY[task.priority] || PRIORITY.medium;
   const isDone = task.status === "done";
+  const isInProgress = task.status === "in_progress";
+  const isError = task.status === "error";
+
+  const taskCode = getTaskCode(phaseName, phaseIndex, index, task.code);
+  const isBlocker = task.priority === "blocker" || task.tags?.includes("blocker");
+  const isHigh = task.priority === "high";
+
+  // Card status quick-switcher menu state
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <Draggable draggableId={task.id} index={index}>
@@ -100,174 +127,127 @@ function KanbanTaskCard({
           ref={provided.innerRef}
           {...provided.draggableProps}
           {...provided.dragHandleProps}
-          style={{
-            ...provided.draggableProps.style,
-            marginBottom: 10,
-            userSelect: "none",
-          }}
+          className="mb-3 select-none outline-none group/card"
+          style={provided.draggableProps.style}
         >
           <div
-            style={{
-              padding: "14px 16px",
-              borderRadius: "var(--radius-lg)",
-              border: `1px solid ${
-                snapshot.isDragging
-                  ? "var(--color-signal)"
-                  : isDone
-                  ? "var(--border-subtle)"
-                  : "var(--border-hairline)"
-              }`,
-              background: snapshot.isDragging
-                ? "var(--bg-surface)"
-                : isDone
-                ? "rgba(20,28,48,0.6)"
-                : "var(--bg-elevated)",
-              boxShadow: snapshot.isDragging
-                ? "0 12px 28px rgba(0,0,0,0.45), 0 0 0 1px var(--color-signal)"
-                : "var(--shadow-card)",
-              opacity: isDone && !snapshot.isDragging ? 0.65 : 1,
-              transition: "box-shadow 0.15s, border-color 0.15s, transform 0.15s",
-              cursor: "grab",
-            }}
+            className={`relative p-3.5 sm:p-4 rounded-xl transition-all duration-150 cursor-grab active:cursor-grabbing bg-white shadow-[0_1px_3px_rgba(0,0,0,0.04)] ${
+              snapshot.isDragging
+                ? "shadow-lg scale-[1.02] border-[#e15b39] ring-2 ring-[#e15b39]/20"
+                : isInProgress
+                ? "border-2 border-[#e15b39]"
+                : isError
+                ? "border border-rose-300 bg-rose-50/20"
+                : "border border-neutral-200/90 hover:border-neutral-300"
+            }`}
           >
-            {/* Header row */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                <span
-                  style={{
-                    fontFamily: "var(--font-mono)",
-                    fontSize: 9,
-                    fontWeight: 700,
-                    padding: "2px 7px",
-                    borderRadius: "var(--radius-xs)",
-                    border: `1px solid ${p.borderColor}`,
-                    color: p.color,
-                    background: p.bg,
-                    letterSpacing: "0.08em",
-                    textTransform: "uppercase",
-                  }}
-                >
-                  {p.label}
-                </span>
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: "var(--fg-muted)", letterSpacing: "0.04em" }}>
-                  {task.estimasi}
+            {/* Top Row: Task Code & Priority Badge */}
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-1.5">
+                {isDone && (
+                  <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                )}
+                <span className="font-mono text-[10px] font-semibold text-neutral-600 bg-neutral-100/90 border border-neutral-200 px-1.5 py-0.5 rounded tracking-tight">
+                  {taskCode}
                 </span>
               </div>
 
-              {/* Status Move Shortcuts */}
-              <div style={{ display: "flex", gap: 4 }} onClick={(e) => e.stopPropagation()}>
-                {task.status !== "todo" && (
-                  <button
-                    onClick={() => onToggleStatus(task.id, "todo")}
-                    title="Move to To Do"
-                    style={{
-                      padding: "3px 7px",
-                      borderRadius: "var(--radius-xs)",
-                      border: "1px solid var(--border-hairline)",
-                      background: "rgba(255,255,255,0.03)",
-                      color: "var(--fg-muted)",
-                      fontSize: 9,
-                      fontFamily: "var(--font-mono)",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    ← Todo
-                  </button>
+              {/* Priority / Status Tag */}
+              <div className="flex items-center gap-1.5">
+                {isDone ? (
+                  <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200/80">
+                    Merged
+                  </span>
+                ) : isBlocker ? (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 border border-rose-200">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0" />
+                    Blocker
+                  </span>
+                ) : isHigh ? (
+                  <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                    High
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-50 text-slate-600 border border-slate-200">
+                    Normal
+                  </span>
                 )}
-                {task.status !== "in_progress" && (
+
+                {/* Quick Status Toggle Button */}
+                <div className="relative">
                   <button
-                    onClick={() => onToggleStatus(task.id, "in_progress")}
-                    title="Move to In Progress"
-                    style={{
-                      padding: "3px 7px",
-                      borderRadius: "var(--radius-xs)",
-                      border: "1px solid rgba(255,182,39,0.35)",
-                      background: "rgba(255,182,39,0.1)",
-                      color: "var(--color-signal)",
-                      fontSize: 9,
-                      fontFamily: "var(--font-mono)",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(!menuOpen);
                     }}
+                    className="opacity-0 group-hover/card:opacity-100 p-1 rounded hover:bg-neutral-100 text-neutral-400 hover:text-neutral-700 transition-opacity"
+                    title="Move status"
                   >
-                    ⚡ Prog
+                    <MoreHorizontal size={13} />
                   </button>
-                )}
-                {task.status !== "done" && (
-                  <button
-                    onClick={() => onToggleStatus(task.id, "done")}
-                    title="Mark Done"
-                    style={{
-                      padding: "3px 7px",
-                      borderRadius: "var(--radius-xs)",
-                      border: "1px solid rgba(79,209,197,0.35)",
-                      background: "rgba(79,209,197,0.1)",
-                      color: "var(--color-circuit)",
-                      fontSize: 9,
-                      fontFamily: "var(--font-mono)",
-                      cursor: "pointer",
-                      transition: "all 0.15s ease",
-                    }}
-                  >
-                    ✓ Done
-                  </button>
-                )}
+
+                  {menuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-30"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setMenuOpen(false);
+                        }}
+                      />
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="absolute right-0 top-6 z-40 w-36 bg-white border border-neutral-200 rounded-lg shadow-lg py-1 text-xs"
+                      >
+                        <div className="px-2 py-1 text-[10px] font-bold text-neutral-400 uppercase font-mono border-b border-neutral-100">
+                          Move to
+                        </div>
+                        {KANBAN_COLUMNS.map((col) => (
+                          <button
+                            key={col.id}
+                            onClick={() => {
+                              onToggleStatus(task.id, col.id);
+                              setMenuOpen(false);
+                            }}
+                            className={`w-full text-left px-2.5 py-1.5 flex items-center justify-between text-[11px] hover:bg-neutral-50 ${
+                              task.status === col.id ? "font-bold text-[#e15b39]" : "text-neutral-700"
+                            }`}
+                          >
+                            <span>{col.title}</span>
+                            {task.status === col.id && <Check size={12} />}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Title */}
             <h4
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 13,
-                fontWeight: 600,
-                color: "var(--fg-primary)",
-                textDecoration: isDone ? "line-through" : "none",
-                lineHeight: 1.4,
-                marginBottom: 6,
-              }}
+              className={`font-sans text-[13px] font-bold text-neutral-900 leading-snug mb-1.5 ${
+                isDone ? "line-through text-neutral-400" : ""
+              }`}
             >
               {task.title}
             </h4>
 
             {/* Description */}
-            <p
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: 12,
-                color: "var(--color-mist)",
-                lineHeight: 1.55,
-                marginBottom: task.tags?.length ? 10 : 0,
-                display: "-webkit-box",
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
+            <p className="font-sans text-[11px] text-neutral-500 leading-relaxed line-clamp-3 mb-2.5">
               {task.description}
             </p>
 
-            {/* Tags */}
-            {task.tags?.length > 0 && (
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+            {/* Tags (if any) */}
+            {task.tags && task.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1">
                 {task.tags.map((tag) => (
                   <span
                     key={tag}
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: 9,
-                      fontWeight: 600,
-                      padding: "2px 7px",
-                      borderRadius: "var(--radius-xs)",
-                      border: "1px solid var(--border-hairline)",
-                      color: "var(--color-circuit)",
-                      background: "rgba(79,209,197,0.04)",
-                      letterSpacing: "0.06em",
-                      textTransform: "uppercase",
-                    }}
+                    className="text-[9px] font-mono font-medium px-1.5 py-0.5 rounded bg-neutral-100 text-neutral-500"
                   >
-                    {tag}
+                    #{tag}
                   </span>
                 ))}
               </div>
@@ -281,51 +261,61 @@ function KanbanTaskCard({
 
 /* ─── Celebration Modal ─── */
 function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: () => void }) {
+  const { t } = useTranslation();
   const RankIcon = RANK_ICONS[result.rank.icon] ?? Award;
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(8,11,20,0.88)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-      <div style={{ background: "var(--bg-surface)", border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-lg)", maxWidth: 400, width: "100%", overflow: "hidden" }}>
-        {/* Signal top rule */}
-        <div aria-hidden="true" style={{ height: 2, background: "var(--color-signal)" }} />
-        <div style={{ padding: "36px 32px", textAlign: "center" }}>
-          <PartyPopper size={44} strokeWidth={1.5} style={{ color: "var(--color-signal)", margin: "0 auto 16px" }} />
-          <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--color-signal)", marginBottom: 8 }}>
-            Project Complete
+    <div className="fixed inset-0 z-50 bg-neutral-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white border border-neutral-200 rounded-2xl max-w-sm w-full overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+        <div className="h-1 bg-[#e15b39]" />
+        <div className="p-8 text-center">
+          <PartyPopper size={44} strokeWidth={1.5} className="text-[#e15b39] mx-auto mb-4" />
+          <div className="font-mono text-[10px] font-bold tracking-wider uppercase text-[#e15b39] mb-2">
+            {t.task.projectComplete}
           </div>
-          <h2 style={{ fontFamily: "var(--font-display)", fontSize: 22, fontWeight: 800, color: "var(--fg-primary)", marginBottom: 8, letterSpacing: "-0.02em" }}>
-            Project Selesai! 🎉
+          <h2 className="text-xl font-bold text-neutral-900 mb-2 font-display">
+            {t.task.projectComplete}
           </h2>
-          <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--color-mist)", marginBottom: 28, lineHeight: 1.6 }}>
-            Semua task berhasil diselesaikan. Points kamu telah diperbarui.
+          <p className="text-xs text-neutral-500 mb-6 leading-relaxed">
+            {t.task.projectCompleteDesc}
           </p>
-          {/* Points */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-md)", padding: "10px 20px", marginBottom: 20, background: "var(--bg-elevated)" }}>
-            <Award size={16} style={{ color: "var(--color-signal)" }} />
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 20, fontWeight: 700, color: "var(--color-signal)", letterSpacing: "-0.02em" }}>
+
+          <div className="inline-flex items-center gap-2 border border-neutral-200 rounded-xl px-5 py-2.5 mb-5 bg-neutral-50">
+            <Award size={18} className="text-[#e15b39]" />
+            <span className="font-mono text-xl font-bold text-[#e15b39]">
               +{result.expGained} {result.expGained === 1 ? "Point" : "Points"}
             </span>
           </div>
-          {/* Rank row */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, border: "1px solid var(--border-hairline)", borderRadius: "var(--radius-md)", padding: "12px 16px", marginBottom: 24, background: "var(--bg-elevated)" }}>
-            <div style={{ width: 38, height: 38, borderRadius: "var(--radius-md)", background: result.rank.color, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-              <RankIcon size={18} color="white" strokeWidth={2} />
+
+          <div className="flex items-center gap-3 border border-neutral-200 rounded-xl p-3 mb-6 bg-neutral-50 text-left">
+            <div
+              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-white"
+              style={{ background: result.rank.color }}
+            >
+              <RankIcon size={18} strokeWidth={2} />
             </div>
-            <div style={{ textAlign: "left" }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 2px" }}>Current Rank</p>
-              <p style={{ fontFamily: "var(--font-body)", fontSize: 14, fontWeight: 700, color: "var(--fg-primary)", margin: 0 }}>{result.rank.name}</p>
+            <div>
+              <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider font-mono mb-0.5">{t.task.currentRank}</p>
+              <p className="text-sm font-bold text-neutral-900">{result.rank.name}</p>
             </div>
-            <div style={{ marginLeft: "auto", textAlign: "right" }}>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 2px" }}>Total Points</p>
-              <p style={{ fontFamily: "var(--font-mono)", fontSize: 14, fontWeight: 700, color: "var(--color-signal)", margin: 0 }}>{result.newExp.toLocaleString("id-ID")}</p>
+            <div className="ml-auto text-right">
+              <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider font-mono mb-0.5">{t.task.totalPoints}</p>
+              <p className="font-mono text-sm font-bold text-[#e15b39]">{result.newExp.toLocaleString("id-ID")}</p>
             </div>
           </div>
-          {/* Actions */}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
-              Tutup
+
+          <div className="flex gap-2.5">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2 rounded-lg border border-neutral-200 text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition-colors"
+            >
+              {t.task.close}
             </button>
-            <Link href="/profile" style={{ flex: 1, padding: "10px 0", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
-              Lihat Profil <ArrowRight size={12} />
+            <Link
+              href="/dashboard/settings?tab=account"
+              className="flex-1 py-2 rounded-lg bg-[#e15b39] text-white text-xs font-semibold hover:bg-[#c44827] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <span>{t.task.viewAccount}</span>
+              <ArrowRight size={12} />
             </Link>
           </div>
         </div>
@@ -338,6 +328,7 @@ function CelebrationModal({ result, onClose }: { result: FinishResult; onClose: 
 function TaskPageContent() {
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
+  const { t, isId } = useTranslation();
   const [data, setData] = useState<TaskData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -350,11 +341,15 @@ function TaskPageContent() {
     setActivePhase,
   } = useKanbanStore();
   const { setShowUpgradeModal } = useUiStore();
+
   const [isFinishing, setIsFinishing] = useState(false);
-  const [finishError, setFinishError] = useState<string | null>(null);
   const [celebration, setCelebration] = useState<FinishResult | null>(null);
   const [isFinished, setIsFinished] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showMcpModal, setShowMcpModal] = useState(false);
+
+  // Priority Scope Filter: null = all, or "blocker" | "high" | "normal"
+  const [priorityFilter, setPriorityFilter] = useState<"blocker" | "high" | "normal" | null>(null);
 
   const fetchTasks = async (force = false) => {
     if (!projectId) return;
@@ -416,48 +411,82 @@ function TaskPageContent() {
   const isDirtyRef = useRef(false);
   latestTaskStatusRef.current = taskStatus;
 
-  // 🔄 Real-Time Auto-Sync: Poll MCP/Server status every 3s without page reload
+  // Smart Real-Time Auto-Sync: Adaptive polling to prevent log flooding
   useEffect(() => {
     if (!projectId || !data) return;
 
-    const intervalId = setInterval(async () => {
-      // Don't poll/update if user is on another tab or actively dragging tasks
-      if (document.visibilityState !== "visible" || isDirtyRef.current) return;
+    let timeoutId: NodeJS.Timeout;
+    let currentInterval = 15000;
+    let isSubscribed = true;
+
+    const pollTaskStatus = async () => {
+      if (document.visibilityState !== "visible" || isDirtyRef.current) {
+        scheduleNext(currentInterval);
+        return;
+      }
 
       try {
         const json = await apiClient.projects.getStatus(projectId);
         const serverStatuses: Record<string, ColumnId> = (json.taskStatus as any) || {};
 
-          let hasChange = false;
-          const updated = { ...latestTaskStatusRef.current };
+        let hasChange = false;
+        const updated = { ...latestTaskStatusRef.current };
 
-          Object.keys(serverStatuses).forEach((taskId) => {
-            const rawStatus = serverStatuses[taskId];
-            const normStatus: ColumnId =
-              typeof rawStatus === "string"
-                ? (rawStatus as ColumnId)
-                : rawStatus === true
-                ? "done"
-                : "todo";
+        Object.keys(serverStatuses).forEach((taskId) => {
+          const rawStatus = serverStatuses[taskId];
+          const normStatus: ColumnId =
+            typeof rawStatus === "string"
+              ? (rawStatus as ColumnId)
+              : rawStatus === true
+              ? "done"
+              : "todo";
 
-            if (updated[taskId] !== normStatus) {
-              updated[taskId] = normStatus;
-              hasChange = true;
-            }
-          });
-
-          if (hasChange) {
-            setTaskStatus(updated);
-            try {
-              localStorage.setItem(`kanban_status_${projectId}`, JSON.stringify(updated));
-            } catch (e) {}
+          if (updated[taskId] !== normStatus) {
+            updated[taskId] = normStatus;
+            hasChange = true;
           }
-      } catch (err) {
-        // Silent error handling for background polling
-      }
-    }, 3000);
+        });
 
-    return () => clearInterval(intervalId);
+        if (hasChange) {
+          setTaskStatus(updated);
+          try {
+            localStorage.setItem(`kanban_status_${projectId}`, JSON.stringify(updated));
+          } catch (e) {}
+          currentInterval = 15000;
+        } else {
+          currentInterval = Math.min(currentInterval + 5000, 45000);
+        }
+      } catch {
+        currentInterval = Math.min(currentInterval + 10000, 60000);
+      }
+
+      if (isSubscribed) {
+        scheduleNext(currentInterval);
+      }
+    };
+
+    const scheduleNext = (delay: number) => {
+      clearTimeout(timeoutId);
+      if (isSubscribed) {
+        timeoutId = setTimeout(pollTaskStatus, delay);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        currentInterval = 15000;
+        pollTaskStatus();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    scheduleNext(currentInterval);
+
+    return () => {
+      isSubscribed = false;
+      clearTimeout(timeoutId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, [projectId, data]);
 
   // Sync to database only when user leaves page or closes tab
@@ -466,7 +495,6 @@ function TaskPageContent() {
     
     const payload = JSON.stringify({ projectId, taskStatus: latestTaskStatusRef.current });
     
-    // 1. Try navigator.sendBeacon (ideal for closing tab / navigating away)
     if (navigator.sendBeacon) {
       const blob = new Blob([payload], { type: "application/json" });
       const sent = navigator.sendBeacon("/api/projects/update", blob);
@@ -476,7 +504,6 @@ function TaskPageContent() {
       }
     }
     
-    // 2. Fallback using centralized apiClient
     apiClient.projects.update({ projectId, checkedTasks: latestTaskStatusRef.current })
       .then(() => {
         isDirtyRef.current = false;
@@ -484,16 +511,10 @@ function TaskPageContent() {
       .catch((e) => console.warn("Failed to sync kanban status on leave:", e));
   };
 
-  // Attach lifecycle event listeners for On-Leave / On-Unload sync (Skenario A)
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      syncToDatabase();
-    };
-
+    const handleBeforeUnload = () => syncToDatabase();
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
-        syncToDatabase();
-      }
+      if (document.visibilityState === "hidden") syncToDatabase();
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -502,12 +523,11 @@ function TaskPageContent() {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-      // Also sync when component unmounts (React page navigation)
       syncToDatabase();
     };
   }, [projectId]);
 
-  // Fast Local-First update handler (0ms API latency while dragging/clicking)
+  // Local-First update handler
   const updateTaskStatusLocally = (newStatuses: Record<string, ColumnId>) => {
     setTaskStatus(newStatuses);
     isDirtyRef.current = true;
@@ -535,18 +555,67 @@ function TaskPageContent() {
     updateTaskStatusLocally(next);
   };
 
-  const getProgress = () => {
-    if (!data) return { done: 0, total: 0, pct: 0 };
-    const all = data.phases.flatMap(p => p.tasks);
-    const done = all.filter(t => taskStatus[t.id] === "done").length;
-    return { done, total: all.length, pct: all.length ? Math.round((done / all.length) * 100) : 0 };
-  };
+  const allTasks = useMemo(() => {
+    if (!data) return [];
+    return data.phases.flatMap((p) => p.tasks);
+  }, [data]);
+
+  const progress = useMemo(() => {
+    if (allTasks.length === 0) return { done: 0, total: 0, remaining: 0, pct: 0 };
+    const done = allTasks.filter((t) => taskStatus[t.id] === "done").length;
+    const total = allTasks.length;
+    const remaining = Math.max(total - done, 0);
+    const pct = Math.round((done / total) * 100);
+    return { done, total, remaining, pct };
+  }, [allTasks, taskStatus]);
+
+  // Priority count aggregations for sidebar
+  const priorityCounts = useMemo(() => {
+    let blocker = 0;
+    let high = 0;
+    let normal = 0;
+
+    allTasks.forEach((t) => {
+      if (t.priority === "blocker" || t.tags?.includes("blocker")) blocker++;
+      else if (t.priority === "high") high++;
+      else normal++;
+    });
+
+    return { blocker, high, normal };
+  }, [allTasks]);
+
+  const activePhaseIndex = useMemo(() => {
+    if (!data || !activePhase) return 0;
+    const idx = data.phases.findIndex((p) => p.id === activePhase);
+    return idx >= 0 ? idx : 0;
+  }, [data, activePhase]);
+
+  const activePhaseData = useMemo(() => {
+    if (!data) return null;
+    return data.phases[activePhaseIndex] || data.phases[0] || null;
+  }, [data, activePhaseIndex]);
+
+  // Filter tasks in active phase by priority if priorityFilter is active
+  const filteredPhaseTasks = useMemo(() => {
+    if (!activePhaseData) return [];
+    if (!priorityFilter) return activePhaseData.tasks;
+
+    return activePhaseData.tasks.filter((t) => {
+      const isBlk = t.priority === "blocker" || t.tags?.includes("blocker");
+      if (priorityFilter === "blocker") return isBlk;
+      if (priorityFilter === "high") return t.priority === "high" && !isBlk;
+      if (priorityFilter === "normal") return t.priority !== "high" && !isBlk;
+      return true;
+    });
+  }, [activePhaseData, priorityFilter]);
+
+  const allDone = progress.total > 0 && progress.pct === 100;
 
   const handleFinish = async () => {
     if (!projectId || !data || isFinishing) return;
-    setIsFinishing(true); setFinishError(null);
+    setIsFinishing(true);
     const checkedMap: Record<string, boolean> = {};
-    Object.keys(taskStatus).forEach(id => {
+    Object.keys(taskStatus).forEach((id) => {
       checkedMap[id] = taskStatus[id] === "done";
     });
 
@@ -555,7 +624,7 @@ function TaskPageContent() {
       setIsFinished(true);
       setCelebration(json);
     } catch (err: any) {
-      setFinishError(err?.message || "Gagal menyelesaikan project.");
+      toast.error(err?.message || "Gagal menyelesaikan project.");
     } finally {
       setIsFinishing(false);
     }
@@ -572,8 +641,8 @@ function TaskPageContent() {
       }
       let md = "";
       data.phases.forEach((ph, i) => {
-        md += `## ${i+1}. ${ph.name}\n\n`;
-        ph.tasks.forEach(t => {
+        md += `## ${i + 1}. ${ph.name}\n\n`;
+        ph.tasks.forEach((t) => {
           const statusStr = taskStatus[t.id] === "done" ? "[x]" : "[ ]";
           const stateLabel = (taskStatus[t.id] || "todo").toUpperCase();
           md += `- ${statusStr} **${t.title}** *(${t.estimasi})* — Status: ${stateLabel} | Priority: ${t.priority}\n  ${t.description}\n\n`;
@@ -591,358 +660,383 @@ function TaskPageContent() {
     }
   };
 
-  const progress = getProgress();
-  const activePhaseData = data?.phases.find(p => p.id === activePhase);
-  const allDone = progress.total > 0 && progress.pct === 100;
-
-  const btn: React.CSSProperties = {
-    display: "inline-flex", alignItems: "center", gap: 5,
-    padding: "5px 10px", borderRadius: "var(--radius-md)",
-    fontFamily: "var(--font-mono)", fontSize: "10px", fontWeight: 700,
-    letterSpacing: "0.08em", textTransform: "uppercase",
-    cursor: "pointer", border: "1px solid var(--border-hairline)",
-    background: "var(--bg-elevated)", color: "var(--fg-secondary)",
-    transition: "opacity 0.15s",
-  };
-
-  const [showMcpModal, setShowMcpModal] = useState(false);
-
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-ink)", color: "var(--fg-primary)" }}>
+    <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-[#FCFBF8] text-neutral-900 flex flex-col font-sans">
       {celebration && <CelebrationModal result={celebration} onClose={() => setCelebration(null)} />}
       {showMcpModal && projectId && (
-        <McpConnectModal projectId={projectId} appName={data?.phases?.[0]?.name} onClose={() => setShowMcpModal(false)} />
+        <McpConnectModal
+          projectId={projectId}
+          appName={data?.phases?.[0]?.name}
+          onClose={() => setShowMcpModal(false)}
+        />
       )}
 
-      {/* ── Topbar ── */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", height: 52, borderBottom: "1px solid var(--border-hairline)", background: "rgba(16,24,43,0.96)", backdropFilter: "blur(12px)" }}>
+      {/* ── Topbar (Preserved exactly as requested) ── */}
+      <header
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 50,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          height: 56,
+          borderBottom: "1px solid var(--border-hairline)",
+          background: "rgba(252, 251, 248, 0.92)",
+          backdropFilter: "blur(12px)",
+        }}
+      >
         <ProjectHeaderBrand projectId={projectId} />
         <StepNavbar currentStep="task" projectId={projectId} />
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-          {!isLoading && data && (
-            <div
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "4px 10px",
-                borderRadius: "var(--radius-xs)",
-                border: "1px solid rgba(79,209,197,0.25)",
-                background: "rgba(79,209,197,0.06)",
-                fontFamily: "var(--font-mono)",
-                fontSize: "10px",
-                color: "var(--color-circuit)",
-                letterSpacing: "0.04em",
-              }}
-              title="Kanban status automatically syncs with AI Agent via NPX CLI & REST API"
-            >
-              <span
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: "50%",
-                  background: "#4FD1C5",
-                  boxShadow: "0 0 8px #4FD1C5",
-                }}
-              />
-              Live Sync
-            </div>
-          )}
-          {!isLoading && data && (
-            <button
-              onClick={() => setShowMcpModal(true)}
-              style={{
-                ...btn,
-                background: "rgba(79,209,197,0.08)",
-                borderColor: "rgba(79,209,197,0.35)",
-                color: "var(--color-circuit)",
-              }}
-            >
-              <Cpu size={12} style={{ color: "var(--color-circuit)" }} />
-              Setup AI Agent CLI
-            </button>
-          )}
-          {!isLoading && data && (
-            <button
-              onClick={() => fetchTasks(true)}
-              disabled={isSyncing}
-              style={{
-                ...btn,
-                background: isSyncing ? "rgba(255,182,39,0.15)" : "var(--bg-elevated)",
-                borderColor: isSyncing ? "var(--color-signal)" : "var(--border-hairline)",
-                color: isSyncing ? "var(--color-signal)" : "var(--fg-secondary)",
-                cursor: isSyncing ? "not-allowed" : "pointer",
-              }}
-              title="Sync tasks with latest PRD and Structure changes"
-            >
-              <RefreshCw size={11} className={isSyncing ? "animate-spin" : ""} style={{ color: isSyncing ? "var(--color-signal)" : "var(--fg-muted)" }} />
-              {isSyncing ? "Syncing…" : "Sync Tasks"}
-            </button>
-          )}
-          {!isLoading && data && (
-            <button onClick={handleExport} style={btn}>↓ Export .md</button>
-          )}
-          <Link href="/generate" style={{ ...btn, background: "var(--color-signal)", color: "var(--color-graphite)", borderColor: "var(--color-signal)", textDecoration: "none" }}>
-            + New Project
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+          {/* Sync PRD Button */}
+          <button
+            onClick={() => fetchTasks(true)}
+            disabled={isSyncing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition-colors disabled:opacity-50 cursor-pointer shadow-2xs"
+            title="Sync tasks with latest PRD and Structure changes"
+          >
+            <RefreshCw size={12} className={isSyncing ? "animate-spin text-[#e15b39]" : "text-neutral-500"} />
+            <span>{isSyncing ? t.task.syncing : t.task.syncPrd}</span>
+          </button>
+
+          {/* Connect AI Button */}
+          <button
+            onClick={() => setShowMcpModal(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-700 text-xs font-semibold hover:bg-neutral-50 transition-colors cursor-pointer shadow-2xs"
+            title="Connect MCP AI Agent"
+          >
+            <Cpu size={12} className="text-neutral-500" />
+            <span>{t.task.connectAi}</span>
+          </button>
+
+          {/* Export Kanban */}
+          <button
+            onClick={handleExport}
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-neutral-200 bg-white text-neutral-600 text-xs font-medium hover:bg-neutral-50 transition-colors cursor-pointer shadow-2xs"
+            title="Export Kanban as Markdown"
+          >
+            <Download size={12} className="text-neutral-400" />
+            <span className="hidden xl:inline">{t.task.export}</span>
+          </button>
+
+          <Link
+            href="/dashboard"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "8px 18px",
+              borderRadius: "8px",
+              background: "#e15b39",
+              color: "#ffffff",
+              border: "none",
+              fontFamily: "var(--font-body)",
+              fontSize: "12px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              textDecoration: "none",
+              transition: "opacity 0.15s, transform 0.1s",
+            }}
+          >
+            <span>{t.task.newProject}</span>
           </Link>
         </div>
       </header>
 
-      <div style={{ paddingTop: 52, display: "flex", height: "100vh" }}>
+      {/* ── Main Layout Body ── */}
+      <div className="pt-14 flex flex-1 overflow-hidden h-full">
+        
+        {/* ── Left Sidebar: Categories, Progress & Priority Scope ── */}
+        <aside className="w-64 sm:w-72 shrink-0 border-r border-neutral-200/80 bg-white/70 backdrop-blur-sm flex flex-col overflow-y-auto">
+          <div className="p-4 flex flex-col gap-5">
+            
+            {/* 1. Sprint Foundation Progress Widget */}
+            <div className="p-3.5 rounded-xl bg-white border border-neutral-200/90 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-mono text-[9px] font-bold text-neutral-400 uppercase tracking-wider">
+                  {t.task.sprintFoundation}
+                </span>
+                <span className="inline-flex items-center text-[10px] font-semibold px-2 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200/80">
+                  {progress.pct}% {t.task.completed}
+                </span>
+              </div>
+              
+              {/* Progress Bar */}
+              <div className="h-1.5 w-full bg-neutral-100 rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-[#e15b39] rounded-full transition-all duration-300"
+                  style={{ width: `${progress.pct}%` }}
+                />
+              </div>
 
-        {/* ── Left sidebar: phase nav ── */}
-        <aside style={{ width: 220, flexShrink: 0, borderRight: "1px solid var(--border-hairline)", background: "var(--bg-surface)", overflowY: "auto", display: "flex", flexDirection: "column" }}>
-          {/* Progress */}
-          <div style={{ padding: "20px 14px 16px", borderBottom: "1px solid var(--border-hairline)" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--fg-muted)" }}>Progress</span>
-              <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: allDone ? "var(--color-circuit)" : "var(--color-signal)" }}>{progress.pct}%</span>
-            </div>
-            <div style={{ height: 3, borderRadius: 2, background: "var(--bg-elevated)" }}>
-              <div style={{ height: "100%", borderRadius: 2, background: allDone ? "var(--color-circuit)" : "var(--color-signal)", width: `${progress.pct}%`, transition: "width 0.4s ease" }} />
-            </div>
-            <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", marginTop: 6, letterSpacing: "0.04em" }}>
-              {progress.done} / {progress.total} tasks done
-            </p>
-          </div>
-
-          {/* Finish CTA */}
-          {allDone && !isFinished && (
-            <div style={{ padding: "10px 10px 0" }}>
-              <button onClick={handleFinish} disabled={isFinishing} style={{ width: "100%", padding: "9px 12px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-circuit)", background: "rgba(79,209,197,0.1)", color: "var(--color-circuit)", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: isFinishing ? 0.6 : 1 }}>
-                <CheckCircle2 size={11} />
-                {isFinishing ? "Processing…" : "Finish & Claim Points"}
-              </button>
-              {finishError && <p style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "#f87171", marginTop: 6, textAlign: "center" }}>{finishError}</p>}
-            </div>
-          )}
-          {isFinished && (
-            <div style={{ padding: "10px 10px 0" }}>
-              <div style={{ padding: "8px 12px", borderRadius: "var(--radius-md)", border: "1px solid rgba(79,209,197,0.35)", background: "rgba(79,209,197,0.07)", display: "flex", alignItems: "center", gap: 7 }}>
-                <CheckCircle2 size={11} style={{ color: "var(--color-circuit)" }} />
-                <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--color-circuit)" }}>Complete!</span>
+              <div className="flex items-center justify-between text-[11px] text-neutral-500 font-medium">
+                <span>{t.task.tasksDone(progress.done, progress.total)}</span>
+                <span className="text-neutral-400">{t.task.remaining(progress.remaining)}</span>
               </div>
             </div>
-          )}
 
-          {/* Phase list */}
-          <div style={{ padding: "10px 8px", flex: 1 }}>
-            {isLoading ? (
-              Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} style={{ height: 36, borderRadius: "var(--radius-md)", background: "var(--bg-elevated)", marginBottom: 4, opacity: 0.4 }} />
-              ))
-            ) : data?.phases.map((phase, idx) => {
-              const done = phase.tasks.filter(t => (taskStatus[t.id] || "todo") === "done").length;
-              const isActive = activePhase === phase.id;
-              return (
-                <button key={phase.id} onClick={() => setActivePhase(phase.id)} style={{ width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: "var(--radius-md)", border: "none", cursor: "pointer", transition: "all 0.12s", marginBottom: 2, background: isActive ? "rgba(255,182,39,0.08)" : "transparent", borderLeft: isActive ? "2px solid var(--color-signal)" : "2px solid transparent" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, color: isActive ? "var(--color-signal)" : "var(--fg-muted)" }}>{idx + 1}.</span>
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: 11, fontWeight: 600, color: isActive ? "var(--fg-primary)" : "var(--fg-secondary)" }}>{phase.name}</span>
-                    </div>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: "var(--fg-muted)", letterSpacing: "0.04em" }}>{done}/{phase.tasks.length}</span>
-                  </div>
-                </button>
-              );
-            })}
+            {/* 2. Categories / Modules Navigation */}
+            <div>
+              <div className="flex items-center justify-between px-1 mb-2">
+                <span className="font-mono text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                  {t.task.categories}
+                </span>
+                <span className="text-[11px] text-neutral-400 font-medium">
+                  {t.task.modules(data?.phases?.length || 0)}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                {isLoading ? (
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-9 rounded-lg bg-neutral-100/70 animate-pulse mb-1" />
+                  ))
+                ) : (
+                  data?.phases.map((phase, idx) => {
+                    const isActive = activePhase === phase.id;
+                    const phaseTaskCount = phase.tasks.length;
+                    const rawName = phase.name.replace(/^\d+[\.\)]\s*/, "");
+                    const displayName = `${idx + 1}. ${rawName}`;
+
+                    return (
+                      <button
+                        key={phase.id}
+                        onClick={() => setActivePhase(phase.id)}
+                        className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-all duration-150 text-[12px] select-none ${
+                          isActive
+                            ? "bg-[#e15b39]/8 border border-[#e15b39]/25 text-[#e15b39] font-semibold shadow-xs"
+                            : "text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/60 border border-transparent font-medium"
+                        }`}
+                      >
+                        <span className="truncate pr-2">{displayName}</span>
+                        <span
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
+                            isActive
+                              ? "bg-[#e15b39]/15 text-[#e15b39] font-bold"
+                              : "bg-neutral-100 text-neutral-500"
+                          }`}
+                        >
+                          {phaseTaskCount}
+                        </span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* 3. Priority Scope Filter Pills */}
+            <div>
+              <div className="px-1 mb-2">
+                <span className="font-mono text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                  {t.task.priorityScope}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => setPriorityFilter(priorityFilter === "blocker" ? null : "blocker")}
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-md border transition-all ${
+                      priorityFilter === "blocker"
+                        ? "bg-rose-100 text-rose-700 border-rose-400 font-bold shadow-xs"
+                        : "bg-rose-50/70 text-rose-600 border-rose-200/80 hover:bg-rose-100/60"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                    <span>{t.task.blocker} ({priorityCounts.blocker})</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPriorityFilter(priorityFilter === "high" ? null : "high")}
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-md border transition-all ${
+                      priorityFilter === "high"
+                        ? "bg-amber-100 text-amber-800 border-amber-400 font-bold shadow-xs"
+                        : "bg-amber-50/70 text-amber-700 border-amber-200/80 hover:bg-amber-100/60"
+                    }`}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                    <span>{t.task.high} ({priorityCounts.high})</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => setPriorityFilter(priorityFilter === "normal" ? null : "normal")}
+                    className={`inline-flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-md border transition-all ${
+                      priorityFilter === "normal"
+                        ? "bg-slate-200 text-slate-800 border-slate-400 font-bold shadow-xs"
+                        : "bg-neutral-100/80 text-neutral-600 border-neutral-200 hover:bg-neutral-200/60"
+                    }`}
+                  >
+                    <span>{t.task.normal} ({priorityCounts.normal})</span>
+                  </button>
+
+                  {priorityFilter && (
+                    <button
+                      type="button"
+                      onClick={() => setPriorityFilter(null)}
+                      className="text-[10px] text-neutral-400 hover:text-neutral-700 underline underline-offset-2 ml-1"
+                    >
+                      {isId ? "Bersihkan" : "Clear"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         </aside>
 
-        {/* ── Main Kanban View ── */}
-        <main style={{ flex: 1, overflowX: "auto", overflowY: "auto", padding: "24px 28px 60px" }}>
-
-          {/* Loading */}
-          {isLoading && (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "80px 0", gap: 16 }}>
-              <div style={{ width: 44, height: 44, borderRadius: "var(--radius-lg)", border: "1px solid var(--color-signal)", background: "rgba(255,182,39,0.08)", display: "flex", alignItems: "center", justifyContent: "center", animation: "spin 0.8s linear infinite" }}>
-                <Loader2 size={20} style={{ color: "var(--color-signal)" }} strokeWidth={2} />
-              </div>
-              <div style={{ textAlign: "center" }}>
-                <h3 style={{ fontFamily: "var(--font-display)", fontSize: 16, fontWeight: 700, color: "var(--fg-primary)", marginBottom: 6 }}>Generating Kanban Tasks…</h3>
-                <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--color-mist)" }}>AI is analyzing the PRD and structuring your interactive board</p>
-              </div>
-            </div>
-          )}
-
-          {/* Error */}
+        {/* ── Main Kanban Workspace Area (Zero Page-Level Scroll) ── */}
+        <main className="flex-1 min-w-0 overflow-hidden flex flex-col p-4 sm:p-6 bg-[#FCFBF8]">
+          
+          {/* Error Banner */}
           {error && !isLoading && (
-            <div style={{ textAlign: "center", padding: "60px 0" }}>
-              <p style={{ fontFamily: "var(--font-body)", color: "#f87171", marginBottom: 16, fontSize: 13 }}>{error}</p>
-              <button onClick={() => { setHasStarted(false); setError(null); }} style={{ padding: "8px 20px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
+            <div className="max-w-md mx-auto text-center py-6 bg-white border border-rose-200 rounded-2xl p-6 shadow-xs mb-4 shrink-0">
+              <AlertCircle size={32} className="text-rose-500 mx-auto mb-2" />
+              <p className="text-xs text-neutral-800 font-medium mb-3">{error}</p>
+              <button
+                onClick={() => { setHasStarted(false); setError(null); }}
+                className="px-3.5 py-1.5 rounded-lg bg-[#e15b39] text-white text-xs font-semibold hover:bg-[#c44827] transition-colors cursor-pointer"
+              >
                 Try Again
               </button>
             </div>
           )}
 
-          {/* All done banner */}
+          {/* All Done Completion Banner */}
           {allDone && !isFinished && !isLoading && (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderRadius: "var(--radius-lg)", marginBottom: 20, border: "1px solid rgba(79,209,197,0.35)", background: "rgba(79,209,197,0.07)" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <CheckCircle2 size={18} style={{ color: "var(--color-circuit)", flexShrink: 0 }} />
+            <div className="flex items-center justify-between p-3.5 rounded-xl mb-4 border border-teal-300 bg-teal-50/50 shadow-xs shrink-0">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 size={18} className="text-teal-600 shrink-0" />
                 <div>
-                  <p style={{ fontFamily: "var(--font-body)", fontWeight: 700, fontSize: 13, color: "var(--color-circuit)", margin: "0 0 2px" }}>All tasks completed!</p>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--color-mist)", margin: 0 }}>Claim your Points now for completing this project.</p>
+                  <p className="text-xs font-bold text-teal-900 mb-0.5">Semua task pada project ini telah selesai!</p>
+                  <p className="text-[11px] text-teal-700">Klaim poin reputasi Anda sekarang untuk menyelesaikan project.</p>
                 </div>
               </div>
-              <button onClick={handleFinish} disabled={isFinishing} style={{ padding: "8px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", cursor: isFinishing ? "not-allowed" : "pointer", display: "flex", alignItems: "center", gap: 7, whiteSpace: "nowrap", flexShrink: 0, opacity: isFinishing ? 0.7 : 1 }}>
-                <Award size={12} />
-                {isFinishing ? "Processing…" : "Finish & Claim +100 Points"}
+              <button
+                onClick={handleFinish}
+                disabled={isFinishing}
+                className="px-3.5 py-1.5 rounded-lg bg-[#e15b39] text-white text-xs font-bold hover:bg-[#c44827] transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+              >
+                <Award size={13} />
+                <span>{isFinishing ? "Memproses..." : "Finish & Claim +100 Points"}</span>
               </button>
             </div>
           )}
 
-          {/* Phase Kanban View */}
-          {activePhaseData && !isLoading && (
-            <div>
-              {/* Phase header */}
-              <div style={{ marginBottom: 20, display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
-                    <span style={{ fontFamily: "var(--font-mono)", fontSize: 24, fontWeight: 700, color: "var(--color-signal)", lineHeight: 1 }}>
-                      {(data?.phases.findIndex(p => p.id === activePhase) ?? 0) + 1}.
-                    </span>
-                    <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 800, color: "var(--fg-primary)", letterSpacing: "-0.02em" }}>
-                      {activePhaseData.name}
-                    </h2>
-                  </div>
-                  <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--color-mist)" }}>
-                    {activePhaseData.description}
-                  </p>
-                </div>
+          {/* Active Phase Header & Subtitle */}
+          {activePhaseData && (
+            <div className="mb-4 shrink-0">
+              <h2 className="text-xl sm:text-2xl font-bold text-neutral-900 font-display tracking-tight mb-0.5">
+                {activePhaseData.name}
+              </h2>
+              <p className="text-xs text-neutral-500 max-w-2xl leading-relaxed">
+                {activePhaseData.description || "Sprint foundation, repository architecture, and infrastructure configuration tasks"}
+              </p>
+            </div>
+          )}
 
-                {/* Phase pagination */}
-                <div style={{ display: "flex", gap: 8 }}>
-                  {data && data.phases.findIndex(p => p.id === activePhase) > 0 && (
-                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx - 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--border-hairline)", background: "var(--bg-elevated)", color: "var(--fg-secondary)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
-                      ← Prev Phase
-                    </button>
-                  )}
-                  {data && data.phases.findIndex(p => p.id === activePhase) < data.phases.length - 1 && (
-                    <button onClick={() => { const idx = data.phases.findIndex(p => p.id === activePhase); setActivePhase(data.phases[idx + 1].id); }} style={{ padding: "7px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--color-signal)", background: "var(--color-signal)", color: "var(--color-graphite)", fontFamily: "var(--font-mono)", fontSize: 10, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", cursor: "pointer" }}>
-                      Next Phase →
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* ── Drag & Drop Kanban Columns ── */}
-              <DragDropContext onDragEnd={onDragEnd}>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(280px, 1fr))", gap: 16, alignItems: "start" }}>
-                  {KANBAN_COLUMNS.map(col => {
-                    const columnTasks = activePhaseData.tasks.filter(
-                      t => (taskStatus[t.id] || "todo") === col.id
+          {/* 4-Column Drag & Drop Board (Full Width, Zero Page Scroll) */}
+          {activePhaseData && (
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div className="flex-1 min-h-0 w-full">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch w-full h-full">
+                  {KANBAN_COLUMNS.map((col) => {
+                    const columnTasks = filteredPhaseTasks.filter(
+                      (t) => (taskStatus[t.id] || "todo") === col.id
                     );
 
                     return (
                       <div
                         key={col.id}
-                        style={{
-                          background: "var(--bg-surface)",
-                          border: "1px solid var(--border-hairline)",
-                          borderRadius: "var(--radius-lg)",
-                          display: "flex",
-                          flexDirection: "column",
-                          maxHeight: "calc(100vh - 200px)",
-                          minHeight: 400,
-                        }}
+                        className={`w-full flex flex-col rounded-2xl p-3 sm:p-3.5 transition-colors border h-full overflow-hidden ${
+                          col.isErrorCol
+                            ? "bg-[#FFF9F9] border-rose-200/80"
+                            : "bg-[#F7F6F2] border-neutral-200/80"
+                        }`}
                       >
                         {/* Column Header */}
-                        <div
-                          style={{
-                            padding: "12px 14px",
-                            borderBottom: "1px solid var(--border-hairline)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div className="flex items-center justify-between px-1 mb-2.5 shrink-0">
+                          <div className="flex items-center gap-2">
                             <span
-                              style={{
-                                width: 8,
-                                height: 8,
-                                borderRadius: "50%",
-                                background: col.bgDot,
-                                flexShrink: 0,
-                              }}
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{ background: col.dotColor }}
                             />
-                            <h3
-                              style={{
-                                fontFamily: "var(--font-mono)",
-                                fontSize: 11,
-                                fontWeight: 700,
-                                letterSpacing: "0.08em",
-                                textTransform: "uppercase",
-                                color: col.color,
-                                margin: 0,
-                              }}
-                            >
+                            <span className="font-mono text-[11px] font-bold text-neutral-800 uppercase tracking-wider">
                               {col.title}
-                            </h3>
+                            </span>
+                            <span
+                              className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded-md ${col.countBg} ${col.countText}`}
+                            >
+                              {columnTasks.length}
+                            </span>
                           </div>
-                          <span
-                            style={{
-                              fontFamily: "var(--font-mono)",
-                              fontSize: 10,
-                              fontWeight: 700,
-                              padding: "2px 7px",
-                              borderRadius: "var(--radius-xs)",
-                              border: `1px solid ${col.borderColor}`,
-                              color: col.color,
-                              background: "var(--bg-elevated)",
-                            }}
-                          >
-                            {columnTasks.length}
-                          </span>
+
+                          {/* Column Action Button (Plus or Refresh) */}
+                          {col.isErrorCol ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                toast.info("Memeriksa error pada task...");
+                              }}
+                              className="p-1 rounded text-neutral-400 hover:text-rose-600 transition-colors cursor-pointer"
+                              title="Retry error tasks"
+                            >
+                              <RotateCw size={13} />
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                toast.info(`Tambah task baru ke ${col.title}`);
+                              }}
+                              className="p-1 rounded text-neutral-400 hover:text-neutral-700 transition-colors cursor-pointer"
+                              title="Add task"
+                            >
+                              <Plus size={14} />
+                            </button>
+                          )}
                         </div>
 
-                        {/* Droppable Card Area */}
+                        {/* Droppable Column Area with Internal Vertical Scrolling */}
                         <Droppable droppableId={col.id}>
                           {(provided, snapshot) => (
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              style={{
-                                flex: 1,
-                                padding: 12,
-                                overflowY: "auto",
-                                background: snapshot.isDraggingOver
-                                  ? "rgba(255,182,39,0.03)"
-                                  : "transparent",
-                                transition: "background 0.15s",
-                                minHeight: 200,
-                              }}
+                              className={`flex flex-col flex-1 overflow-y-auto pr-1 rounded-xl transition-colors p-1 kanban-column-scroll min-h-0 ${
+                                snapshot.isDraggingOver
+                                  ? "bg-neutral-200/40"
+                                  : ""
+                              }`}
                             >
-                              {columnTasks.length === 0 && !snapshot.isDraggingOver && (
-                                <div
-                                  style={{
-                                    height: 120,
-                                    border: "1px dashed var(--border-hairline)",
-                                    borderRadius: "var(--radius-md)",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    color: "var(--fg-muted)",
-                                    fontFamily: "var(--font-mono)",
-                                    fontSize: 10,
-                                    letterSpacing: "0.06em",
-                                    textTransform: "uppercase",
-                                  }}
-                                >
-                                  Drag task here
-                                </div>
-                              )}
-
-                              {columnTasks.map((task, index) => (
+                              {columnTasks.map((task, idx) => (
                                 <KanbanTaskCard
                                   key={task.id}
-                                  task={{ ...task, status: taskStatus[task.id] || "todo" }}
-                                  index={index}
+                                  task={task}
+                                  index={idx}
+                                  phaseName={activePhaseData.name}
+                                  phaseIndex={activePhaseIndex}
                                   onToggleStatus={handleStatusChange}
                                 />
                               ))}
                               {provided.placeholder}
+
+                              {/* Empty column hint */}
+                              {columnTasks.length === 0 && !snapshot.isDraggingOver && (
+                                <div className="flex-1 flex flex-col items-center justify-center border border-dashed border-neutral-200/90 rounded-xl p-6 text-center text-neutral-400">
+                                  <span className="text-[11px] font-medium">No tasks in {col.title.toLowerCase()}</span>
+                                </div>
+                              )}
                             </div>
                           )}
                         </Droppable>
@@ -950,22 +1044,32 @@ function TaskPageContent() {
                     );
                   })}
                 </div>
-              </DragDropContext>
-
-            </div>
+              </div>
+            </DragDropContext>
           )}
+
         </main>
       </div>
 
       <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        aside::-webkit-scrollbar { width: 4px; }
-        aside::-webkit-scrollbar-thumb { background: var(--border-hairline); border-radius: 3px; }
-        main::-webkit-scrollbar { height: 6px; width: 6px; }
-        main::-webkit-scrollbar-thumb { background: var(--border-hairline); border-radius: 3px; }
+        .kanban-column-scroll {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+        }
+        .kanban-column-scroll::-webkit-scrollbar {
+          width: 5px;
+        }
+        .kanban-column-scroll::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .kanban-column-scroll::-webkit-scrollbar-thumb {
+          background: rgba(0, 0, 0, 0.15);
+          border-radius: 9999px;
+        }
+        .kanban-column-scroll::-webkit-scrollbar-thumb:hover {
+          background: rgba(0, 0, 0, 0.28);
+        }
       `}</style>
-      {/* Pro Upgrade Modal */}
-      <UpgradeModal />
     </div>
   );
 }

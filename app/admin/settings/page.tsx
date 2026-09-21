@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Navbar from "@/app/components/Navbar";
+import { Navbar } from "@/app/components/layout";
 import { Settings, Save, Server, Cpu, Loader2, AlertCircle, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { apiClient, ApiError } from "@/lib/apiClient";
+import { apiClient, ApiError } from "@/lib/utils/apiClient";
+import { isTextGenerationModel } from "@/lib/ai/models";
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -23,18 +24,12 @@ export default function AdminSettingsPage() {
   const [usages, setUsages] = useState({ gemini_key_1: 0, gemini_key_2: 0, openrouter: 0 });
   const [usagesLoading, setUsagesLoading] = useState(true);
 
-  const GEMINI_MODELS = [
-    { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash" },
-    { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash" },
-    { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" },
-    { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash Lite" },
-    { id: "gemini-3.1-flash-lite", name: "Gemini 3.1 Flash Lite" },
-    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
-    { id: "gemini-2.5-flash-lite", name: "Gemini 2.5 Flash Lite" },
-  ];
+  const [geminiModels, setGeminiModels] = useState<Array<{ id: string; name: string }>>([]);
+  const [geminiModelsLoading, setGeminiModelsLoading] = useState(true);
 
   useEffect(() => {
     fetchSettings();
+    fetchGeminiModels();
     fetchOpenRouterModels();
     fetchUsages();
   }, []);
@@ -55,10 +50,25 @@ export default function AdminSettingsPage() {
     }
   };
 
+  const fetchGeminiModels = async () => {
+    try {
+      setGeminiModelsLoading(true);
+      const res = await apiClient.gemini.getModels();
+      if (res.models && res.models.length > 0) {
+        setGeminiModels(res.models.filter(isTextGenerationModel));
+      }
+    } catch (err: unknown) {
+      console.warn("Failed to fetch Gemini models:", err);
+    } finally {
+      setGeminiModelsLoading(false);
+    }
+  };
+
   const fetchOpenRouterModels = async () => {
     try {
       const data = await apiClient.openrouter.getModels();
-      setFreeModels(data.models || []);
+      const raw = data.models || [];
+      setFreeModels(raw.filter(isTextGenerationModel));
     } catch (err: any) {
       if (err instanceof ApiError && err.statusCode === 403) return;
       console.error(err);
@@ -190,15 +200,22 @@ export default function AdminSettingsPage() {
               <select
                 value={geminiModel}
                 onChange={(e) => setGeminiModel(e.target.value)}
+                disabled={geminiModelsLoading}
                 style={{
                   flex: 1, padding: "14px 16px", borderRadius: "12px", border: "1px solid var(--border-subtle)",
                   background: "var(--bg-elevated)", color: "var(--fg-primary)", fontSize: "15px",
                   appearance: "none", cursor: "pointer", outline: "none"
                 }}
               >
-                {GEMINI_MODELS.map(m => (
-                  <option key={m.id} value={m.id}>{m.name} ({m.id})</option>
-                ))}
+                {geminiModels.length > 0 ? (
+                  geminiModels.map(m => (
+                    <option key={m.id} value={m.id}>{m.name} ({m.id})</option>
+                  ))
+                ) : geminiModelsLoading ? (
+                  <option value={geminiModel} disabled>Memuat model Gemini…</option>
+                ) : (
+                  <option value={geminiModel}>{geminiModel}</option>
+                )}
               </select>
             </div>
             <p style={{ fontSize: "13px", color: "var(--fg-muted)", marginTop: "8px" }}>

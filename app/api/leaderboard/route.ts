@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { getRank } from '@/lib/gamification';
+import { prisma } from '@/lib/db/prisma';
+import { getRank } from '@/lib/analytics/gamification';
 
 export const dynamic = "force-dynamic";
 

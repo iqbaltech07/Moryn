@@ -3,11 +3,11 @@ import { DEFAULT_API_URL } from "../config/constants.js";
 
 export async function apiRequest(endpoint: string, options: { method?: string; body?: any; token?: string; apiUrl?: string; rawText?: boolean } = {}): Promise<any> {
   const globalConfig = getGlobalConfig();
-  const token = options.token || globalConfig.token || process.env.PIARDIFY_API_KEY || "";
+  const token = options.token || globalConfig.token || process.env.MORYN_API_KEY || process.env.PIARDIFY_API_KEY || "";
   const baseUrl = (options.apiUrl || globalConfig.apiUrl || DEFAULT_API_URL).replace(/\/$/, "");
 
   if (!token && !endpoint.includes("/api/agent/status")) {
-    throw new Error("NOT_AUTHENTICATED: Please run 'npx piardify login --token <TOKEN>' first.");
+    throw new Error("NOT_AUTHENTICATED: Please run 'npx moryn login --token <TOKEN>' first.");
   }
 
   const url = `${baseUrl}${endpoint}`;
@@ -47,6 +47,6 @@ export async function apiRequest(endpoint: string, options: { method?: string; b
     if (err.message?.startsWith("API_ERROR_") || err.message?.startsWith("NOT_AUTHENTICATED")) {
       throw err;
     }
-    throw new Error(`NETWORK_ERROR: Unable to connect to Piardify API at ${baseUrl}. ${err.message}`);
+    throw new Error(`NETWORK_ERROR: Unable to connect to Moryn API at ${baseUrl}. ${err.message}`);
   }
 }

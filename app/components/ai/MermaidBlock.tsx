@@ -46,7 +46,12 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart }) => {
           clean = clean.replace(/([A-Za-z0-9_\]\)\}]|")\s+->\s+([A-Za-z0-9_\[\(\{]|")/g, "$1 --> $2");
           clean = clean.replace(/([A-Za-z0-9_\]\)\}]|")\s+->\|(.*?)\|\s+([A-Za-z0-9_\[\(\{]|")/g, "$1 -->|$2| $3");
           clean = clean.replace(/→/g, "-->");
-          clean = clean.replace(/\|([^|\n]*?)\|/g, (_m, label) => `|${label.replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim()}|`);
+          // Convert `-- label with quotes -->` into safe `-->|label|`
+          clean = clean.replace(/--\s*([^-\n>]+?)\s*-->/g, (_m, label) => {
+            const safeLabel = label.replace(/["']/g, "").replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim();
+            return `-->|${safeLabel}|`;
+          });
+          clean = clean.replace(/\|([^|\n]*?)\|/g, (_m, label) => `|${label.replace(/["']/g, "").replace(/[\(\)]/g, "").replace(/\s+/g, " ").trim()}|`);
           const lines = clean.split("\n");
           return lines.map((line, idx) => {
             if (idx === 0 || line.trim().startsWith("%%")) return line;

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   getDesignTemplateById,
   getAllDesignTemplatesWithContent,
-} from "@/lib/designTemplatesServer";
+} from "@/lib/design/designTemplatesServer";
 
 export async function GET(req: NextRequest) {
   try {

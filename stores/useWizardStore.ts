@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { FormData, Step, StackCategory } from "@/app/generate/types";
-import { apiClient } from "@/lib/apiClient";
+import type { FormData, Step, StackCategory } from "@/app/dashboard/components/setup/types";
+import { apiClient } from "@/lib/utils/apiClient";
+import { useLanguageStore } from "@/stores/useLanguageStore";
 
 interface WizardStore {
   step: Step;
@@ -20,7 +21,11 @@ interface WizardStore {
   setStackMode: (mode: "manual" | "ai") => void;
   setStack: (category: StackCategory, label: string) => void;
   setDesignData: (designData: string) => void;
-  setDynamicAnswer: (key: string, value: string | string[], type: "single" | "multiple") => void;
+  setDynamicAnswer: (
+    key: string,
+    value: string | string[],
+    type?: "single" | "multiple" | "essay"
+  ) => void;
 
   fetchDynamicQuestions: () => Promise<void>;
   resetWizard: () => void;
@@ -73,9 +78,9 @@ export const useWizardStore = create<WizardStore>()(
       setDesignData: (designData) =>
         set((state) => ({ form: { ...state.form, designData } })),
 
-      setDynamicAnswer: (key, value, type) =>
+      setDynamicAnswer: (key, value, type = "single") =>
         set((state) => {
-          if (type === "single") {
+          if (Array.isArray(value) || type === "single" || type === "essay") {
             return {
               form: {
                 ...state.form,
@@ -100,10 +105,12 @@ export const useWizardStore = create<WizardStore>()(
         const { form } = get();
         set({ questionsLoading: true });
         try {
+          const language = useLanguageStore.getState().language;
           const data = await apiClient.generate.questions({
             appName: form.appName,
             appIdea: form.appIdea,
             stacks: form.stacks,
+            language,
           });
 
           const questions = Array.isArray(data) ? data : (data as any).questions || [];
@@ -127,7 +134,7 @@ export const useWizardStore = create<WizardStore>()(
         }),
     }),
     {
-      name: "piardify_wizard_draft_v1",
+      name: "moryn_wizard_draft_v1",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         step: state.step,

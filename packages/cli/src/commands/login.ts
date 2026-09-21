@@ -15,20 +15,20 @@ function promptInput(query: string): Promise<string> {
   });
 }
 
-export async function loginCommand(options: { token?: string; url?: string; json?: boolean }) {
-  let token = options.token?.trim() || process.env.PIARDIFY_API_KEY?.trim();
+export async function loginCommand(options: { token?: string; key?: string; url?: string; json?: boolean }) {
+  let token = options.token?.trim() || options.key?.trim() || process.env.MORYN_API_KEY?.trim() || process.env.PIARDIFY_API_KEY?.trim();
 
   if (!token && !options.json && process.stdin.isTTY) {
-    console.log("\n  Piardify CLI Login");
+    console.log("\n  Moryn CLI Login");
     console.log("  ==================");
-    token = await promptInput("  Enter your Piardify API Key: ");
+    token = await promptInput("  Enter your Moryn API Key: ");
   }
 
   if (!token) {
     if (options.json) {
       console.log(JSON.stringify({ success: false, error: "Missing --token argument or API Key input." }));
     } else {
-      console.error("\n[ERROR] Token is required.\nUsage: npx piardify login --token <YOUR_PIARDIFY_API_KEY>\n");
+      console.error("\n[ERROR] Token is required.\nUsage: npx moryn login --token <YOUR_MORYN_API_KEY>\n");
     }
     process.exit(1);
   }
@@ -48,11 +48,11 @@ export async function loginCommand(options: { token?: string; url?: string; json
       console.log(JSON.stringify({ success: true, user: res.user, status: "authenticated" }));
     } else {
       console.log("\n==========================================");
-      console.log("  Piardify CLI - Authentication Success");
+      console.log("  Moryn CLI - Authentication Success");
       console.log("==========================================");
       console.log(`  User  : ${res.user?.name || "Authenticated User"} (${res.user?.email})`);
       console.log("  Status: Connected");
-      console.log("\nNext step: Run 'npx piardify init' in your project directory.\n");
+      console.log("\nNext step: Run 'npx moryn init' in your project directory.\n");
     }
   } catch (err: any) {
     if (options.json) {

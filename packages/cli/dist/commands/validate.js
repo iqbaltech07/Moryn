@@ -39,7 +39,10 @@ const path = __importStar(require("path"));
 async function validateCommand(options) {
     try {
         const workspaceRoot = process.cwd();
-        const configPath = path.join(workspaceRoot, ".piardify", "config.json");
+        let configPath = path.join(workspaceRoot, ".moryn", "config.json");
+        if (!fs.existsSync(configPath)) {
+            configPath = path.join(workspaceRoot, ".piardify", "config.json");
+        }
         let target = options.target || "web";
         if (fs.existsSync(configPath)) {
             try {
@@ -96,7 +99,7 @@ async function validateCommand(options) {
             for (let i = 0; i < lines.length; i++) {
                 const lineContent = lines[i];
                 const lineNum = i + 1;
-                if (lineContent.includes("// piardify-allow") || relPath.includes("tasteSkill") || relPath.includes("contextSerializer"))
+                if (lineContent.includes("// moryn-allow") || lineContent.includes("// piardify-allow") || relPath.includes("tasteSkill") || relPath.includes("contextSerializer"))
                     continue;
                 // 1. Check Gradient Text on Headline
                 if (/<h[1-6]/i.test(lineContent) || /className=.*text-(2xl|3xl|4xl|5xl|6xl)/i.test(lineContent)) {
@@ -142,7 +145,7 @@ async function validateCommand(options) {
                             message: `Forbidden Slop Class '${cls}' detected`,
                             file: relPath,
                             line: lineNum,
-                            advice: "Use Piardify Obsidian Surface (#090A0C, #121318) or semantic token classes (bg-piardify-dark) instead of generic slop colors.",
+                            advice: "Use Moryn Obsidian Surface (#090A0C, #121318) or semantic token classes (bg-moryn-dark) instead of generic slop colors.",
                         });
                     }
                 }
@@ -157,7 +160,7 @@ async function validateCommand(options) {
                         advice: "Remove decorative pulsing dots and badges from non-Hero sections.",
                     });
                 }
-                // 4b. Excessive Pill Badges on Non-Status Elements (Taste Skill v2 & Piardify v3.0)
+                // 4b. Excessive Pill Badges on Non-Status Elements
                 if (lineContent.includes("rounded-full") && (/<h[1-6]/i.test(lineContent) || /className=.*text-(lg|xl|2xl|3xl)/i.test(lineContent) || lineContent.includes("Category") || lineContent.includes("Feature"))) {
                     if (!lineContent.includes("status") && !lineContent.includes("badge-status") && !lineContent.includes("avatar") && !lineContent.includes("isStreaming")) {
                         issues.push({
@@ -170,7 +173,7 @@ async function validateCommand(options) {
                         });
                     }
                 }
-                // 4c. Forbidden Sparkles & Shimmer Slop (Piardify v3.0)
+                // 4c. Forbidden Sparkles & Shimmer Slop
                 if ((lineContent.includes("Sparkles") || lineContent.includes("Wand2") || lineContent.includes("animate-shimmer")) && !relPath.includes("generate") && !relPath.includes("prompt") && !relPath.includes("ai/")) {
                     issues.push({
                         type: "error",
@@ -181,7 +184,7 @@ async function validateCommand(options) {
                         advice: "Remove decorative Sparkles/Wand icons and shimmer effects. Rely on clean material surface layers, crisp typography, and tactile spring hover states.",
                     });
                 }
-                // 4d. Side-Tab Accent Border Slop (Taste Skill v2 §3.6)
+                // 4d. Side-Tab Accent Border Slop
                 if (/border-[lrtb]-4\s+border-(purple|blue|indigo)-/i.test(lineContent)) {
                     issues.push({
                         type: "error",
@@ -192,7 +195,7 @@ async function validateCommand(options) {
                         advice: "Avoid 1-sided thick accent borders. Use uniform subtle borders (border border-border) with surface background contrast instead.",
                     });
                 }
-                // 4e. Cliché Purple-Blue-Cyan Gradient Slop (Taste Skill v2 §3.2)
+                // 4e. Cliché Purple-Blue-Cyan Gradient Slop
                 if (/from-purple-.*(to-blue-|to-cyan-|via-blue-)/i.test(lineContent) || /from-violet-.*to-cyan-/i.test(lineContent)) {
                     issues.push({
                         type: "error",
@@ -259,7 +262,7 @@ async function validateCommand(options) {
                     });
                 }
                 // 10. IoT Specific Rules
-                if (target === "iot" && lineContent.includes("delay(") && !lineContent.includes("// piardify-allow")) {
+                if (target === "iot" && lineContent.includes("delay(") && !lineContent.includes("// moryn-allow") && !lineContent.includes("// piardify-allow")) {
                     issues.push({
                         type: "error",
                         code: "IOT_BLOCKING_DELAY",
@@ -282,6 +285,32 @@ async function validateCommand(options) {
                 }
             }
         }
+        // 17. Orphaned / Unused Component Check
+        const importOccurrences = new Set();
+        for (const filePath of filesToScan) {
+            const fc = fs.readFileSync(filePath, "utf-8");
+            const importRegex = /(?:import\s+(?:[\s\S]*?from\s+)?|require\s*\(\s*)["']([^"']+)["']/g;
+            let m;
+            while ((m = importRegex.exec(fc)) !== null) {
+                importOccurrences.add(path.basename(m[1], path.extname(m[1])));
+            }
+        }
+        for (const filePath of filesToScan) {
+            const relPath = path.relative(workspaceRoot, filePath).replace(/\\/g, "/");
+            const baseName = path.basename(filePath, path.extname(filePath));
+            const isComponent = (relPath.includes("components/") || relPath.includes("ui/")) && !relPath.includes("components/ui/");
+            const isPageOrLayout = relPath.includes("page.") || relPath.includes("layout.") || relPath.includes("route.") || relPath.includes("globals.");
+            if (isComponent && !isPageOrLayout && !importOccurrences.has(baseName)) {
+                issues.push({
+                    type: "warning",
+                    code: "ORPHANED_UNUSED_COMPONENT",
+                    message: `Component '${baseName}' is declared but never imported anywhere in the project`,
+                    file: relPath,
+                    line: 1,
+                    advice: "Run 'npx moryn clean' or delete this unused component to keep the codebase lean and clean.",
+                });
+            }
+        }
         const errorCount = issues.filter((i) => i.type === "error").length;
         const warningCount = issues.filter((i) => i.type === "warning").length;
         if (options.json) {
@@ -296,12 +325,12 @@ async function validateCommand(options) {
         }
         else {
             console.log("\n==========================================");
-            console.log(`  Piardify UI/UX Anti-Slop Linter v2.7.1`);
+            console.log(`  Moryn UI/UX Anti-Slop Linter v2.13.0`);
             console.log(`  Target Domain: ${target.toUpperCase()}`);
             console.log(`  Scanned Files: ${filesToScan.length}`);
             console.log("==========================================\n");
             if (issues.length === 0) {
-                console.log("  ✅ SUCCESS: Zero Anti-Slop violations detected. UI is 100% Piardify compliant!\n");
+                console.log("  ✅ SUCCESS: Zero Anti-Slop violations detected. UI is 100% Moryn compliant!\n");
             }
             else {
                 for (const issue of issues) {

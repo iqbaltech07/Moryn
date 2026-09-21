@@ -1,4 +1,8 @@
+export interface BentoGridProps {
+    title?: string;
+}
 /**
- * Bento Grid Component Scaffold Template (Anti-Slop Compliant)
+ * BentoGrid - Asymmetric Feature Grid (Anti-Slop Compliant)
  */
-export declare function getBentoTemplate(name: string): string;
+export declare function BentoGrid({ title }: BentoGridProps): import("react/jsx-runtime").JSX.Element;
+export default BentoGrid;

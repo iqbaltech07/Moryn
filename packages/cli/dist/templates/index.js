@@ -1,33 +1,68 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBentoTemplate = exports.getModalTemplate = exports.getFormTemplate = exports.getTableTemplate = exports.getHeroTemplate = exports.getCardTemplate = void 0;
+exports.getTemplateRegistry = getTemplateRegistry;
+exports.parseComponentScaffold = parseComponentScaffold;
 exports.getScaffoldTemplate = getScaffoldTemplate;
-const card_js_1 = require("./card.js");
-Object.defineProperty(exports, "getCardTemplate", { enumerable: true, get: function () { return card_js_1.getCardTemplate; } });
-const hero_js_1 = require("./hero.js");
-Object.defineProperty(exports, "getHeroTemplate", { enumerable: true, get: function () { return hero_js_1.getHeroTemplate; } });
-const table_js_1 = require("./table.js");
-Object.defineProperty(exports, "getTableTemplate", { enumerable: true, get: function () { return table_js_1.getTableTemplate; } });
-const form_js_1 = require("./form.js");
-Object.defineProperty(exports, "getFormTemplate", { enumerable: true, get: function () { return form_js_1.getFormTemplate; } });
-const modal_js_1 = require("./modal.js");
-Object.defineProperty(exports, "getModalTemplate", { enumerable: true, get: function () { return modal_js_1.getModalTemplate; } });
-const bento_js_1 = require("./bento.js");
-Object.defineProperty(exports, "getBentoTemplate", { enumerable: true, get: function () { return bento_js_1.getBentoTemplate; } });
-function getScaffoldTemplate(name, type) {
-    switch (type) {
-        case "hero":
-            return (0, hero_js_1.getHeroTemplate)(name);
-        case "table":
-            return (0, table_js_1.getTableTemplate)(name);
-        case "form":
-            return (0, form_js_1.getFormTemplate)(name);
-        case "modal":
-            return (0, modal_js_1.getModalTemplate)(name);
-        case "bento":
-            return (0, bento_js_1.getBentoTemplate)(name);
-        case "card":
-        default:
-            return (0, card_js_1.getCardTemplate)(name);
+const registry_json_1 = __importDefault(require("./registry.json"));
+/**
+ * Loads registry.json from templates manifest
+ */
+function getTemplateRegistry() {
+    return registry_json_1.default;
+}
+/**
+ * Universal AST/Regex Template Parser
+ * Parses the raw React Component file and replaces default identifiers with custom user component names.
+ */
+function parseComponentScaffold(rawSource, defaultName, targetName) {
+    if (!targetName || targetName === defaultName) {
+        return rawSource;
     }
+    const defaultPropsName = `${defaultName}Props`;
+    const targetPropsName = `${targetName}Props`;
+    let parsed = rawSource;
+    // 1. Replace Props Interface definition and usages
+    parsed = parsed.replaceAll(defaultPropsName, targetPropsName);
+    // 2. Replace Component Function name
+    parsed = parsed.replaceAll(`function ${defaultName}`, `function ${targetName}`);
+    // 3. Replace default export
+    parsed = parsed.replaceAll(`export default ${defaultName}`, `export default ${targetName}`);
+    return parsed;
+}
+/**
+ * Reads and parses scaffold template dynamically from packages/cli/src/templates
+ */
+function getScaffoldTemplate(name, type) {
+    const registry = getTemplateRegistry();
+    const found = registry.find((item) => item.type === type || item.id === type) || registry[0];
+    const defaultName = found?.defaultName || "CustomComponent";
+    const filename = found?.file || `${type}.tsx`;
+    const targetName = name || defaultName;
+    // In Node.js CLI runtime, read the component file dynamically
+    if (typeof window === "undefined") {
+        try {
+            const nodeFs = require("fs");
+            const nodePath = require("path");
+            const templatesDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+            const candidatePaths = [
+                nodePath.join(templatesDir, filename),
+                nodePath.join(templatesDir, "src", "templates", filename),
+                nodePath.join(templatesDir, "packages", "cli", "src", "templates", filename),
+                nodePath.join(process.cwd(), "packages", "cli", "src", "templates", filename),
+            ];
+            for (const p of candidatePaths) {
+                if (nodeFs.existsSync(p)) {
+                    const rawCode = nodeFs.readFileSync(p, "utf-8");
+                    return parseComponentScaffold(rawCode, defaultName, targetName);
+                }
+            }
+        }
+        catch {
+            // fallback to generated stub
+        }
+    }
+    return `// Scaffolding ${targetName} (${type})\nexport function ${targetName}() { return <div>${targetName}</div>; }\nexport default ${targetName};`;
 }

@@ -1,38 +1,68 @@
 # Product Requirements Document (PRD)
 
-## Piardify — AI-Powered PRD & Architecture Engine
+## Moryn — AI-Powered PRD & Architecture Engine
 
 ---
 
-## 1. Overview & Objectives
+## 1. Overview
 
 ### 1.1 Product Summary
-**Piardify** adalah platform otomasi rekayasa perangkat lunak yang mengubah ide produk mentah menjadi **Product Requirements Document (PRD)**, diagram arsitektur interaktif, spesifikasi desain (*design.md*), dan daftar tugas teknis (*6-Phase Kanban Tasks*) yang presisi dan siap dieksekusi tanpa halusinasi.
+**Moryn** adalah platform otomasi rekayasa perangkat lunak yang mengubah ide produk mentah menjadi **Product Requirements Document (PRD)**, diagram arsitektur interaktif (*React Flow Architecture Tree*), spesifikasi desain (*design.md*), dan daftar tugas teknis (*6-Phase Kanban Tasks*) yang presisi dan siap dieksekusi tanpa halusinasi.
 
 ### 1.2 Core Problem & Solution
-* **Problem**: Menyusun dokumentasi teknis dan memecahnya menjadi arsitektur file membutuhkan waktu berhari-hari. Generator AI generik sering berhalusinasi dan menghasilkan spesifikasi yang tidak konsisten antar komponen.
+* **Problem**: Menyusun dokumentasi teknis, memetakan arsitektur file, dan memecahnya menjadi daftar task siap eksekusi membutuhkan waktu berhari-hari. Generator AI generik sering berhalusinasi dan menghasilkan spesifikasi yang tidak konsisten antar komponen.
 * **Solution**: Pipeline berantai 4 tahap terikat (*Contextual Chaining Pipeline*): Kuesioner Personal $\rightarrow$ PRD $\rightarrow$ Visual Tree $\rightarrow$ 6-Phase Task List.
 
 ### 1.3 Success Metrics (KPIs)
 * Waktu generasi end-to-end $< 3$ menit per project.
-* $\ge 95\%$ konsistensi konteks antara PRD, struktur folder, dan task list.
-* Zero build errors pada scaffold kode yang dihasilkan.
+* $\ge 95\%$ konsistensi konteks antara PRD, struktur folder/diagram, dan daftar tugas Kanban.
+* Zero build errors pada scaffold kode dan integrasi MCP Agent.
 
 ---
 
-## 2. User Personas & Pain Points
+## 2. Requirements
 
-### 2.1 Software Engineers / Solo Developers
-* **Pain Point**: Dokumentasi teknis memakan waktu; kesulitan memecah PRD abstrak menjadi task teknis atomik; output AI generik sering menghasilkan nama file yang inkonsisten.
-* **Solution**: Auto-scaffolding arsitektur folder dan breakdown task 6 fase yang langsung sinkron dengan MCP Agent di IDE.
+### 2.1 Target Personas & Pain Points
+* **Software Engineers / Solo Developers**:
+  * *Pain Point*: Dokumentasi teknis memakan waktu; kesulitan memecah PRD abstrak menjadi task teknis atomik; output AI generik sering menghasilkan nama file yang inkonsisten.
+  * *Solusi*: Auto-scaffolding arsitektur folder, visual tree, dan breakdown task 6 fase yang langsung sinkron dengan MCP Agent di IDE (Cursor, Windsurf, Antigravity).
+* **Product Managers & Technical Founders**:
+  * *Pain Point*: Kesulitan mengomunikasikan ide bisnis abstrak menjadi arsitektur teknis bagi developer; draf revisi sering hilang saat navigasi tab.
+  * *Solusi*: Editor PRD interaktif dengan auto-save draf lokal, visual mindmap yang bisa diedit langsung, dan preview token desain.
 
-### 2.2 Product Managers & Technical Founders
-* **Pain Point**: Kesulitan mengomunikasikan ide bisnis abstrak menjadi arsitektur teknis bagi developer; draf revisi sering hilang saat navigasi tab.
-* **Solution**: Editor PRD interaktif dengan auto-save draf lokal, visual mindmap yang bisa diedit langsung, dan preview token desain.
+### 2.2 Non-Functional Requirements & Security Guidelines
+* **Performance SLAs**:
+  * Initial page load: $\le 1.5$ detik.
+  * Navigasi antar step berkat Zustand memory cache: **0ms network delay**.
+* **Security & Access Control**:
+  * Autentikasi ketat pada seluruh endpoint mutasi data (`/api/projects/*`, `/api/generate/*`).
+  * Compound query `where: { id_userId: { id, userId } }` menjamin user hanya dapat mengakses project miliknya.
+  * Rate-limiting per user untuk mencegah eksploitasi kuota API LLM via Upstash Redis sliding window.
 
 ---
 
-## 3. End-to-End User Flow & Journey
+## 3. Core Features
+
+### Fase 1 — Fondasi: Multi-Step Generator & Contextual AI
+* **FR-01 (Multi-Step Generator)**: Wizard pembuatan project interaktif bertahap dengan auto-save draf lokal via Zustand `persist` (`useWizardStore`) sehingga input form tidak hilang saat reload halaman.
+* **FR-02 (7-Step Contextual AI)**: Analisis cerdas terhadap ide produk pengguna yang menghasilkan 7 pertanyaan terarah spesifik domain untuk mengunci konteks produk sebelum PRD di-generate.
+
+### Fase 2 — Operasional: Interactive PRD Editor & Visual Architecture Tree
+* **FR-03 (Interactive PRD Editor)**: Antarmuka viewer PRD Markdown live dengan Table of Contents (TOC) otomatis, mode edit manual, dan asisten AI chat revisi real-time (`/api/generate/edit-prd`).
+* **FR-04 (Visual Architecture Tree)**: Mindmap arsitektur hierarkis berbasis *React Flow* yang memetakan modul aplikasi, kategori, dan sub-fitur dengan auto-layout kurva bezier halus.
+
+### Fase 3 — Skalabilitas: Smart Task Synchronizer & Reactive Kanban Board
+* **FR-05 (Smart Task Synchronizer)**: Pemecahan modul arsitektur menjadi tugas-tugas teknis modular 6-fase (*Foundation, Core Logic, API, UI/UX, Testing, Polish*) dengan pelacakan status sinkronisasi.
+* **FR-06 (Reactive Kanban Board)**: Papan kerja Kanban drag-and-drop instan (Todo, In Progress, Done) dengan pembaruan status background yang responsif (0ms lag).
+
+### Fase 4 — Keamanan & Integrasi: MCP Agent Server, Gamification & Anti-Slop Studio
+* **FR-07 (MCP Agent Server)**: Endpoint Model Context Protocol (`/api/mcp`) yang memungkinkan IDE AI Agent (Cursor, Windsurf, Antigravity) membaca PRD, struktur folder, dan status task secara langsung.
+* **FR-08 (Gamification & EXP Engine)**: Sistem reward penghargaan (+100 EXP per penyelesaian project) dan pembaruan ranking leaderboard publik secara real-time.
+* **FR-09 (CLI Template Studio)**: Workbench interaktif untuk menginspeksi dan men-scaffold template kode Anti-Slop dengan preview multi-viewport (Desktop/Tablet/Mobile).
+
+---
+
+## 4. User Flow
 
 ```mermaid
 flowchart TD
@@ -53,22 +83,7 @@ flowchart TD
 
 ---
 
-## 4. Functional Requirements & Feature Matrix
-
-| ID | Modul Fitur | User Story & Fungsionalitas | Kriteria Keberhasilan (Acceptance Criteria) |
-| :--- | :--- | :--- | :--- |
-| **FR-01** | **Multi-Step Generator** | Sebagai user, saya ingin mengisi ide produk secara bertahap dengan auto-save draf. | Draf ide & jawaban kuesioner tersimpan otomatis di `localStorage` via Zustand `persist` dan tidak hilang saat refresh. |
-| **FR-02** | **7-Step Contextual AI** | Sebagai user, saya ingin menjawab 7 pertanyaan terarah yang relevan dengan domain ide saya. | AI menghasilkan 7 pertanyaan spesifik domain; jawaban diikat sebagai konteks permanen generasi PRD. |
-| **FR-03** | **Interactive PRD Editor** | Sebagai user, saya ingin merevisi bagian PRD tertentu melalui chat instruksi interaktif. | PRD Markdown terbarui secara inkremental tanpa merusak struktur bab yang tidak diubah. |
-| **FR-04** | **Visual Architecture Tree** | Sebagai user, saya ingin melihat dan mengedit diagram pohon arsitektur produk (*React Flow*). | Node dapat digeser, ditambahkan, dihapus, dan di-reverse engineer otomatis ke format JSON terstruktur. |
-| **FR-05** | **Smart Task Synchronizer** | Sebagai developer, saya ingin modul arsitektur dipecah menjadi 6 fase pengerjaan modular. | Tasks otomatis dikelompokkan ke 6 fase; perubahan PRD/Struktur menandai task lama untuk disinkronkan ulang. |
-| **FR-06** | **Reactive Kanban Board** | Sebagai developer, saya ingin menggeser status task (*Todo, In Progress, Done*) secara instan. | Pergeseran kartu task responsif (0ms lag) dan status live disinkronkan ke server secara background. |
-| **FR-07** | **Gamification & EXP Engine**| Sebagai user, saya ingin mendapatkan reward EXP saat menyelesaikan project. | +100 EXP ditambahkan ke profil user dan memperbarui status ranking leaderboard publik. |
-| **FR-08** | **MCP Agent Server** | Sebagai developer, saya ingin menghubungkan Cursor/Windsurf/Antigravity ke project via API Key. | Endpoint MCP menyediakan tools `get_project_context`, `list_tasks`, dan `update_task_status`. |
-
----
-
-## 5. System Architecture & Component Interactions
+## 5. Architecture
 
 ```mermaid
 flowchart LR
@@ -104,22 +119,7 @@ flowchart LR
 
 ---
 
-## 6. API Specifications & Data Contracts
-
-| Method | Endpoint Path | Request Payload Schema | Expected 200 Response Schema |
-| :--- | :--- | :--- | :--- |
-| `POST` | `/api/projects/create` | `{ appName: string, appIdea: string, stacks: object, dynamicAnswers: object }` | `{ projectId: string }` |
-| `GET` | `/api/projects/detail` | `?projectId=string` | `{ project: ProjectDetailData }` |
-| `POST` | `/api/projects/update` | `{ projectId: string, prdData?: string, strukturData?: object, taskData?: object }` | `{ success: boolean }` |
-| `POST` | `/api/generate/prd` | `{ projectId: string }` | `{ markdown: string }` |
-| `POST` | `/api/generate/edit-prd`| `{ projectId: string, currentPrd: string, prompt: string, selectedModel?: string }`| `{ updatedMarkdown: string, diffSummary: string }` |
-| `POST` | `/api/generate/struktur`| `{ projectId: string }` | `{ title: string, description: string, nodes: Array }` |
-| `POST` | `/api/generate/tasks` | `{ projectId: string, forceSync?: boolean }` | `{ phases: Array, savedStatus: object }` |
-| `POST` | `/api/projects/finish` | `{ projectId: string, checkedTasks: object }` | `{ success: boolean, expGained: number, newExp: number }` |
-
----
-
-## 7. Data Model & Database Schema
+## 6. Database Schema
 
 ```mermaid
 erDiagram
@@ -157,14 +157,21 @@ erDiagram
 
 ---
 
-## 8. Tech Stack, State Management & Integrations
+## 7. Tech Stack
 
 * **Core Framework**: Next.js 16 (Turbopack, App Router), React 19, TypeScript.
+* **Component Architecture (`app/components/`)**:
+  * `layout/`: Shell, Topbar, StepNavbar, Footer, ProjectHeaderBrand.
+  * `landing/`: HeroSection, FeaturesSection, HowItWorksSection, LeaderboardSection, PricingSection, CtaSection.
+  * `modals/`: ExamplePrdModal, McpConnectModal, UpgradeModal.
+  * `shared/`: MarkdownRenderer, Skeleton suite.
+  * `ai/`: Specialized AI message stream and Markdown blocks.
+  * `showcase/`: CLI Template Studio workbench subcomponents.
 * **Global State Management (Zustand 5-Store Suite)**:
   * `useProjectStore`: Caching project aktif di memori client untuk navigasi 0ms antar tab.
-  * `useChatStore`: Riwayat chat AI dan preferensi model yang persisten.
+  * `useChatStore`: Riwayat chat revisi AI dan preferensi model yang persisten.
   * `useWizardStore`: Draf multi-step generator dengan auto-save `localStorage`.
-  * `useKanbanStore`: Drag-and-drop responsif dan sinkronisasi task.
+  * `useKanbanStore`: Drag-and-drop responsif dan sinkronisasi task status.
   * `useUiStore`: Kontrol modal global (MCP, Rename, Upgrade).
 * **Database & ORM**: PostgreSQL dengan Prisma ORM v6 (menggunakan composite index `[userId, createdAt]` dan compound unique `[id, userId]`).
 * **Caching & Rate Limiting**: Upstash Redis (Fail-open sliding window rate limiting & 30s SWR TTL cache).
@@ -173,31 +180,16 @@ erDiagram
 
 ---
 
-## 9. Non-Functional Requirements & Security Guidelines
+## 8. API Endpoints
 
-* **Performance & Latency SLAs**:
-  * Initial page load: $\le 1.5$ detik.
-  * Navigasi antar step berkat Zustand memory cache: **0ms network delay**.
-* **Security & Access Control**:
-  * Autentikasi ketat pada seluruh endpoint mutasi data (`/api/projects/*`, `/api/generate/*`).
-  * Compound query `where: { id_userId: { id, userId } }` menjamin user hanya dapat mengakses project miliknya.
-  * Rate-limiting per user untuk mencegah eksploitasi kuota API LLM.
-* **Design System Reference**:
-  * Seluruh token warna (HEX/HSL), hirarki tipografi, dan aturan komponen UI mengacu secara ketat pada spesifikasi berkas `design.md` (`designData`).
-
----
-
-## 10. Implementation Roadmap & Milestones
-
-* **Phase 1: Database & Auth Infrastructure**
-  * Setup PostgreSQL, Prisma schema indexes, Better-Auth, dan Upstash Redis rate-limiter.
-* **Phase 2: Zustand 5-Store Suite & Centralized API Client**
-  * Implementasi `lib/apiClient.ts` dan 5 store Zustand (`useProjectStore`, `useChatStore`, `useWizardStore`, `useKanbanStore`, `useUiStore`).
-* **Phase 3: Form Generator & 7-Step Contextual Questionnaire**
-  * UI Wizard interaktif, auto-save draf, dan integrasi prompt AI generator pertanyaan.
-* **Phase 4: PRD Engine & Interactive Chat Editor**
-  * Pipeline generasi PRD Markdown dan panel chat revisi real-time tanpa reload halaman.
-* **Phase 5: Visual Mindmap Tree & 6-Phase Task Synchronization**
-  * Diagram React Flow interaktif dan auto-breakdown task list dengan status tracking.
-* **Phase 6: Gamification, MCP Agent Server & Production Hardening**
-  * Sistem reward EXP, endpoint MCP untuk koneksi IDE eksternal, dan build audit clean.
+| Method | Endpoint Path | Request Payload Schema | Expected 200 Response Schema |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/projects/create` | `{ appName: string, appIdea: string, stacks: object, dynamicAnswers: object }` | `{ projectId: string }` |
+| `GET` | `/api/projects/detail` | `?projectId=string` | `{ project: ProjectDetailData }` |
+| `POST` | `/api/projects/update` | `{ projectId: string, prdData?: string, strukturData?: object, taskData?: object }` | `{ success: boolean }` |
+| `POST` | `/api/generate/prd` | `{ projectId: string }` | `{ markdown: string }` |
+| `POST` | `/api/generate/edit-prd`| `{ projectId: string, currentPrd: string, prompt: string, selectedModel?: string }`| `{ updatedMarkdown: string, diffSummary: string }` |
+| `POST` | `/api/generate/struktur`| `{ projectId: string }` | `{ title: string, description: string, nodes: Array }` |
+| `POST` | `/api/generate/tasks` | `{ projectId: string, forceSync?: boolean }` | `{ phases: Array, savedStatus: object }` |
+| `POST` | `/api/projects/finish` | `{ projectId: string, checkedTasks: object }` | `{ success: boolean, expGained: number, newExp: number }` |
+| `POST` | `/api/mcp` | `{ method: string, params: object }` | `{ result: object }` |

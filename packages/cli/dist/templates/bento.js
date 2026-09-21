@@ -1,51 +1,12 @@
+"use client";
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getBentoTemplate = getBentoTemplate;
+exports.BentoGrid = BentoGrid;
+const jsx_runtime_1 = require("react/jsx-runtime");
 /**
- * Bento Grid Component Scaffold Template (Anti-Slop Compliant)
+ * BentoGrid - Asymmetric Feature Grid (Anti-Slop Compliant)
  */
-function getBentoTemplate(name) {
-    return `import React from "react";
-
-export interface ${name}Props {
-  title?: string;
+function BentoGrid({ title = "Architectural Pillars" }) {
+    return ((0, jsx_runtime_1.jsxs)("section", { className: "w-full bg-[#090A0C] text-[#F3F4F6] p-6 space-y-6 font-sans rounded-xl border border-[#222634]", children: [(0, jsx_runtime_1.jsxs)("div", { className: "space-y-1 max-w-prose", children: [(0, jsx_runtime_1.jsx)("h2", { className: "text-xl font-bold tracking-tight text-[#F3F4F6]", children: title }), (0, jsx_runtime_1.jsx)("p", { className: "text-xs text-[#9CA3AF]", children: "Designed for high-performance AI agent workflows." })] }), (0, jsx_runtime_1.jsxs)("div", { className: "grid grid-cols-1 md:grid-cols-3 gap-4", children: [(0, jsx_runtime_1.jsxs)("div", { className: "md:col-span-2 bg-[#121318] p-5 rounded-md space-y-3 border border-[#222634]", children: [(0, jsx_runtime_1.jsx)("span", { className: "text-[10px] font-mono uppercase tracking-wider text-[#6366F1]", children: "Pillar 01" }), (0, jsx_runtime_1.jsx)("h3", { className: "text-base font-bold tracking-tight text-[#F3F4F6]", children: "3-Layer Context Architecture" }), (0, jsx_runtime_1.jsx)("p", { className: "text-xs text-[#9CA3AF] leading-relaxed", children: "Eliminates context truncation and cognitive overload by keeping static blueprints pinned at 15\u201325 KB while streaming dynamic schemas via MCP protocol." })] }), (0, jsx_runtime_1.jsxs)("div", { className: "bg-[#121318] p-5 rounded-md space-y-3 border border-[#222634]", children: [(0, jsx_runtime_1.jsx)("span", { className: "text-[10px] font-mono uppercase tracking-wider text-[#10B981]", children: "Pillar 02" }), (0, jsx_runtime_1.jsx)("h3", { className: "text-base font-bold tracking-tight text-[#F3F4F6]", children: "AST Linter Engine" }), (0, jsx_runtime_1.jsx)("p", { className: "text-xs text-[#9CA3AF] leading-relaxed", children: "Static AST code analyzer that rejects gradient headline slop and over-nested cards." })] })] })] }));
 }
-
-/**
- * ${name} - Asymmetric Feature Grid (Anti-Slop Compliant)
- * Rules: No nested card-in-card > 2 levels, spatial whitespace separation.
- */
-export function ${name}({ title = "Architectural Pillars" }: ${name}Props) {
-  return (
-    <section className="w-full bg-[#090A0C] text-[#F3F4F6] p-6 md:p-12 space-y-8 font-sans">
-      <div className="space-y-2 max-w-prose">
-        <h2 className="text-3xl font-bold tracking-tight text-[#F3F4F6]">{title}</h2>
-        <p className="text-sm text-[#9CA3AF]">Designed for high-performance AI agent workflows.</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Large Feature Card (2 cols) */}
-        <div className="md:col-span-2 bg-[#121318] p-8 rounded-md space-y-4 border border-[#222634]">
-          <span className="text-xs font-mono uppercase tracking-wider text-[#6366F1]">Pillar 01</span>
-          <h3 className="text-2xl font-bold tracking-tight text-[#F3F4F6]">3-Layer Context Architecture</h3>
-          <p className="text-sm text-[#9CA3AF] leading-relaxed">
-            Eliminates context truncation and cognitive overload by keeping static blueprints pinned at 15–25 KB while streaming dynamic schemas via MCP protocol.
-          </p>
-        </div>
-
-        {/* Small Feature Card (1 col) */}
-        <div className="bg-[#121318] p-8 rounded-md space-y-4 border border-[#222634]">
-          <span className="text-xs font-mono uppercase tracking-wider text-[#10B981]">Pillar 02</span>
-          <h3 className="text-xl font-bold tracking-tight text-[#F3F4F6]">AST Linter Engine</h3>
-          <p className="text-sm text-[#9CA3AF] leading-relaxed">
-            Static AST code analyzer that rejects gradient headline slop and over-nested cards.
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-export default ${name};
-`;
-}
+exports.default = BentoGrid;

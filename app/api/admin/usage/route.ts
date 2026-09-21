@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { getDailyUsage } from "@/lib/usageTracker";
-import { isAdminEmail } from "@/lib/planQuota";
+import { getDailyUsage } from "@/lib/analytics/usageTracker";
+import { isAdminEmail } from "@/lib/analytics/planQuota";
 
 export async function GET() {
   try {

@@ -48,11 +48,11 @@ async function hookCommand(options) {
                 fs.mkdirSync(gitHooksDir, { recursive: true });
             }
             const preCommitScript = `#!/bin/sh
-# Piardify Anti-Slop Visual Governance Pre-Commit Hook
-echo "🔍 Running Piardify Anti-Slop Linter..."
-npx piardify validate-ui
+# Moryn Anti-Slop Visual Governance Pre-Commit Hook
+echo "🔍 Running Moryn Anti-Slop Linter..."
+npx moryn validate-ui
 if [ $? -ne 0 ]; then
-  echo "❌ Commit rejected: Piardify Anti-Slop Linter found violations."
+  echo "❌ Commit rejected: Moryn Anti-Slop Linter found violations."
   exit 1
 fi
 `;
@@ -67,7 +67,7 @@ fi
                 const pkgContent = fs.readFileSync(pkgPath, "utf-8");
                 const pkg = JSON.parse(pkgContent);
                 pkg.scripts = pkg.scripts || {};
-                pkg.scripts.prebuild = "npx piardify validate-ui";
+                pkg.scripts.prebuild = "npx moryn validate-ui";
                 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2), "utf-8");
                 packageJsonUpdated = true;
             }
@@ -82,10 +82,10 @@ fi
         }
         else {
             console.log("\n==========================================");
-            console.log("  Piardify Guardrail Hooks Installed");
+            console.log("  Moryn Guardrail Hooks Installed");
             console.log("==========================================");
             console.log(`  Git Pre-Commit : ${gitHookInstalled ? "Installed -> .git/hooks/pre-commit" : "Skipped (No .git folder)"}`);
-            console.log(`  Package Prebuild: ${packageJsonUpdated ? "Added 'prebuild': 'npx piardify validate-ui'" : "Skipped"}`);
+            console.log(`  Package Prebuild: ${packageJsonUpdated ? "Added 'prebuild': 'npx moryn validate-ui'" : "Skipped"}`);
             console.log("\nCommits and builds will now automatically enforce Anti-Slop rules.\n");
         }
     }

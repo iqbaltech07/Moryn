@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateAgentRequest } from "@/lib/agentAuth";
-import { prisma } from "@/lib/prisma";
-import { redis } from "@/lib/redis";
+import { authenticateAgentRequest } from "@/lib/auth/agentAuth";
+import { prisma } from "@/lib/db/prisma";
+import { redis } from "@/lib/db/redis";
 
 export async function POST(
   req: NextRequest,

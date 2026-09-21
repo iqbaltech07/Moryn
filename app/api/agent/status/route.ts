@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateAgentRequest } from "@/lib/agentAuth";
-import { prisma } from "@/lib/prisma";
+import { authenticateAgentRequest } from "@/lib/auth/agentAuth";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(req: NextRequest) {
   try {

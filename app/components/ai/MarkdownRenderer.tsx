@@ -56,7 +56,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
   const safeContent = sanitizeMarkdownHtml(content);
 
   return (
-    <div className={`ai-markdown-content text-slate-200 leading-relaxed font-sans text-xs sm:text-sm min-w-0 max-w-full overflow-hidden wrap-break-word ${className}`}>
+    <div className={`ai-markdown-content text-zinc-900 leading-relaxed font-sans text-xs sm:text-sm min-w-0 max-w-full overflow-hidden wrap-break-word ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
         rehypePlugins={[rehypeKatex, rehypeRaw]}
@@ -70,7 +70,7 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
           h6: ({ children }) => <HeadingBlock level={6}>{children}</HeadingBlock>,
 
           // Paragraphs
-          p: ({ children }) => <p className="mb-3.5 leading-relaxed text-slate-300 last:mb-0">{children}</p>,
+          p: ({ children }) => <p className="mb-3 leading-relaxed text-zinc-800 last:mb-0">{children}</p>,
 
           // Links
           a: ({ href, children }) => {
@@ -80,10 +80,10 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
                 href={href}
                 target={isExternal ? "_blank" : undefined}
                 rel={isExternal ? "noopener noreferrer" : undefined}
-                className="inline-flex items-center gap-0.5 text-indigo-400 hover:text-indigo-300 underline underline-offset-4 decoration-indigo-500/40 hover:decoration-indigo-400 transition-colors font-medium"
+                className="inline-flex items-center gap-0.5 text-[#e15b39] hover:text-[#c44827] underline underline-offset-4 decoration-[#e15b39]/40 hover:decoration-[#e15b39] transition-colors font-medium"
               >
                 <span>{children}</span>
-                {isExternal && <ExternalLink className="w-3 h-3 text-indigo-400/80 inline" />}
+                {isExternal && <ExternalLink className="w-3 h-3 text-[#e15b39]/80 inline" />}
               </a>
             );
           },
@@ -163,11 +163,11 @@ const MarkdownRendererComponent: React.FC<MarkdownRendererProps> = ({
           ),
 
           // Horizontal rule
-          hr: () => <hr className="my-6 border-t border-indigo-500/20" />,
+          hr: () => <hr className="my-4 border-t border-zinc-200" />,
 
           // Emphasis
-          strong: ({ children }) => <strong className="font-bold text-slate-100">{children}</strong>,
-          em: ({ children }) => <em className="italic text-slate-200">{children}</em>,
+          strong: ({ children }) => <strong className="font-bold text-zinc-950">{children}</strong>,
+          em: ({ children }) => <em className="italic text-zinc-900 font-medium">{children}</em>,
         }}
       >
         {safeContent}

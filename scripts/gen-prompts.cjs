@@ -1,5 +1,5 @@
 /**
- * Generates lib/prompts/index.ts from the human-editable source of truth:
+ * Generates lib/ai/prompts/templateAssets.ts from the human-editable source of truth:
  *   - system-prompt.txt
  *   - public/contoh-prd.md
  *
@@ -35,6 +35,8 @@ export const PRD_TEMPLATE_FALLBACK =
   "# PRODUCT REQUIREMENTS DOCUMENT (PRD)\\n\\n## 1. Overview\\n\\n## 2. Objectives\\n\\n...";
 `;
 
+fs.mkdirSync(path.join(root, "lib", "ai", "prompts"), { recursive: true });
+fs.writeFileSync(path.join(root, "lib", "ai", "prompts", "templateAssets.ts"), out);
 fs.mkdirSync(path.join(root, "lib", "prompts"), { recursive: true });
-fs.writeFileSync(path.join(root, "lib", "prompts", "index.ts"), out);
-console.log("Wrote lib/prompts/index.ts", out.length, "bytes");
+fs.writeFileSync(path.join(root, "lib", "prompts", "templateAssets.ts"), out);
+console.log("Wrote lib/ai/prompts/templateAssets.ts", out.length, "bytes");

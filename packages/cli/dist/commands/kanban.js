@@ -7,7 +7,7 @@ async function kanbanCommand(options = {}) {
     try {
         const projectId = options.project || (0, store_js_1.getProjectConfig)().projectId;
         if (!projectId) {
-            throw new Error("NO_PROJECT_LINKED: Run 'npx piardify init' or specify '--project <projectId>' first.");
+            throw new Error("NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.");
         }
         const res = await (0, client_js_1.apiRequest)(`/api/agent/kanban?projectId=${projectId}`);
         if (options.json) {

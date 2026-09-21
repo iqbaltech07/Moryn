@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { redis } from "@/lib/redis";
+import { auth } from "@/lib/auth/auth";
+import { redis } from "@/lib/db/redis";
 import { headers } from "next/headers";
-import { isAdminEmail } from "@/lib/planQuota";
+import { isAdminEmail } from "@/lib/analytics/planQuota";
 
 export async function GET() {
   try {

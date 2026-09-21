@@ -1,15 +1,16 @@
 {
-  "name": "piardify-app",
-  "version": "2.7.0",
+  "name": "moryn-app",
+  "version": "2.14.0",
   "private": true,
   "scripts": {
     "dev": "next dev --experimental-https",
+    "dev:ai": "powershell -Command \"cd services/ai-engine; .\\.venv\\Scripts\\python.exe run.py\"",
+    "dev:all": "concurrently -n \"NEXT,AI\" -c \"cyan,magenta\" \"npm run dev\" \"npm run dev:ai\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
-    "@google/genai": "^2.17.1",
     "@hello-pangea/dnd": "^18.0.1",
     "@mermaid-js/parser": "^1.2.0",
     "@prisma/client": "^6.19.3",
@@ -17,6 +18,7 @@
     "@vercel/blob": "^0.27.1",
     "@xyflow/react": "^12.11.2",
     "better-auth": "^1.6.5",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
     "katex": "^0.18.1",
     "lucide-react": "^1.8.0",
@@ -34,6 +36,7 @@
     "remark-math": "^6.0.0",
     "shiki": "^4.3.1",
     "sonner": "^2.0.7",
+    "tailwind-merge": "^3.7.0",
     "zustand": "^5.0.15"
   },
   "devDependencies": {
@@ -41,6 +44,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
     "prisma": "^6.19.3",

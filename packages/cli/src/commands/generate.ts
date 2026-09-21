@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { getScaffoldTemplate, ComponentType } from "../templates/index.js";
+import { getScaffoldTemplate, ComponentType, getTemplateRegistry } from "../templates/index.js";
 
 export async function generateCommand(
   nameOrType?: string,
@@ -8,39 +8,50 @@ export async function generateCommand(
   options: { type?: string; target?: string; json?: boolean } = {}
 ) {
   try {
-    if (!nameOrType) {
+    const registry = getTemplateRegistry();
+    const validTypes: string[] = registry.map((r) => r.type.toLowerCase());
+
+    if (!nameOrType && !options.type) {
       console.log("\n==========================================");
-      console.log("  🎨 Piardify Component Generator v2.0");
+      console.log("  🎨 Moryn Component Scaffolder v2.13.0");
       console.log("==========================================");
-      console.log("  Usage: npx piardify generate <ComponentName> [--type <card|hero|table|form|modal|bento>]\n");
+      console.log("  Usage: npx moryn scaffold <ComponentName> [--type <type>]\n");
       console.log("  Available Anti-Slop Component Archetypes:");
-      console.log("    • card     : Data Metric Cards with Compact Currency");
-      console.log("    • hero     : Editorial Storytelling Hero Section with CTA");
-      console.log("    • table    : High-Density Utilitarian Data Table");
-      console.log("    • form     : Clean Form Inputs & Validation State");
-      console.log("    • modal    : Elevated Dialog Modal Layer");
-      console.log("    • bento    : Asymmetric Spatial Feature Grid\n");
-      throw new Error("MISSING_COMPONENT_NAME: Please specify component name (e.g. 'npx piardify generate UserDashboard --type card')");
+      registry.forEach((item) => {
+        console.log(`    • ${item.type.padEnd(10)} : ${item.description}`);
+      });
+      console.log();
+      throw new Error("MISSING_COMPONENT_NAME: Please specify component name (e.g. 'npx moryn scaffold HeroSection --type=hero')");
     }
 
     let componentType: ComponentType = "card";
-    let componentName = nameOrType;
+    let rawName = nameOrType || "";
 
-    const validTypes: ComponentType[] = ["card", "hero", "table", "form", "modal", "bento", "sidebar"];
-    if (validTypes.includes(nameOrType.toLowerCase() as ComponentType) && extraName) {
-      componentType = nameOrType.toLowerCase() as ComponentType;
-      componentName = extraName;
-    } else if (options.type && validTypes.includes(options.type.toLowerCase() as ComponentType)) {
-      componentType = options.type.toLowerCase() as ComponentType;
+    if (nameOrType && validTypes.includes(nameOrType.toLowerCase())) {
+      componentType = nameOrType.toLowerCase();
+      const matched = registry.find((r) => r.type.toLowerCase() === componentType);
+      rawName = extraName || matched?.defaultName || "CustomComponent";
+    } else if (options.type && validTypes.includes(options.type.toLowerCase())) {
+      componentType = options.type.toLowerCase();
+      const matched = registry.find((r) => r.type.toLowerCase() === componentType);
+      rawName = rawName || matched?.defaultName || "CustomComponent";
     }
 
-    const cleanName = componentName.charAt(0).toUpperCase() + componentName.slice(1);
+    const matched = registry.find((r) => r.type.toLowerCase() === componentType) || registry[0];
+    if (!rawName) {
+      rawName = matched?.defaultName || "CustomComponent";
+    }
+
+    const cleanName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
     const workspaceRoot = process.cwd();
 
     let targetDir = path.join(workspaceRoot, "components");
-    if (fs.existsSync(path.join(workspaceRoot, "src"))) {
+    if (fs.existsSync(path.join(workspaceRoot, "src", "components"))) {
+      targetDir = path.join(workspaceRoot, "src", "components");
+    } else if (fs.existsSync(path.join(workspaceRoot, "src"))) {
       targetDir = path.join(workspaceRoot, "src", "components");
     }
+
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
     }
@@ -59,18 +70,18 @@ export async function generateCommand(
       }));
     } else {
       console.log("\n==========================================");
-      console.log("  🎨 Piardify Component Generator");
+      console.log("  🎨 Moryn Component Scaffolder");
       console.log("==========================================");
       console.log(`  Component Name : ${cleanName}`);
       console.log(`  Archetype Type : ${componentType.toUpperCase()}`);
       console.log(`  File Created   : ${path.relative(workspaceRoot, filePath)}`);
-      console.log("  Anti-Slop Status: 100% Compliant (Clean surface contrast, responsive)\n");
+      console.log("  Anti-Slop Status: 100% Compliant (Zero Slop, Responsive)\n");
     }
   } catch (err: any) {
     if (options.json) {
       console.log(JSON.stringify({ success: false, error: err.message }));
     } else {
-      console.error(`\n❌ Component generation failed: ${err.message}\n`);
+      console.error(`\n❌ Component scaffolding failed: ${err.message}\n`);
     }
     process.exit(1);
   }

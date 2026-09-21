@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { authenticateAgentRequest } from "@/lib/agentAuth";
-import { prisma } from "@/lib/prisma";
+import { authenticateAgentRequest } from "@/lib/auth/agentAuth";
+import { prisma } from "@/lib/db/prisma";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,9 +16,14 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Missing projectId parameter" }, { status: 400 });
     }
 
-    const project = await prisma.project.findUnique({
-      where: { id: projectId, userId: authResult.user.id },
-      select: {
+     const project = await prisma.project.findUnique({
+       where: {
+         id_userId: {
+           id: projectId,
+           userId: authResult.user.id,
+         },
+       },
+       select: {
         id: true,
         appName: true,
         status: true,

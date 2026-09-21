@@ -1,48 +1,119 @@
 @import "tailwindcss";
 
-/* ==============================
-   DESIGN TOKENS — BLUEPRINT
-   ============================== */
+/* ==========================================
+   MORYN DESIGN TOKENS — TAILWIND V4 @theme
+   ========================================== */
+@theme inline {
+  --color-brand-ink: #18181b;
+  --color-brand-orange: #e85d3f;
+
+  --color-background: #fcfbf8;
+  --color-surface: #f5f2ea;
+  --color-surface-raised: #ffffff;
+
+  --color-foreground: #18181b;
+  --color-foreground-secondary: #3f3f46;
+  --color-foreground-muted: #71717a;
+  --color-foreground-subtle: #a1a1aa;
+
+  --color-border: #d9ddd9;
+  --color-border-subtle: #e8ebe8;
+  --color-border-strong: #b9bfbc;
+
+  --color-primary: #18181b;
+  --color-primary-foreground: #fcfbf8;
+
+  --color-accent: #e85d3f;
+  --color-accent-foreground: #ffffff;
+
+  --color-accent-soft: #fbe4de;
+
+  --color-success: #2f7d5c;
+  --color-warning: #b7791f;
+  --color-error: #c63d3d;
+  --color-info: #416b8d;
+
+  --font-sans: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-serif: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+}
+
+/* ==========================================
+   NATIVE CSS VARIABLES (MORYN SYSTEM MAPPINGS)
+   ========================================== */
 :root {
-  /* Core palette */
-  --color-ink:      #10182B;
-  --color-paper:    #F7F5EF;
-  --color-graphite: #1D2333;
-  --color-mist:     #8B93A7;
-  --color-signal:   #FFB627;
-  --color-circuit:  #4FD1C5;
+  /* Core Brand & Semantic Colors */
+  --color-brand-ink: #18181b;
+  --color-brand-orange: #e85d3f;
 
-  /* Derived surface tokens */
-  --bg-base:     var(--color-ink);
-  --bg-surface:  #141C30;
-  --bg-elevated: #1A2238;
+  --color-background: #fcfbf8;
+  --color-surface: #f5f2ea;
+  --color-surface-raised: #ffffff;
 
-  /* Foreground */
-  --fg-primary:   #E8EBF4;
-  --fg-secondary: var(--color-mist);
-  --fg-muted:     #5A6275;
+  --color-foreground: #18181b;
+  --color-foreground-secondary: #3f3f46;
+  --color-foreground-muted: #71717a;
+  --color-foreground-subtle: #a1a1aa;
 
-  /* Border — hairline, flat */
-  --border-hairline: rgba(139, 147, 167, 0.18);
-  --border-subtle:   rgba(139, 147, 167, 0.12);
-  --border-strong:   rgba(139, 147, 167, 0.35);
+  --color-border: #d9ddd9;
+  --color-border-subtle: #e8ebe8;
+  --color-border-strong: #b9bfbc;
+
+  --color-primary: #18181b;
+  --color-primary-foreground: #fcfbf8;
+
+  --color-accent: #e85d3f;
+  --color-accent-foreground: #ffffff;
+
+  --color-accent-soft: #fbe4de;
+
+  --color-success: #2f7d5c;
+  --color-warning: #b7791f;
+  --color-error: #c63d3d;
+  --color-info: #416b8d;
+
+  /* Legacy & Semantic Mappings for seamless compatibility */
+  --color-ink: var(--color-brand-ink);
+  --color-paper: var(--color-background);
+  --color-graphite: var(--color-foreground-secondary);
+  --color-mist: var(--color-foreground-muted);
+  --color-signal: var(--color-accent);
+  --color-circuit: var(--color-info);
+
+  /* Surfaces & Layers */
+  --bg-base: var(--color-background);
+  --bg-surface: var(--color-surface);
+  --bg-elevated: var(--color-surface-raised);
+
+  /* Foreground Hierarchy */
+  --fg-primary: var(--color-foreground);
+  --fg-secondary: var(--color-foreground-secondary);
+  --fg-muted: var(--color-foreground-muted);
+
+  /* Border Tokens */
+  --border-hairline: var(--color-border-subtle);
+  --border-subtle: var(--color-border);
+  --border-strong: var(--color-border-strong);
+  --border-zinc-soft: #e4e4e7;
 
   /* Grid line color for drafting background */
-  --grid-line: rgba(139, 147, 167, 0.07);
+  --grid-line: rgba(20, 24, 23, 0.06);
 
-  /* Typography */
-  --font-display: var(--font-fraunces), "Georgia", serif;
-  --font-body:    var(--font-ibm-plex-sans), "Arial", sans-serif;
-  --font-mono:    var(--font-ibm-plex-mono), "Courier New", monospace;
+  /* Typography — Smooth, friendly modern neo-grotesque & rounded monospace */
+  --font-display: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-body: var(--font-plus-jakarta-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "Courier New", monospace;
 
-  /* Border radius — deliberately tight */
+  /* Border radius */
   --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
   --radius-lg: 8px;
 
-  /* Shadows — flat, no blur glow */
-  --shadow-card: 0 1px 0 var(--border-hairline);
+  /* Shadows — crisp & elevated */
+  --shadow-card: 0 1px 3px rgba(20, 24, 23, 0.05), 0 1px 2px rgba(20, 24, 23, 0.03);
+  --shadow-raised: 0 4px 12px rgba(20, 24, 23, 0.08);
 }
 
 /* ==============================
@@ -65,8 +136,8 @@ html {
 }
 
 body {
-  background-color: var(--color-ink);
-  color: var(--fg-primary);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -78,7 +149,7 @@ body {
    FOCUS STATES — accessible
    ============================== */
 :focus-visible {
-  outline: 2px solid var(--color-signal);
+  outline: 2px solid var(--color-accent);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
@@ -98,8 +169,8 @@ body {
   background-image:
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(rgba(139, 147, 167, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(139, 147, 167, 0.03) 1px, transparent 1px);
+    linear-gradient(rgba(20, 24, 23, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 24, 23, 0.03) 1px, transparent 1px);
   background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
 }
 
@@ -112,25 +183,26 @@ body {
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-mist);
+  color: var(--color-foreground-muted);
 }
 
 .mono-stat {
   font-family: var(--font-mono);
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: var(--fg-primary);
+  color: var(--color-foreground);
 }
 
 /* ==============================
-   SIGNAL ACCENT
+   SIGNAL & ACCENT UTILITIES
    ============================== */
-.text-signal { color: var(--color-signal); }
-.text-circuit { color: var(--color-circuit); }
+.text-signal { color: var(--color-accent); }
+.text-circuit { color: var(--color-info); }
+.text-brand-orange { color: var(--color-brand-orange); }
 
 .signal-underline {
   text-decoration: underline;
-  text-decoration-color: var(--color-signal);
+  text-decoration-color: var(--color-accent);
   text-underline-offset: 4px;
   text-decoration-thickness: 2px;
 }
@@ -190,50 +262,67 @@ body {
    CUSTOM SCROLLBAR
    ============================== */
 ::-webkit-scrollbar { width: 5px; }
-::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-mist); }
+::-webkit-scrollbar-track { background: var(--color-background); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-foreground-muted); }
 
 /* ==============================
    MARKDOWN PREVIEW STYLES
    ============================== */
 .markdown-preview {
-  color: var(--fg-primary);
+  color: var(--color-foreground);
   line-height: 1.75;
   font-size: 0.9375rem;
   font-family: var(--font-body);
 }
 
-.markdown-preview h1 {
-  font-family: var(--font-display);
+.markdown-preview h1,
+.prd-content h1 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
   font-size: 1.75rem;
   font-weight: 700;
+  letter-spacing: -0.025em;
   margin-bottom: 0.75rem;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--border-hairline);
-  color: var(--fg-primary);
+  color: var(--color-foreground);
 }
 
-.markdown-preview h2 {
-  font-family: var(--font-display);
+.markdown-preview h2,
+.prd-content h2 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
   font-size: 1.25rem;
   font-weight: 700;
+  letter-spacing: -0.015em;
   margin-top: 1.75rem;
   margin-bottom: 0.5rem;
-  color: var(--color-signal);
+  color: var(--color-accent);
 }
 
-.markdown-preview h3 {
+.markdown-preview h3,
+.prd-content h3 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
   font-size: 1.05rem;
   font-weight: 600;
+  letter-spacing: -0.01em;
   margin-top: 1.25rem;
   margin-bottom: 0.4rem;
-  color: var(--fg-primary);
+  color: var(--color-foreground);
+}
+
+.markdown-preview h4,
+.markdown-preview h5,
+.markdown-preview h6,
+.prd-content h4,
+.prd-content h5,
+.prd-content h6 {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif);
+  font-weight: 600;
 }
 
 .markdown-preview p {
   margin-bottom: 0.875rem;
-  color: var(--fg-secondary);
+  color: var(--color-foreground-secondary);
 }
 
 .markdown-preview ul,
@@ -244,21 +333,21 @@ body {
 
 .markdown-preview li {
   margin-bottom: 0.25rem;
-  color: var(--fg-secondary);
+  color: var(--color-foreground-secondary);
 }
 
 .markdown-preview code {
-  background: rgba(79, 209, 197, 0.08);
-  color: var(--color-circuit);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
   padding: 0.15em 0.45em;
   border-radius: var(--radius-sm);
   font-size: 0.875em;
   font-family: var(--font-mono);
-  border: 1px solid rgba(79, 209, 197, 0.18);
+  border: 1px solid rgba(232, 93, 63, 0.2);
 }
 
 .markdown-preview pre {
-  background: var(--bg-elevated);
+  background: var(--color-surface);
   border: 1px solid var(--border-hairline);
   border-radius: var(--radius-md);
   padding: 1rem;
@@ -269,14 +358,14 @@ body {
 .markdown-preview pre code {
   background: none;
   padding: 0;
-  color: var(--fg-primary);
+  color: var(--color-foreground);
   border: none;
 }
 
 .markdown-preview blockquote {
-  border-left: 2px solid var(--color-signal);
+  border-left: 2px solid var(--color-accent);
   padding-left: 1rem;
-  color: var(--fg-muted);
+  color: var(--color-foreground-muted);
   margin-bottom: 0.875rem;
 }
 
@@ -287,12 +376,12 @@ body {
 }
 
 .markdown-preview strong {
-  color: var(--fg-primary);
+  color: var(--color-foreground);
   font-weight: 700;
 }
 
 .markdown-preview a {
-  color: var(--color-signal);
+  color: var(--color-accent);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -310,7 +399,7 @@ button { font-family: inherit; }
   width: 28px;
   height: 28px;
   border: 2px solid var(--border-hairline);
-  border-top-color: var(--color-signal);
+  border-top-color: var(--color-accent);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -340,9 +429,9 @@ button { font-family: inherit; }
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.03) 25%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0.03) 75%
+    rgba(20, 24, 23, 0.03) 25%,
+    rgba(20, 24, 23, 0.08) 50%,
+    rgba(20, 24, 23, 0.03) 75%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.5s ease-in-out infinite;
@@ -357,3 +446,507 @@ button { font-family: inherit; }
     background-position: -200% 0;
   }
 }
+
+/* ==============================
+   SONNER TOAST — MORYN THEME
+   ============================== */
+
+/* Override Sonner light-theme success/error/warning/info variables
+   to match Moryn's color palette instead of the default green/red Sonner colors */
+[data-sonner-toaster][data-sonner-theme="light"] {
+  --success-bg: #f0faf5;
+  --success-border: #b8dece;
+  --success-text: #1e5c41;
+  --error-bg: #fff1f1;
+  --error-border: #f0bcbc;
+  --error-text: #9b2c2c;
+  --warning-bg: #fffbf0;
+  --warning-border: #e8d5a0;
+  --warning-text: #8a5c1a;
+  --info-bg: #f0f6ff;
+  --info-border: #b8cef0;
+  --info-text: #2a4e7a;
+}
+
+/* Base toast styling — all variants */
+[data-sonner-toaster] [data-sonner-toast] {
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), Arial, sans-serif) !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(20, 24, 23, 0.08), 0 1px 4px rgba(20, 24, 23, 0.04) !important;
+}
+
+/* Normal/default toast — white background */
+[data-sonner-toaster][data-sonner-theme="light"] [data-sonner-toast][data-type="default"],
+[data-sonner-toaster][data-sonner-theme="light"] [data-sonner-toast]:not([data-type]) {
+  background: #ffffff !important;
+  border: 1px solid var(--color-border-subtle, #e8ebe8) !important;
+  color: var(--color-foreground, #141817) !important;
+}
+
+/* Title */
+[data-sonner-toaster] [data-sonner-toast] [data-title] {
+  color: inherit !important;
+  font-weight: 600 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* Description */
+[data-sonner-toaster] [data-sonner-toast] [data-description] {
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+}
+
+/* Close button — match toast background */
+[data-sonner-toaster] [data-sonner-toast] [data-close-button] {
+  background: inherit !important;
+  color: var(--color-foreground-muted, #737b78) !important;
+}
+
+/* ==============================
+   MERMAID DIAGRAM THEME & TEXT CONTRAST FIX
+   ============================== */
+.mermaid-diagram-viewer,
+.mermaid,
+[data-mermaid-viewer] {
+  color: #ffffff !important;
+  background-color: #1a1c23;
+}
+
+.mermaid-diagram-viewer svg,
+.mermaid svg,
+[data-mermaid-viewer] svg {
+  color: #ffffff !important;
+}
+
+/* Ensure all text inside SVG has crisp pure white color */
+.mermaid svg text,
+.mermaid svg tspan,
+.mermaid svg text *,
+.mermaid-diagram-viewer svg text,
+.mermaid-diagram-viewer svg tspan,
+.mermaid-diagram-viewer svg text *,
+[data-mermaid-viewer] svg text,
+[data-mermaid-viewer] svg tspan,
+[data-mermaid-viewer] svg text * {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  stroke: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+}
+
+/* Force HTML elements inside foreignObject to be crisp pure white */
+.mermaid svg foreignObject,
+.mermaid-diagram-viewer svg foreignObject,
+[data-mermaid-viewer] svg foreignObject {
+  overflow: visible !important;
+  color: #ffffff !important;
+}
+
+.mermaid svg foreignObject div,
+.mermaid svg foreignObject span,
+.mermaid svg foreignObject p,
+.mermaid svg .nodeLabel,
+.mermaid svg .label,
+.mermaid svg .edgeLabel,
+.mermaid-diagram-viewer svg foreignObject div,
+.mermaid-diagram-viewer svg foreignObject span,
+.mermaid-diagram-viewer svg foreignObject p,
+.mermaid-diagram-viewer svg .nodeLabel,
+.mermaid-diagram-viewer svg .label,
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg foreignObject div,
+[data-mermaid-viewer] svg foreignObject span,
+[data-mermaid-viewer] svg foreignObject p,
+[data-mermaid-viewer] svg .nodeLabel,
+[data-mermaid-viewer] svg .label,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+}
+
+/* Node shapes (rect, polygon, circle) styling for contrast */
+.mermaid-diagram-viewer svg .node rect,
+.mermaid-diagram-viewer svg .node circle,
+.mermaid-diagram-viewer svg .node ellipse,
+.mermaid-diagram-viewer svg .node polygon,
+.mermaid-diagram-viewer svg .node path,
+[data-mermaid-viewer] svg .node rect,
+[data-mermaid-viewer] svg .node circle,
+[data-mermaid-viewer] svg .node ellipse,
+[data-mermaid-viewer] svg .node polygon,
+[data-mermaid-viewer] svg .node path {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Hover effect on nodes */
+.mermaid-diagram-viewer svg .node:hover rect,
+.mermaid-diagram-viewer svg .node:hover polygon,
+.mermaid-diagram-viewer svg .node:hover circle,
+[data-mermaid-viewer] svg .node:hover rect,
+[data-mermaid-viewer] svg .node:hover polygon,
+[data-mermaid-viewer] svg .node:hover circle {
+  fill: #2c3240 !important;
+  stroke: #818cf8 !important;
+}
+
+/* Edge labels (arrows text) */
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #e2e8f0 !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel foreignObject div,
+.mermaid-diagram-viewer svg .edgeLabel foreignObject span,
+.mermaid-diagram-viewer svg .edgeLabel span,
+[data-mermaid-viewer] svg .edgeLabel foreignObject div,
+[data-mermaid-viewer] svg .edgeLabel foreignObject span,
+[data-mermaid-viewer] svg .edgeLabel span {
+  color: #e2e8f0 !important;
+  background: #1e222b !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel rect,
+[data-mermaid-viewer] svg .edgeLabel rect {
+  fill: #1e222b !important;
+  stroke: rgba(255, 255, 255, 0.08) !important;
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Lines & Arrows */
+.mermaid-diagram-viewer svg .flowchart-link,
+.mermaid-diagram-viewer svg path.flowchart-link,
+.mermaid-diagram-viewer svg .edge-thickness-normal,
+.mermaid-diagram-viewer svg path.link,
+[data-mermaid-viewer] svg .flowchart-link,
+[data-mermaid-viewer] svg path.flowchart-link,
+[data-mermaid-viewer] svg .edge-thickness-normal,
+[data-mermaid-viewer] svg path.link {
+  stroke: #94a3b8 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg marker path,
+[data-mermaid-viewer] svg marker path {
+  fill: #94a3b8 !important;
+  stroke: #94a3b8 !important;
+}
+
+/* Clusters / Subgraphs */
+.mermaid-diagram-viewer svg .cluster rect,
+[data-mermaid-viewer] svg .cluster rect {
+  fill: rgba(20, 23, 31, 0.7) !important;
+  stroke: #3b4252 !important;
+  stroke-dasharray: 4 4 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg .cluster span,
+.mermaid-diagram-viewer svg .cluster .nodeLabel,
+[data-mermaid-viewer] svg .cluster span,
+[data-mermaid-viewer] svg .cluster .nodeLabel {
+  color: #e2e8f0 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+/* Entity Relationship (erDiagram) */
+.mermaid-diagram-viewer svg .er.entityBox,
+[data-mermaid-viewer] svg .er.entityBox {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+}
+
+.mermaid-diagram-viewer svg .er.entityLabel,
+[data-mermaid-viewer] svg .er.entityLabel {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxOdd,
+[data-mermaid-viewer] svg .er.attributeBoxOdd {
+  fill: #1a1d26 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxEven,
+[data-mermaid-viewer] svg .er.attributeBoxEven {
+  fill: #222632 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.relationshipLine,
+[data-mermaid-viewer] svg .er.relationshipLine {
+  stroke: #94a3b8 !important;
+}
+
+/* ==========================================
+   AI CHAT MARKDOWN TYPOGRAPHY — HITAM ZINC
+   ========================================== */
+.ai-markdown-content {
+  color: #18181b !important;
+}
+
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3,
+.ai-markdown-content h4,
+.ai-markdown-content h5,
+.ai-markdown-content h6 {
+  color: #18181b !important;
+}
+
+.ai-markdown-content p {
+  color: #27272a !important;
+}
+/* Ensure all text inside SVG has crisp pure white color */
+.mermaid svg text,
+.mermaid svg tspan,
+.mermaid svg text *,
+.mermaid-diagram-viewer svg text,
+.mermaid-diagram-viewer svg tspan,
+.mermaid-diagram-viewer svg text *,
+[data-mermaid-viewer] svg text,
+[data-mermaid-viewer] svg tspan,
+[data-mermaid-viewer] svg text * {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  stroke: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+}
+
+/* Force HTML elements inside foreignObject to be crisp pure white */
+.mermaid svg foreignObject,
+.mermaid-diagram-viewer svg foreignObject,
+[data-mermaid-viewer] svg foreignObject {
+  overflow: visible !important;
+  color: #ffffff !important;
+}
+
+.mermaid svg foreignObject div,
+.mermaid svg foreignObject span,
+.mermaid svg foreignObject p,
+.mermaid svg .nodeLabel,
+.mermaid svg .label,
+.mermaid svg .edgeLabel,
+.mermaid-diagram-viewer svg foreignObject div,
+.mermaid-diagram-viewer svg foreignObject span,
+.mermaid-diagram-viewer svg foreignObject p,
+.mermaid-diagram-viewer svg .nodeLabel,
+.mermaid-diagram-viewer svg .label,
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg foreignObject div,
+[data-mermaid-viewer] svg foreignObject span,
+[data-mermaid-viewer] svg foreignObject p,
+[data-mermaid-viewer] svg .nodeLabel,
+[data-mermaid-viewer] svg .label,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  font-family: var(--font-body, var(--font-plus-jakarta-sans), sans-serif) !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  text-align: center !important;
+}
+
+/* Node shapes (rect, polygon, circle) styling for contrast */
+.mermaid-diagram-viewer svg .node rect,
+.mermaid-diagram-viewer svg .node circle,
+.mermaid-diagram-viewer svg .node ellipse,
+.mermaid-diagram-viewer svg .node polygon,
+.mermaid-diagram-viewer svg .node path,
+[data-mermaid-viewer] svg .node rect,
+[data-mermaid-viewer] svg .node circle,
+[data-mermaid-viewer] svg .node ellipse,
+[data-mermaid-viewer] svg .node polygon,
+[data-mermaid-viewer] svg .node path {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+  stroke-width: 1.5px !important;
+}
+
+/* Hover effect on nodes */
+.mermaid-diagram-viewer svg .node:hover rect,
+.mermaid-diagram-viewer svg .node:hover polygon,
+.mermaid-diagram-viewer svg .node:hover circle,
+[data-mermaid-viewer] svg .node:hover rect,
+[data-mermaid-viewer] svg .node:hover polygon,
+[data-mermaid-viewer] svg .node:hover circle {
+  fill: #2c3240 !important;
+  stroke: #818cf8 !important;
+}
+
+/* Edge labels (arrows text) */
+.mermaid-diagram-viewer svg .edgeLabel,
+[data-mermaid-viewer] svg .edgeLabel {
+  color: #e2e8f0 !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel foreignObject div,
+.mermaid-diagram-viewer svg .edgeLabel foreignObject span,
+.mermaid-diagram-viewer svg .edgeLabel span,
+[data-mermaid-viewer] svg .edgeLabel foreignObject div,
+[data-mermaid-viewer] svg .edgeLabel foreignObject span,
+[data-mermaid-viewer] svg .edgeLabel span {
+  color: #e2e8f0 !important;
+  background: #1e222b !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.mermaid-diagram-viewer svg .edgeLabel rect,
+[data-mermaid-viewer] svg .edgeLabel rect {
+  fill: #1e222b !important;
+  stroke: rgba(255, 255, 255, 0.08) !important;
+  rx: 4px !important;
+  ry: 4px !important;
+}
+
+/* Lines & Arrows */
+.mermaid-diagram-viewer svg .flowchart-link,
+.mermaid-diagram-viewer svg path.flowchart-link,
+.mermaid-diagram-viewer svg .edge-thickness-normal,
+.mermaid-diagram-viewer svg path.link,
+[data-mermaid-viewer] svg .flowchart-link,
+[data-mermaid-viewer] svg path.flowchart-link,
+[data-mermaid-viewer] svg .edge-thickness-normal,
+[data-mermaid-viewer] svg path.link {
+  stroke: #94a3b8 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg marker path,
+[data-mermaid-viewer] svg marker path {
+  fill: #94a3b8 !important;
+  stroke: #94a3b8 !important;
+}
+
+/* Clusters / Subgraphs */
+.mermaid-diagram-viewer svg .cluster rect,
+[data-mermaid-viewer] svg .cluster rect {
+  fill: rgba(20, 23, 31, 0.7) !important;
+  stroke: #3b4252 !important;
+  stroke-dasharray: 4 4 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid-diagram-viewer svg .cluster span,
+.mermaid-diagram-viewer svg .cluster .nodeLabel,
+[data-mermaid-viewer] svg .cluster span,
+[data-mermaid-viewer] svg .cluster .nodeLabel {
+  color: #e2e8f0 !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+}
+
+/* Entity Relationship (erDiagram) */
+.mermaid-diagram-viewer svg .er.entityBox,
+[data-mermaid-viewer] svg .er.entityBox {
+  fill: #232732 !important;
+  stroke: #525c6e !important;
+}
+
+.mermaid-diagram-viewer svg .er.entityLabel,
+[data-mermaid-viewer] svg .er.entityLabel {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxOdd,
+[data-mermaid-viewer] svg .er.attributeBoxOdd {
+  fill: #1a1d26 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.attributeBoxEven,
+[data-mermaid-viewer] svg .er.attributeBoxEven {
+  fill: #222632 !important;
+  stroke: #374151 !important;
+}
+
+.mermaid-diagram-viewer svg .er.relationshipLine,
+[data-mermaid-viewer] svg .er.relationshipLine {
+  stroke: #94a3b8 !important;
+}
+
+/* ==========================================
+   AI CHAT MARKDOWN TYPOGRAPHY — HITAM ZINC
+   ========================================== */
+.ai-markdown-content {
+  color: #18181b !important;
+}
+
+.ai-markdown-content h1,
+.ai-markdown-content h2,
+.ai-markdown-content h3,
+.ai-markdown-content h4,
+.ai-markdown-content h5,
+.ai-markdown-content h6 {
+  color: #18181b !important;
+}
+
+.ai-markdown-content p {
+  color: #27272a !important;
+}
+
+.ai-markdown-content li {
+  color: #27272a !important;
+}
+
+.ai-markdown-content strong,
+.ai-markdown-content b {
+  color: #09090b !important;
+  font-weight: 700;
+}
+
+.ai-markdown-content em,
+.ai-markdown-content i {
+  color: #18181b !important;
+  font-style: italic;
+  background: transparent !important;
+}
+
+.ai-markdown-content mark {
+  background: rgba(225, 91, 57, 0.15) !important;
+  color: #18181b !important;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+

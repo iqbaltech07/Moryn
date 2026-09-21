@@ -41,11 +41,14 @@ const client_js_1 = require("../api/client.js");
 async function projectCommand(section, options = {}) {
     try {
         const workspaceRoot = process.cwd();
-        const piardifyDir = path.join(workspaceRoot, ".piardify");
+        const morynDir = path.join(workspaceRoot, ".moryn");
+        const legacyPiardifyDir = path.join(workspaceRoot, ".piardify");
         let sec = (section || "overview").toLowerCase();
-        // Check local modular files first (Solusi 3)
+        // Check local modular files first
         if (sec === "tokens") {
-            const tokensFile = path.join(piardifyDir, "tokens.json");
+            let tokensFile = path.join(morynDir, "tokens.json");
+            if (!fs.existsSync(tokensFile))
+                tokensFile = path.join(legacyPiardifyDir, "tokens.json");
             if (fs.existsSync(tokensFile)) {
                 const tokens = JSON.parse(fs.readFileSync(tokensFile, "utf-8"));
                 console.log(options.json ? JSON.stringify(tokens) : JSON.stringify(tokens, null, 2));
@@ -53,7 +56,9 @@ async function projectCommand(section, options = {}) {
             }
         }
         if (sec === "rules") {
-            const rulesFile = path.join(piardifyDir, "anti_slop_rules.md");
+            let rulesFile = path.join(morynDir, "anti_slop_rules.md");
+            if (!fs.existsSync(rulesFile))
+                rulesFile = path.join(legacyPiardifyDir, "anti_slop_rules.md");
             if (fs.existsSync(rulesFile)) {
                 const rules = fs.readFileSync(rulesFile, "utf-8");
                 console.log(rules);
@@ -62,7 +67,7 @@ async function projectCommand(section, options = {}) {
         }
         const projectId = options.project || (0, store_js_1.getProjectConfig)().projectId;
         if (!projectId) {
-            throw new Error("NO_PROJECT_LINKED: Run 'npx piardify init' or specify '--project <projectId>' first.");
+            throw new Error("NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.");
         }
         if (sec === "current")
             sec = "overview";
@@ -81,7 +86,7 @@ async function projectCommand(section, options = {}) {
             console.log(JSON.stringify(res, null, 2));
         }
         else {
-            console.log(`\n--- Piardify Project [${sec.toUpperCase()}] ---`);
+            console.log(`\n--- Moryn Project [${sec.toUpperCase()}] ---`);
             if (sec === "prd") {
                 console.log(res.prd || "No PRD content found.");
             }

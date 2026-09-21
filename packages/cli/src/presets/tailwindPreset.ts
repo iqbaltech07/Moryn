@@ -7,21 +7,56 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        piardify: {
-          dark: "#090A0C",         // Obsidian Deep Dark Base
-          surface: "#121318",      // Surface Level 1
-          elevated: "#181A22",     // Surface Level 2
-          border: "#222634",       // Subtle Structural Divider
-          accent: "#6366F1",       // Primary Brand Accent
+        brand: {
+          ink: "#141817",
+          orange: "#e85d3f",
+        },
+        background: "#fcfbf8",
+        surface: {
+          DEFAULT: "#f5f2ea",
+          raised: "#ffffff",
+        },
+        foreground: {
+          DEFAULT: "#141817",
+          secondary: "#4d5552",
+          muted: "#737b78",
+          subtle: "#9ca3a0",
+        },
+        border: {
+          DEFAULT: "#d9ddd9",
+          subtle: "#e8ebe8",
+          strong: "#b9bfbc",
+        },
+        primary: {
+          DEFAULT: "#141817",
+          foreground: "#fcfbf8",
+        },
+        accent: {
+          DEFAULT: "#e85d3f",
+          foreground: "#ffffff",
+          soft: "#fbe4de",
+        },
+        status: {
+          success: "#2f7d5c",
+          warning: "#b7791f",
+          error: "#c63d3d",
+          info: "#416b8d",
+        },
+        moryn: {
+          dark: "#141817",
+          surface: "#f5f2ea",
+          elevated: "#ffffff",
+          border: "#d9ddd9",
+          accent: "#e85d3f",
           text: {
-            primary: "#F3F4F6",    // High Contrast Text
-            muted: "#9CA3AF",      // Muted Secondary Text
-            dim: "#6B7280",        // Micro Label Text
+            primary: "#141817",
+            muted: "#737b78",
+            dim: "#9ca3a0",
           },
           status: {
-            success: "#10B981",    // Muted Emerald
-            warning: "#F59E0B",    // Muted Amber
-            error: "#EF4444",      // Muted Rose
+            success: "#2f7d5c",
+            warning: "#b7791f",
+            error: "#c63d3d",
           }
         }
       },
@@ -31,8 +66,8 @@ module.exports = {
       },
       borderRadius: {
         sharp: "2px",
-        subtle: "6px",
-        card: "10px",
+        subtle: "4px",
+        card: "6px",
       }
     }
   }

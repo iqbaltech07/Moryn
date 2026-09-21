@@ -1,9 +1,10 @@
 {
-  "name": "piardify",
+  "name": "moryn",
   "version": "2.13.0",
-  "description": "Piardify AI Agent CLI & Executable Function Package",
+  "description": "Moryn AI Agent CLI & Executable Function Package",
   "main": "./dist/index.js",
   "bin": {
+    "moryn": "dist/index.js",
     "piardify": "dist/index.js"
   },
   "files": [
@@ -16,6 +17,7 @@
     "prepublishOnly": "npm run build"
   },
   "keywords": [
+    "moryn",
     "piardify",
     "ai-agent",
     "npx",
@@ -23,7 +25,7 @@
     "prd",
     "cli"
   ],
-  "author": "Piardify",
+  "author": "Moryn",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "^20.0.0",

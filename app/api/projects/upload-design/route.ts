@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db/prisma";
+import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { parseDesignMarkdown } from "@/lib/designParser";
+import { parseDesignMarkdown } from "@/lib/design/designParser";
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +25,9 @@ export async function POST(req: NextRequest) {
       const rawText = (formData.get("designText") as string) || "";
 
       if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          return NextResponse.json({ error: "File size exceeds 5MB limit" }, { status: 400 });
+        }
         designText = await file.text();
       } else if (rawText) {
         designText = rawText;
@@ -39,6 +42,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No design.md content or file provided" }, { status: 400 });
     }
 
+    if (designText.length > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: "Design content exceeds 5MB limit" }, { status: 400 });
+    }
+
     // Parse markdown into structured JSON object
     const structuredData = parseDesignMarkdown(designText);
     const designJsonString = JSON.stringify(structuredData);
@@ -46,7 +53,12 @@ export async function POST(req: NextRequest) {
     // Instant save directly to Database (0 Vercel Blob overhead)
     if (projectId) {
       const project = await prisma.project.findUnique({
-        where: { id: projectId, userId: session.user.id },
+        where: {
+          id_userId: {
+            id: projectId,
+            userId: session.user.id,
+          },
+        },
         select: { id: true },
       });
 
@@ -55,7 +67,12 @@ export async function POST(req: NextRequest) {
       }
 
       await prisma.project.update({
-        where: { id: projectId },
+        where: {
+          id_userId: {
+            id: projectId,
+            userId: session.user.id,
+          },
+        },
         data: {
           designData: designJsonString,
         } as any,

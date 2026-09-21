@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { apiClient } from "@/lib/apiClient";
-import type { ProjectDetailData } from "@/app/detail/types";
+import { apiClient } from "@/lib/utils/apiClient";
+import type { ProjectDetailData } from "@/app/design/types";
 
 interface ProjectStore {
   currentProjectId: string | null;

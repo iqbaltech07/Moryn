@@ -6,7 +6,8 @@ import { apiRequest } from "../api/client.js";
 export async function designCommand(options: { project?: string; json?: boolean } = {}) {
   try {
     const workspaceRoot = process.cwd();
-    const piardifyDir = path.join(workspaceRoot, ".piardify");
+    const morynDir = path.join(workspaceRoot, ".moryn");
+    const legacyPiardifyDir = path.join(workspaceRoot, ".piardify");
     const projectId = options.project || getProjectConfig().projectId;
 
     let remoteDesign = null;
@@ -20,11 +21,11 @@ export async function designCommand(options: { project?: string; json?: boolean 
           remoteDesign = res.design;
 
           // Auto-sync local cache files
-          if (!fs.existsSync(piardifyDir)) {
-            fs.mkdirSync(piardifyDir, { recursive: true });
+          if (!fs.existsSync(morynDir)) {
+            fs.mkdirSync(morynDir, { recursive: true });
           }
           if (remoteDesign.colorTokens) {
-            fs.writeFileSync(path.join(piardifyDir, "tokens.json"), JSON.stringify(remoteDesign.colorTokens, null, 2), "utf-8");
+            fs.writeFileSync(path.join(morynDir, "tokens.json"), JSON.stringify(remoteDesign.colorTokens, null, 2), "utf-8");
           }
         }
       } catch (err: any) {
@@ -33,8 +34,11 @@ export async function designCommand(options: { project?: string; json?: boolean 
     }
 
     // 2. FALLBACK TO LOCAL CACHE ONLY IF REMOTE API FAILS OR OFFLINE
-    const tokensPath = path.join(piardifyDir, "tokens.json");
-    const rulesPath = path.join(piardifyDir, "anti_slop_rules.md");
+    let tokensPath = path.join(morynDir, "tokens.json");
+    if (!fs.existsSync(tokensPath)) tokensPath = path.join(legacyPiardifyDir, "tokens.json");
+
+    let rulesPath = path.join(morynDir, "anti_slop_rules.md");
+    if (!fs.existsSync(rulesPath)) rulesPath = path.join(legacyPiardifyDir, "anti_slop_rules.md");
 
     let localTokens = null;
     let localRules = null;
@@ -49,7 +53,7 @@ export async function designCommand(options: { project?: string; json?: boolean 
     }
 
     if (!remoteDesign && !localTokens && !localRules) {
-      const errReason = fetchError ? fetchError.message : "NO_PROJECT_LINKED: Run 'npx piardify init' or specify '--project <projectId>' first.";
+      const errReason = fetchError ? fetchError.message : "NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.";
       throw new Error(errReason);
     }
 
@@ -64,7 +68,7 @@ export async function designCommand(options: { project?: string; json?: boolean 
 
     // Human-readable console output
     console.log("\n==========================================");
-    console.log(`  🎨 Piardify Design Context [${remoteDesign ? "LIVE REMOTE API" : "LOCAL CACHE FALLBACK"}]`);
+    console.log(`  🎨 Moryn Design Context [${remoteDesign ? "LIVE REMOTE API" : "LOCAL CACHE FALLBACK"}]`);
     console.log("==========================================\n");
 
     if (remoteDesign) {

@@ -13,7 +13,7 @@ async function statusCommand(options) {
             console.log(JSON.stringify(res));
         }
         else {
-            console.log("\nPiardify Status");
+            console.log("\nMoryn Status");
             console.log("──────────────");
             console.log(`Authenticated: yes (${res.user?.email})`);
             console.log(`User         : ${res.user?.name || res.user?.email}`);

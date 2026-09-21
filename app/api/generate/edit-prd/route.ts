@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import { redis } from "@/lib/redis";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { redis } from "@/lib/db/redis";
+import { prisma } from "@/lib/db/prisma";
+import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { generateGemini, generateOpenRouter, parseAndRepairJson } from "@/lib/llm";
-import { getAiChatLimit } from "@/lib/planQuota";
-import { parseBody, editPrdSchema } from "@/lib/validation";
-import { fixMermaidBlocks } from "@/lib/mermaidFix";
+import { getAiChatLimit } from "@/lib/analytics/planQuota";
+import { parseBody, editPrdSchema } from "@/lib/utils/validation";
+import { fixMermaidBlocks } from "@/lib/utils/mermaidFix";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
+import { FastApiClient } from "@/lib/ai/fastapiClient";
+import {
+  retrieveRelevantChunks,
+  formatRetrievedContext,
+  chunkPrdMarkdown,
+  storeProjectChunks,
+} from "@/lib/ai/rag";
 
 export const maxDuration = 60;
 
@@ -21,7 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await parseBody(req, editPrdSchema);
-    const { projectId, currentPrd, prompt, selectedModel } = body;
+    const { projectId, currentPrd, prompt, history, selectedModel } = body;
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -31,7 +38,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const chatLimit = getAiChatLimit(user.tier, user.email);
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    const chatLimit = isCustomKeysActive ? Infinity : getAiChatLimit(user.tier, user.email);
 
     // Track chat count per project in Redis
     const chatKey = projectId ? `project:${projectId}:chats:${session.user.id}` : `user:${session.user.id}:chats`;
@@ -43,179 +51,75 @@ export async function POST(req: NextRequest) {
       console.warn("Redis get chat count warn:", e);
     }
 
-    if (currentChats >= chatLimit) {
-      return NextResponse.json({
-        error: `Batas chat tercapai (${currentChats}/${chatLimit}). User ${user.tier} hanya mendapatkan ${chatLimit === Infinity ? "unlimited" : chatLimit}x chat AI. Upgrade ke ${user.tier === "FREE" ? "PRO" : "unlimited"} untuk menambah kuota chat!`,
-        chatLimitReached: true,
-        chatCount: currentChats,
-        chatLimit,
-        tier: user.tier,
-      }, { status: 403 });
+    if (!isCustomKeysActive && currentChats >= chatLimit) {
+      return NextResponse.json(
+        {
+          error: `Batas chat tercapai (${currentChats}/${chatLimit}). User ${user.tier} hanya mendapatkan ${
+            chatLimit === Infinity ? "unlimited" : chatLimit
+          }x chat AI. Masukkan Custom API Key sendiri di Profile untuk akses unlimited!`,
+          chatLimitReached: true,
+          chatCount: currentChats,
+          chatLimit,
+          tier: user.tier,
+        },
+        { status: 403 }
+      );
     }
 
-    const isEditIntent = /(tambah|ubah|ganti|update|edit|hapus|masukkan|terapkan|buatkan|revisi|sesuaikan|add|remove|change|insert|delete|append|modify|fix|perbaiki)/i.test(prompt);
+    const isEditIntent = /(tambah|ubah|ganti|update|edit|hapus|masukkan|terapkan|buatkan|revisi|sesuaikan|add|remove|change|insert|delete|append|modify|fix|perbaiki)/i.test(
+      prompt
+    );
 
-    const systemPrompt = `You are an expert AI Product Manager and Brainstorming Partner.
-You are helping the user refine, discuss, or update their Product Requirements Document (PRD).
+    // Sanitize user prompt to prevent XML/delimiter tag evasion
+    const sanitizedPrompt = prompt
+      .replace(/<\/?user_instruction>/gi, "")
+      .replace(/<\/?updated_prd>/gi, "")
+      .replace(/<\/?is_prd_updated>/gi, "");
 
-TASK INSTRUCTIONS:
-1. Analyze the user's prompt instruction.
-2. Determine if the user is BRAINSTORMING / ASKING A QUESTION / DISCUSSING (e.g. asking for ideas, pros/cons, recommendations, technical advice, feedback).
-   - If BRAINSTORMING: Provide a helpful, clear conversational response in Indonesian answering their question. Set isPrdUpdated to false.
-3. Determine if the user wants to REVISE / EDIT / ADD TO / REMOVE / UPDATE / FIX the PRD (e.g. "Tambahkan fitur X", "Hapus section Y", "Ubah bahasa", "Terapkan rekomendasi tadi").
-   - If EDITING: Provide a friendly confirmation message and generate the FULL updated PRD markdown.
-
-OUTPUT FORMAT (You can use Tagged Format for maximum reliability):
-<reply>Your conversational response, answer, ideas, or edit confirmation in Indonesian.</reply>
-<is_prd_updated>true or false</is_prd_updated>
-<updated_prd>
-(Full updated PRD markdown here if is_prd_updated is true, otherwise leave empty)
-</updated_prd>
-
-Alternatively, you may return strict valid JSON:
-{
-  "reply": "Your conversational response in Indonesian.",
-  "isPrdUpdated": true,
-  "updatedMarkdown": "Full updated PRD markdown string"
-}`;
-
-    const userPrompt = `=== CURRENT PRD START ===
-${currentPrd}
-=== CURRENT PRD END ===
-
-=== USER INSTRUCTION ===
-${prompt}
-
-${isEditIntent ? "USER INTENT: The user wants to EDIT/UPDATE the PRD. Please provide the updated PRD with their changes applied." : ""}`;
-
-    let rawText = "";
-    const modelToUse = selectedModel || "gemini-3.7-flash";
-
-    if (modelToUse.startsWith("gemini-")) {
-      const res = await generateGemini({
-        systemPrompt,
-        userPrompt,
-        preferredModel: modelToUse,
-      });
-      rawText = res.text;
-    } else {
-      // OpenRouter Model
-      const res = await generateOpenRouter({
-        systemPrompt,
-        userPrompt,
-        model: modelToUse,
-        jsonObject: false,
-      });
-      rawText = res.text;
-    }
-
-    if (!rawText) {
-      return NextResponse.json({ error: "Failed to process prompt" }, { status: 500 });
-    }
-
-    function parseOrExtractResponse(text: string): { reply: string; isPrdUpdated: boolean; updatedMarkdown?: string | null } {
-      const trimmed = text.trim();
-
-      // 1. Check Tagged Delimiter Format (<reply>...</reply>, <updated_prd>...</updated_prd>)
-      const replyTagMatch = trimmed.match(/<reply>([\s\S]*?)<\/reply>/i);
-      const isUpdatedTagMatch = trimmed.match(/<is_prd_updated>([\s\S]*?)<\/is_prd_updated>/i);
-      const prdTagMatch = trimmed.match(/<updated_prd>([\s\S]*?)<\/updated_prd>/i);
-
-      if (replyTagMatch || prdTagMatch) {
-        const reply = replyTagMatch ? replyTagMatch[1].trim() : "Perubahan PRD telah diterapkan.";
-        const isUpdatedStr = isUpdatedTagMatch ? isUpdatedTagMatch[1].trim().toLowerCase() : "";
-        const prdContent = prdTagMatch ? prdTagMatch[1].trim() : "";
-        const isPrdUpdated = isUpdatedStr === "true" || prdContent.length > 50 || isEditIntent;
-
-        return {
-          reply: reply || "PRD berhasil diperbarui!",
-          isPrdUpdated: isPrdUpdated && prdContent.length > 30,
-          updatedMarkdown: prdContent.length > 30 ? prdContent : null,
-        };
-      }
-
-      // 2. Try JSON Parse
-      const repairedObj = parseAndRepairJson<Record<string, unknown>>(text);
-      if (repairedObj && typeof repairedObj === "object") {
-        const reply = typeof repairedObj.reply === "string" ? repairedObj.reply : "Respons diterima.";
-        const isPrdUpdated = Boolean(repairedObj.isPrdUpdated);
-        const updatedMarkdown = typeof repairedObj.updatedMarkdown === "string" ? repairedObj.updatedMarkdown : null;
-
-        if (isPrdUpdated && updatedMarkdown && updatedMarkdown.trim().length > 30) {
-          return {
-            reply,
-            isPrdUpdated: true,
-            updatedMarkdown: updatedMarkdown.trim(),
-          };
+    // Retrieve semantic context via RAG
+    let augmentedInstruction = sanitizedPrompt;
+    if (projectId) {
+      try {
+        const retrieved = await retrieveRelevantChunks(projectId, sanitizedPrompt, { topK: 5, minSimilarity: 0.48 });
+        if (retrieved.length > 0) {
+          const ragSummary = formatRetrievedContext(retrieved);
+          augmentedInstruction = `${sanitizedPrompt}\n\n=== GROUNDED ARCHITECTURE & USER CONTEXT (RAG) ===\n${ragSummary}`;
         }
+      } catch (ragErr) {
+        console.warn("[EditPRD] RAG retrieval warning:", ragErr);
       }
-
-      // 3. Fallback: Regex extraction for JSON strings with unescaped newlines
-      const mdMatch = text.match(/"updatedMarkdown"\s*:\s*"([\s\S]*?)"(?:\s*,\s*"|\s*})/);
-      const replyMatch = text.match(/"reply"\s*:\s*"([\s\S]*?)"(?:\s*,\s*"|\s*})/);
-
-      let extractedMd = mdMatch ? mdMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
-      let extractedReply = replyMatch ? replyMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"') : "";
-
-      if (extractedMd && extractedMd.length > 50) {
-        return {
-          reply: extractedReply || "Saya telah memperbarui PRD sesuai instruksi Anda.",
-          isPrdUpdated: true,
-          updatedMarkdown: extractedMd,
-        };
-      }
-
-      // 4. Fallback: Check if response contains direct Markdown headings (e.g. # PRODUCT REQUIREMENTS DOCUMENT)
-      if (text.includes("# PRODUCT REQUIREMENTS DOCUMENT") || (text.includes("## 1. Overview") && text.length > 200)) {
-        let cleanMd = text;
-        if (cleanMd.includes("```markdown")) {
-          const match = cleanMd.match(/```markdown([\s\S]*?)```/);
-          if (match) cleanMd = match[1];
-        } else if (cleanMd.includes("```")) {
-          const match = cleanMd.match(/```([\s\S]*?)```/);
-          if (match) cleanMd = match[1];
-        }
-
-        return {
-          reply: "PRD telah berhasil diperbarui dan diselaraskan.",
-          isPrdUpdated: true,
-          updatedMarkdown: cleanMd.trim(),
-        };
-      }
-
-      // 5. Pure conversational response
-      let cleanText = text.replace(/```json/gi, "").replace(/```/g, "").trim();
-      if (cleanText.startsWith("{") && cleanText.endsWith("}")) {
-        cleanText = cleanText.slice(1, -1).trim();
-      }
-      cleanText = cleanText.replace(/^"reply"\s*:\s*"/, "").replace(/"$/, "");
-
-      return {
-        reply: cleanText || "Respons diterima.",
-        isPrdUpdated: false,
-        updatedMarkdown: null,
-      };
     }
 
-    const parsed = parseOrExtractResponse(rawText);
+    // Call FastAPI AI Engine
+    const res = await FastApiClient.editPrd({
+      currentPrd,
+      instruction: augmentedInstruction,
+      isEditIntent,
+      model: selectedModel,
+      history: history || undefined,
+    });
 
-    let updatedMarkdown = parsed.updatedMarkdown || "";
+    let updatedMarkdown = res.updatedMarkdown || "";
 
     // Auto fix mermaid syntax if PRD was updated
-    if (parsed.isPrdUpdated && updatedMarkdown) {
+    if (res.isPrdUpdated && updatedMarkdown) {
       updatedMarkdown = await fixMermaidBlocks(updatedMarkdown);
 
       // Save to Database & Redis if projectId is provided
       if (projectId) {
         try {
-          const project = await prisma.project.findFirst({
-            where: { id: projectId, userId: session.user.id },
+          const project = await prisma.project.findUnique({
+            where: {
+              id_userId: {
+                id: projectId,
+                userId: session.user.id,
+              },
+            },
             select: { formInputs: true },
           });
 
-          const updateData: any = { prdData: updatedMarkdown };
+          const updateData: { prdData: string; formInputs?: string } = { prdData: updatedMarkdown };
 
-          // Smart-sync: editing the PRD makes the generated task list outdated
           if (project?.formInputs) {
             try {
               const formInputsObj = JSON.parse(project.formInputs);
@@ -225,7 +129,12 @@ ${isEditIntent ? "USER INTENT: The user wants to EDIT/UPDATE the PRD. Please pro
           }
 
           await prisma.project.update({
-            where: { id: projectId },
+            where: {
+              id_userId: {
+                id: projectId,
+                userId: session.user.id,
+              },
+            },
             data: updateData,
             select: { id: true },
           });
@@ -233,6 +142,10 @@ ${isEditIntent ? "USER INTENT: The user wants to EDIT/UPDATE the PRD. Please pro
           const cacheKey = `project:${projectId}:prd`;
           await redis.set(cacheKey, updatedMarkdown);
           await redis.del(`project:${projectId}:tasks`);
+
+          // Re-embed updated PRD sections into persistent vector store
+          const prdChunks = chunkPrdMarkdown(updatedMarkdown);
+          storeProjectChunks(projectId, prdChunks).catch(() => {});
         } catch (e) {
           console.warn("Database/Redis update warn:", e);
         }
@@ -247,15 +160,17 @@ ${isEditIntent ? "USER INTENT: The user wants to EDIT/UPDATE the PRD. Please pro
     }
 
     return NextResponse.json({
-      reply: parsed.reply,
-      isPrdUpdated: parsed.isPrdUpdated,
-      markdown: parsed.isPrdUpdated ? updatedMarkdown : null,
+      reply: res.reply,
+      isPrdUpdated: res.isPrdUpdated,
+      updatedMarkdown: res.isPrdUpdated ? updatedMarkdown : null,
+      markdown: res.isPrdUpdated ? updatedMarkdown : null,
       chatCount: currentChats + 1,
       chatLimit: chatLimit === Infinity ? null : chatLimit,
+      actions: res.actions || null,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error editing/brainstorming PRD:", error);
-    const status = error?.status ?? 500;
-    return NextResponse.json({ error: status === 400 ? error.message : error?.message || "Internal Server Error" }, { status });
+    const msg = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

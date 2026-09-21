@@ -1,64 +1,9 @@
+"use client";
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getHeroTemplate = getHeroTemplate;
-/**
- * Hero Component Scaffold Template (Anti-Slop Compliant)
- */
-function getHeroTemplate(name) {
-    return `import React from "react";
-
-export interface ${name}Props {
-  title?: string;
-  subtitle?: string;
-  primaryCtaText?: string;
-  secondaryCtaText?: string;
-  onPrimaryClick?: () => void;
+exports.HeroSection = HeroSection;
+const jsx_runtime_1 = require("react/jsx-runtime");
+function HeroSection({ eyebrow = "MORYN / SYSTEM ENGINE", title = "Turn product ideas into systems you can actually build.", subtitle = "Generate structured PRDs, architecture decisions, feature dependencies, and execution-ready workflows from one product brief.", primaryCtaText = "Start Building", secondaryCtaText = "Explore the System", onPrimaryClick, onSecondaryClick, }) {
+    return ((0, jsx_runtime_1.jsxs)("section", { className: "relative w-full overflow-hidden bg-[#090A0C] text-[#F3F4F6] font-sans rounded-xl border border-[#1B2522]", children: [(0, jsx_runtime_1.jsx)("div", { className: "pointer-events-none absolute inset-x-0 top-0 h-px bg-[#285A48]/50" }), (0, jsx_runtime_1.jsxs)("div", { className: "flex min-h-12 items-center justify-between border-b border-[#1B2522] px-5 text-[9px] uppercase tracking-[0.18em] text-[#6F817B] font-mono", children: [(0, jsx_runtime_1.jsx)("span", { children: eyebrow }), (0, jsx_runtime_1.jsx)("span", { className: "hidden sm:block", children: "PRD \u2192 SYSTEM \u2192 EXECUTION" })] }), (0, jsx_runtime_1.jsxs)("div", { className: "grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr]", children: [(0, jsx_runtime_1.jsxs)("div", { className: "relative flex flex-col justify-between p-6 sm:p-8 lg:border-r border-[#1B2522]", children: [(0, jsx_runtime_1.jsxs)("div", { className: "max-w-xl", children: [(0, jsx_runtime_1.jsxs)("div", { className: "mb-6 flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.16em] text-[#408A71]", children: [(0, jsx_runtime_1.jsx)("span", { className: "text-[#6F817B]", children: "01" }), (0, jsx_runtime_1.jsx)("span", { className: "h-px w-8 bg-[#285A48]" }), (0, jsx_runtime_1.jsx)("span", { children: "Product Intelligence" })] }), (0, jsx_runtime_1.jsx)("h1", { className: "text-2xl sm:text-3xl lg:text-4xl font-semibold leading-[1.05] tracking-[-0.04em] text-[#F3F4F6]", children: title }), (0, jsx_runtime_1.jsx)("p", { className: "mt-5 max-w-lg border-l border-[#408A71] pl-3 text-xs sm:text-sm leading-relaxed text-[#9CA3AF]", children: subtitle }), (0, jsx_runtime_1.jsxs)("div", { className: "mt-6 flex flex-wrap gap-2.5", children: [(0, jsx_runtime_1.jsxs)("button", { onClick: onPrimaryClick, className: "group inline-flex h-10 items-center justify-between gap-6 border border-[#408A71] bg-[#285A48] px-4 text-xs font-medium text-[#F3F4F6] transition-all hover:bg-[#408A71]", children: [(0, jsx_runtime_1.jsx)("span", { children: primaryCtaText }), (0, jsx_runtime_1.jsx)("span", { className: "transition-transform group-hover:translate-x-0.5", children: "\u2197" })] }), (0, jsx_runtime_1.jsxs)("button", { onClick: onSecondaryClick, className: "inline-flex h-10 items-center gap-2 border border-[#28332F] bg-transparent px-4 text-xs font-medium text-[#C3CCC8] transition-colors hover:border-[#408A71] hover:text-white", children: [(0, jsx_runtime_1.jsx)("span", { className: "font-mono text-[#408A71]", children: "02" }), (0, jsx_runtime_1.jsx)("span", { children: secondaryCtaText })] })] })] }), (0, jsx_runtime_1.jsxs)("div", { className: "mt-8 grid grid-cols-3 border-t border-[#1B2522] pt-3 text-[9px] font-mono uppercase tracking-[0.14em] text-[#65746F]", children: [(0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)("span", { className: "block text-[#408A71]", children: "Input" }), "Product Brief"] }), (0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)("span", { className: "block text-[#408A71]", children: "Output" }), "System Blueprint"] }), (0, jsx_runtime_1.jsxs)("div", { children: [(0, jsx_runtime_1.jsx)("span", { className: "block text-[#408A71]", children: "Mode" }), "Structured"] })] })] }), (0, jsx_runtime_1.jsxs)("div", { className: "relative min-h-70 sm:min-h-80 overflow-hidden bg-[#0C100F] flex flex-col justify-between p-6", children: [(0, jsx_runtime_1.jsx)("div", { className: "pointer-events-none absolute inset-0 opacity-20 bg-[linear-gradient(#285A48_1px,transparent_1px),linear-gradient(90deg,#285A48_1px,transparent_1px)] bg-size-[28px_28px]" }), (0, jsx_runtime_1.jsx)("div", { className: "font-mono text-[8px] uppercase tracking-[0.16em] text-[#52635D] z-10", children: "SYS / 001" }), (0, jsx_runtime_1.jsxs)("div", { className: "relative z-10 grid grid-cols-3 gap-2 my-auto items-center", children: [(0, jsx_runtime_1.jsxs)("div", { className: "border border-[#285A48] bg-[#101613] p-2.5 rounded-sm space-y-1", children: [(0, jsx_runtime_1.jsxs)("div", { className: "flex items-center justify-between text-[8px] font-mono", children: [(0, jsx_runtime_1.jsx)("span", { className: "text-[#408A71]", children: "INPUT" }), (0, jsx_runtime_1.jsx)("span", { className: "text-[#52635D]", children: "01" })] }), (0, jsx_runtime_1.jsx)("div", { className: "text-[11px] font-semibold text-[#DCE4E0]", children: "Brief" }), (0, jsx_runtime_1.jsx)("div", { className: "text-[8px] text-[#697873]", children: "Goals / users" })] }), (0, jsx_runtime_1.jsxs)("div", { className: "border border-[#408A71] bg-[#101613] p-2.5 rounded-sm space-y-1 shadow-lg", children: [(0, jsx_runtime_1.jsxs)("div", { className: "flex items-center justify-between text-[8px] font-mono", children: [(0, jsx_runtime_1.jsx)("span", { className: "text-[#B0E4CC]", children: "ENGINE" }), (0, jsx_runtime_1.jsx)("span", { className: "text-[#52635D]", children: "02" })] }), (0, jsx_runtime_1.jsx)("div", { className: "text-[11px] font-bold text-[#F3F4F6]", children: "Structure" }), (0, jsx_runtime_1.jsxs)("div", { className: "space-y-0.5 font-mono text-[7px] text-[#697873]", children: [(0, jsx_runtime_1.jsxs)("div", { className: "flex justify-between", children: [(0, jsx_runtime_1.jsx)("span", { children: "reqs" }), (0, jsx_runtime_1.jsx)("span", { className: "text-[#408A71]", children: "OK" })] }), (0, jsx_runtime_1.jsxs)("div", { className: "flex justify-between", children: [(0, jsx_runtime_1.jsx)("span", { children: "deps" }), (0, jsx_runtime_1.jsx)("span", { className: "text-[#408A71]", children: "OK" })] })] })] }), (0, jsx_runtime_1.jsxs)("div", { className: "border border-[#285A48] bg-[#101613] p-2.5 rounded-sm space-y-1", children: [(0, jsx_runtime_1.jsxs)("div", { className: "flex items-center justify-between text-[8px] font-mono", children: [(0, jsx_runtime_1.jsx)("span", { className: "text-[#408A71]", children: "OUTPUT" }), (0, jsx_runtime_1.jsx)("span", { className: "text-[#52635D]", children: "03" })] }), (0, jsx_runtime_1.jsx)("div", { className: "text-[11px] font-semibold text-[#DCE4E0]", children: "Plan" }), (0, jsx_runtime_1.jsx)("div", { className: "text-[8px] text-[#697873]", children: "Tasks / phases" })] })] }), (0, jsx_runtime_1.jsxs)("div", { className: "border-t border-[#1B2522] bg-[#0A0E0D]/90 pt-2 font-mono text-[8px] uppercase tracking-[0.14em] text-[#65746F] flex justify-between z-10", children: [(0, jsx_runtime_1.jsx)("span", { children: "Architecture Graph" }), (0, jsx_runtime_1.jsx)("span", { className: "text-[#408A71]", children: "SYSTEM READY" })] })] })] })] }));
 }
-
-/**
- * ${name} - Editorial Hero Section (Anti-Slop Compliant)
- * Rules: Max 2 lines title, transparent hero badge, no pulsing dots, 80px navbar friendly.
- */
-export function ${name}({
-  title = "Build System Blueprints with AI Precision",
-  subtitle = "Generate structured PRDs, system architecture schemas, and sync Kanban tasks seamlessly.",
-  primaryCtaText = "Get Started Free",
-  secondaryCtaText = "View Documentation",
-  onPrimaryClick,
-}: ${name}Props) {
-  return (
-    <section className="w-full min-h-[85dvh] bg-[#090A0C] text-[#F3F4F6] flex flex-col justify-center items-center px-6 py-20 text-center font-sans space-y-8">
-      {/* Transparent Hero Anchor Badge */}
-      <div className="inline-flex items-center gap-2 px-3 py-1 text-xs font-mono tracking-wider uppercase text-[#9CA3AF] bg-transparent border border-[#222634] rounded-full">
-        <span>Piardify Engine v2.0</span>
-      </div>
-
-      {/* Hero Headline — Solid Typography (No Gradient Text Slop) */}
-      <h1 className="max-w-4xl text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-[#F3F4F6] leading-[1.1]">
-        {title}
-      </h1>
-
-      {/* Subtitle — Max 20 Words */}
-      <p className="max-w-2xl text-base md:text-lg text-[#9CA3AF] leading-relaxed">
-        {subtitle}
-      </p>
-
-      {/* CTA Row */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-        <button
-          onClick={onPrimaryClick}
-          className="w-full sm:w-auto px-8 py-3.5 bg-[#6366F1] hover:bg-[#4F46E5] text-white font-medium text-sm rounded-md transition-all duration-150 active:scale-[0.98]"
-        >
-          {primaryCtaText}
-        </button>
-        <button className="w-full sm:w-auto px-8 py-3.5 bg-[#121318] hover:bg-[#181A22] text-[#F3F4F6] border border-[#222634] font-medium text-sm rounded-md transition-all duration-150">
-          {secondaryCtaText}
-        </button>
-      </div>
-    </section>
-  );
-}
-
-export default ${name};
-`;
-}
+exports.default = HeroSection;

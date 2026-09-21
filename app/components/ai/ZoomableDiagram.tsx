@@ -47,7 +47,7 @@ export default function ZoomableDiagram({
       onTransform={handleTransformed}
     >
       {({ zoomIn, zoomOut, resetTransform }) => (
-        <div className={wrapperClassName}>
+        <div className={wrapperClassName} data-mermaid-viewer>
           {/* Floating Zoom Controls */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5 bg-[#121318]/90 border border-slate-800 rounded-lg px-2 py-1 shadow-lg backdrop-blur-md opacity-80 group-hover:opacity-100 transition-opacity">
             <span className="text-[10px] font-mono text-slate-400 font-medium mr-1 select-none">
@@ -87,6 +87,7 @@ export default function ZoomableDiagram({
               ref={containerRef}
               dangerouslySetInnerHTML={{ __html: svgHtml }}
               className={contentClassName}
+              style={{ color: "#ffffff" }}
             />
           </TransformComponent>
         </div>

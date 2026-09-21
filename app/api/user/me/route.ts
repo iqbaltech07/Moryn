@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { auth } from "@/lib/auth/auth";
+import { prisma } from "@/lib/db/prisma";
 import { headers } from "next/headers";
-import { isAdminEmail } from "@/lib/planQuota";
+import { isAdminEmail } from "@/lib/analytics/planQuota";
 
 export async function GET() {
   const session = await auth.api.getSession({

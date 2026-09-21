@@ -16,12 +16,12 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ level, children }) =
     .replace(/\s+/g, "-");
 
   const styles = {
-    1: "text-xl sm:text-2xl font-bold text-slate-100 border-b border-indigo-500/20 pb-2 mt-6 mb-4 tracking-tight",
-    2: "text-lg sm:text-xl font-bold text-slate-100 mt-5 mb-3 tracking-tight",
-    3: "text-base sm:text-lg font-semibold text-indigo-300 mt-4 mb-2",
-    4: "text-sm sm:text-base font-semibold text-purple-300 mt-3 mb-2",
-    5: "text-xs sm:text-sm font-semibold text-slate-300 mt-2 mb-1",
-    6: "text-xs font-semibold text-slate-400 mt-2 mb-1 uppercase tracking-wider",
+    1: "text-lg sm:text-xl font-bold text-zinc-900 border-b border-zinc-200 pb-1.5 mt-5 mb-2.5 tracking-tight",
+    2: "text-base sm:text-lg font-bold text-zinc-900 mt-4 mb-2 tracking-tight",
+    3: "text-sm sm:text-base font-bold text-zinc-900 mt-3.5 mb-1.5",
+    4: "text-xs sm:text-sm font-semibold text-zinc-900 mt-3 mb-1",
+    5: "text-xs font-semibold text-zinc-800 mt-2 mb-1",
+    6: "text-[11px] font-semibold text-zinc-700 mt-2 mb-1 uppercase tracking-wider",
   }[level];
 
   const content = (
@@ -30,7 +30,7 @@ export const HeadingBlock: React.FC<HeadingBlockProps> = ({ level, children }) =
       {id && (
         <a
           href={`#${id}`}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-indigo-400 hover:text-indigo-200"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-zinc-600"
           aria-label="Link to heading"
         >
           <Link2 className="w-3.5 h-3.5" />

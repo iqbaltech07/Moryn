@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import { redis } from "@/lib/redis";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
+import { NextRequest, NextResponse, after } from "next/server";
+import { prisma } from "@/lib/db/prisma";
+import { redis } from "@/lib/db/redis";
+import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
-import { generateGemini } from "@/lib/llm";
-import { PRD_TEMPLATE, PRD_TEMPLATE_FALLBACK, BASE_SYSTEM_PROMPT } from "@/lib/prompts";
-import { getOwnedProject } from "@/lib/projectHelpers";
-import { checkRateLimit, RateLimitWindows } from "@/lib/rateLimit";
-import { getDailyAiCallLimit } from "@/lib/planQuota";
-import { parseBody, projectIdSchema } from "@/lib/validation";
-import { fixMermaidBlocks } from "@/lib/mermaidFix";
+import { getOwnedProject } from "@/lib/utils/projectHelpers";
+import { checkRateLimit, RateLimitWindows } from "@/lib/db/rateLimit";
+import { getDailyAiCallLimit } from "@/lib/analytics/planQuota";
+import { parseBody, projectIdSchema } from "@/lib/utils/validation";
+import { fixMermaidBlocks } from "@/lib/utils/mermaidFix";
+import { hasActiveCustomAiKeys } from "@/lib/ai/keyManager";
+import { FastApiClient } from "@/lib/ai/fastapiClient";
+import { waitForStageResult, formatStructureSummary, runSequentialGenerationPipeline } from "@/lib/ai/pipeline";
 
 export const maxDuration = 60;
 
@@ -30,21 +31,30 @@ export async function POST(req: NextRequest) {
       select: { tier: true, email: true },
     });
 
-    const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
-    const rl = await checkRateLimit({
-      userId: session.user.id,
-      scope: "generate:prd",
-      limit: dailyLimit,
-      windowSeconds: RateLimitWindows.DAY,
-    });
-    if (!rl.allowed) {
-      return NextResponse.json({ error: "DAILY_LIMIT_REACHED", message: `Batas generate harian tercapai. Coba lagi besok.` }, { status: 429 });
+    const isCustomKeysActive = await hasActiveCustomAiKeys(session.user.id);
+    if (!isCustomKeysActive) {
+      const dailyLimit = getDailyAiCallLimit(user?.tier, user?.email);
+      const rl = await checkRateLimit({
+        userId: session.user.id,
+        scope: "generate:prd",
+        limit: dailyLimit,
+        windowSeconds: RateLimitWindows.DAY,
+      });
+      if (!rl.allowed) {
+        return NextResponse.json(
+          {
+            error: "DAILY_LIMIT_REACHED",
+            message: "Batas generate harian tercapai. Coba lagi besok atau gunakan Custom API Key sendiri.",
+          },
+          { status: 429 }
+        );
+      }
     }
 
     // 1. Check Redis Cache
     const cacheKey = `project:${projectId}:prd`;
     try {
-      const cached = await redis.get(cacheKey);
+      const cached = await redis.get<string>(cacheKey);
       if (cached) {
         return NextResponse.json({ markdown: cached });
       }
@@ -52,7 +62,7 @@ export async function POST(req: NextRequest) {
       console.warn("Redis Cache Miss/Error:", err);
     }
 
-    // 2. Check Database (typed ownership)
+    // 2. Check Database
     const project = await getOwnedProject(session.user.id, projectId, {
       id: true,
       userId: true,
@@ -60,6 +70,7 @@ export async function POST(req: NextRequest) {
       appIdea: true,
       formInputs: true,
       prdData: true,
+      strukturData: true,
     });
 
     if (!project) {
@@ -67,103 +78,82 @@ export async function POST(req: NextRequest) {
     }
 
     if (project.prdData) {
-      try { await redis.set(cacheKey, project.prdData); } catch { }
+      try {
+        await redis.set(cacheKey, project.prdData);
+      } catch {}
       return NextResponse.json({ markdown: project.prdData });
     }
 
+    // 3. Smart-wait for background pipeline if currently executing
+    const awaitedPrd = await waitForStageResult(
+      projectId,
+      cacheKey,
+      async () => {
+        const p = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { prdData: true },
+        });
+        return p?.prdData ? { markdown: p.prdData } : null;
+      },
+      15000,
+      1000
+    );
+
+    if (awaitedPrd) {
+      return NextResponse.json(awaitedPrd);
+    }
+
+    // 4. Fallback / Direct Generation with Structure Context
     const formInputs = project.formInputs ? JSON.parse(project.formInputs) : {};
+    const structureSummary = project.strukturData ? formatStructureSummary(project.strukturData) : undefined;
+    const language = (formInputs.language === "id" ? "id" : "en") as "en" | "id";
 
-    const systemPrompt = `${BASE_SYSTEM_PROMPT}
+    // Call FastAPI AI Engine (Single Source of Truth)
+    const fastApiRes = await FastApiClient.generatePrd({
+      appName: project.appName,
+      appIdea: project.appIdea,
+      stacks: formInputs.stacks,
+      dynamicAnswers: formInputs.dynamicAnswers,
+      designPreference: formInputs.designPreference,
+      structureContext: structureSummary,
+      language,
+    });
 
-=== TEMPLATE START ===
-${PRD_TEMPLATE || PRD_TEMPLATE_FALLBACK}
-=== TEMPLATE END ===`;
-
-    let answersStr = "";
-    if (formInputs.dynamicQuestions && formInputs.dynamicAnswers) {
-      formInputs.dynamicQuestions.forEach((q: any) => {
-        const ans = formInputs.dynamicAnswers[q.key];
-        const ansStr = Array.isArray(ans) ? ans.join(", ") : ans || "N/A";
-        answersStr += `- ${q.title}: ${ansStr}\n`;
-      });
-    } else {
-      // Fallback for older projects
-      answersStr = `- Target User: ${formInputs.targetUser || "N/A"}
-- Platform: ${formInputs.platform || "N/A"}
-- Core Features: ${Array.isArray(formInputs.coreFeatures) ? formInputs.coreFeatures.join(", ") : "N/A"}
-- Monetization: ${formInputs.monetization || "N/A"}
-- App Scale: ${formInputs.appScale || "N/A"}
-- Integrations: ${Array.isArray(formInputs.integrations) ? formInputs.integrations.join(", ") : "N/A"}
-- Design Preference: ${formInputs.designPreference || "N/A"}`;
+    if (!fastApiRes?.markdown) {
+      return NextResponse.json({ error: "Failed to generate PRD from AI Engine" }, { status: 500 });
     }
 
-    const integrationsList = Array.isArray(formInputs.integrations) && formInputs.integrations.length > 0
-      ? formInputs.integrations.filter((i: string) => i !== "None").join(", ")
-      : "None";
-
-    const userPrompt = `Generate a PRD based on the following user inputs:
-    
-- App Name: ${project.appName || "N/A"}
-- App Idea: ${project.appIdea || "N/A"}
-- Frontend Stack: ${formInputs.stacks?.frontend || "N/A"}
-- Backend Stack: ${formInputs.stacks?.backend || "N/A"}
-- Database Stack: ${formInputs.stacks?.database || "N/A"}
-- Deployment Stack: ${formInputs.stacks?.deployment || "N/A"}
-${answersStr}
-
-[SELECTED INTEGRATIONS - CRITICAL]
-The following third-party integrations have been selected by the user and MUST be explicitly described inside the corresponding feature section of the PRD (not just listed in tech stack):
-${integrationsList}
-
-For each integration above, include a dedicated sub-section or detailed bullet inside the relevant feature section explaining HOW it is used (e.g. OAuth flow, API calls, webhook handling, SDK usage, etc.).
-`;
-
-    let response: any;
-    let success = false;
-    let lastError = null;
-
-    try {
-      response = await generateGemini({
-        systemPrompt,
-        userPrompt,
-      });
-      success = true;
-    } catch (err: any) {
-      lastError = err;
-      console.warn("[PRD] All Gemini fallback combinations failed:", err.message);
-    }
-
-    if (!success || !response) {
-      console.error("All fallback combinations failed:", lastError);
-      return NextResponse.json({ error: "Failed to generate PRD due to API limits or errors" }, { status: 500 });
-    }
-
-    let text = response.text;
-
-    // Validate and auto-fix mermaid blocks before sending to client
-    if (text) {
-      text = await fixMermaidBlocks(text);
-    }
+    let cleanMarkdown = fastApiRes.markdown;
+    cleanMarkdown = await fixMermaidBlocks(cleanMarkdown);
 
     // Save to Database
     await prisma.project.update({
       where: { id: projectId },
-      data: { prdData: text },
-      select: { id: true },
+      data: {
+        prdData: cleanMarkdown,
+        formInputs: JSON.stringify({
+          ...formInputs,
+          _tasksOutdated: true,
+        }),
+      },
     });
 
     // Save to Redis Cache
     try {
-      await redis.set(cacheKey, text);
-    } catch (err) {
-      console.warn("Redis set error:", err);
+      await redis.set(cacheKey, cleanMarkdown);
+    } catch (err: unknown) {
+      console.warn("Failed to set Redis cache:", err);
     }
 
-    return NextResponse.json({ markdown: text });
+    // Continue background pipeline for Tasks if not yet generated
+    after(async () => {
+      await runSequentialGenerationPipeline(projectId);
+    });
 
-  } catch (error: any) {
+    return NextResponse.json({ markdown: cleanMarkdown });
+  } catch (error: unknown) {
     console.error("Error generating PRD:", error);
-    const status = error?.status ?? 500;
-    return NextResponse.json({ error: status === 400 ? error.message : "Internal Server Error" }, { status });
+    const msg = error instanceof Error ? error.message : "Internal Server Error";
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

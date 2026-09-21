@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { redis } from "@/lib/redis";
-import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db/prisma";
+import { redis } from "@/lib/db/redis";
+import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
 
 export async function POST(req: NextRequest) {

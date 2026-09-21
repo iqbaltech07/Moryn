@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type ColumnId = "todo" | "in_progress" | "done";
+export type ColumnId = "todo" | "in_progress" | "done" | "error";
 
 interface KanbanStore {
   taskStatus: Record<string, ColumnId>;

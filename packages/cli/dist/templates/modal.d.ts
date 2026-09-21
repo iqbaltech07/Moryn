@@ -1,4 +1,11 @@
+export interface ConfirmModalProps {
+    isOpen?: boolean;
+    title?: string;
+    onClose?: () => void;
+    onConfirm?: () => void;
+}
 /**
- * Modal Component Scaffold Template (Anti-Slop Compliant)
+ * ConfirmModal - Elevated Dialog Modal (Anti-Slop Compliant)
  */
-export declare function getModalTemplate(name: string): string;
+export declare function ConfirmModal({ isOpen: defaultOpen, title, onClose, onConfirm, }: ConfirmModalProps): import("react/jsx-runtime").JSX.Element;
+export default ConfirmModal;
