@@ -2,12 +2,16 @@
  * Type-safe HTTP client to communicate between Next.js BFF and FastAPI AI Engine.
  */
 
-const FASTAPI_URL = process.env.FASTAPI_URL || "http://127.0.0.1:8000";
+function getFastApiUrl(): string {
+  const raw = process.env.API_URL || process.env.FASTAPI_URL || "http://127.0.0.1:8000";
+  return raw.replace(/\/+$/, "");
+}
+
 const INTERNAL_SECRET = process.env.INTERNAL_SERVICE_SECRET || "moryn_internal_ai_secret_dev";
 
 export class FastApiClient {
   private static async request<T>(endpoint: string, body: unknown): Promise<T> {
-    const url = `${FASTAPI_URL}${endpoint}`;
+    const url = `${getFastApiUrl()}${endpoint}`;
     
     try {
       const res = await fetch(url, {
@@ -38,7 +42,7 @@ export class FastApiClient {
   /** Checks if the FastAPI AI Engine is running and healthy. */
   static async isHealthy(): Promise<boolean> {
     try {
-      const res = await fetch(`${FASTAPI_URL}/api/v1/health`, {
+      const res = await fetch(`${getFastApiUrl()}/api/v1/health`, {
         method: "GET",
         signal: AbortSignal.timeout(3000),
       });

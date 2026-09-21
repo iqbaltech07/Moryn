@@ -48,11 +48,11 @@ export default function McpConnectModal({ projectId, appName, onClose }: McpConn
       : "piar_live_••••••••••••••••••••••••••••••••";
 
   // CLI command strings
-  const getCliCommands = (key: string) => `npx moryn login --token ${key || "<YOUR_API_KEY>"}
-npx moryn init --project ${projectId}`;
+  const getCliCommands = (key: string) => `npx moryn-cli login --token ${key || "<YOUR_API_KEY>"}
+npx moryn-cli init --project ${projectId}`;
 
-  const cliCommandsDisplay = `npx moryn login --token ${sensoredApiKeyDisplay}
-npx moryn init --project ${projectId}`;
+  const cliCommandsDisplay = `npx moryn-cli login --token ${sensoredApiKeyDisplay}
+npx moryn-cli init --project ${projectId}`;
 
   // AI Prompt strings
   const getAiPrompt = (key: string) => `Bertindaklah sebagai AI Senior Fullstack Engineer untuk proyek Moryn ini.
@@ -61,8 +61,8 @@ Tolong jalankan alur kerja otomatisasi berikut:
 
 1. SETUP CLI & INSTALL SKILL (Terminal):
    Jalankan 2 perintah berikut di terminal:
-   npx moryn login --token ${key || "<YOUR_API_KEY>"}
-   npx moryn init --project ${projectId}
+   npx moryn-cli login --token ${key || "<YOUR_API_KEY>"}
+   npx moryn-cli init --project ${projectId}
 
 2. BACA SYSTEM DIRECTIVES & WORKFLOW SKILL:
    Setelah init selesai, baca file instruksi .agents/skills/moryn/SKILL.md dan .moryn/context.md yang otomatis terpasang di workspace.
@@ -82,8 +82,8 @@ Tolong jalankan alur kerja otomatisasi berikut:
 
 1. SETUP CLI & INSTALL SKILL (Terminal):
    Jalankan 2 perintah berikut di terminal:
-   npx moryn login --token ${sensoredApiKeyDisplay}
-   npx moryn init --project ${projectId}
+   npx moryn-cli login --token ${sensoredApiKeyDisplay}
+   npx moryn-cli init --project ${projectId}
 
 2. BACA SYSTEM DIRECTIVES & WORKFLOW SKILL:
    Setelah init selesai, baca file instruksi .agents/skills/moryn/SKILL.md dan .moryn/context.md yang otomatis terpasang di workspace.

@@ -3,6 +3,12 @@ from functools import lru_cache
 from typing import List, Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from pathlib import Path
+
+# Resolve path directly to services/ai-engine/.env
+BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
+BACKEND_ENV = BACKEND_DIR / ".env"
+
 class Settings(BaseSettings):
     # Server configs
     APP_NAME: str = "Moryn AI Engine"
@@ -17,6 +23,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "https://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://moryn.vercel.app",
+        "https://piardify.vercel.app",
     ]
 
     # AI API Keys
@@ -33,9 +41,9 @@ class Settings(BaseSettings):
     DEFAULT_OPENROUTER_MODEL: str = "gemini-3.6-flash"
     GEMINI_EMBEDDING_MODEL: str = "gemini-embedding-001"
 
-    # Support multiple .env locations (local .env, then root ../../.env)
+    # Strict isolation: Only load from dedicated services/ai-engine/.env
     model_config = SettingsConfigDict(
-        env_file=(".env", "../../.env"),
+        env_file=str(BACKEND_ENV),
         env_file_encoding="utf-8",
         extra="ignore"
     )
