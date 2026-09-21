@@ -1,19 +1,19 @@
-# Moryn CLI & Visual Governance Engine (v2.13.0)
+# Moryn CLI & Visual Governance Engine (v3.0.0)
 
 Official CLI & Agent Skill package for **Moryn** — AI PRD Generator, System Architecture Tracker, & Anti-Slop Visual Governance Engine.
 
-[![npm version](https://img.shields.io/npm/v/moryn.svg)](https://www.npmjs.com/package/moryn)
+[![npm version](https://img.shields.io/npm/v/moryn-cli.svg)](https://www.npmjs.com/package/moryn-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
 
-## ⚡ What's New in v2.13.0
+## ⚡ What's New in v3.0.0
 
-- **🚀 Lossless Context Densification Engine**: Reduces context payload by **~65%** via dense constraint syntax, unified UI governance (`<ui_governance>`), minified JSON, and active task windowing without losing 100% full context.
-- **🎨 Dedicated Frontend Design Thinking Skill (`frontend-design`)**: Separated foundational studio design mindset (`.agents/skills/frontend/SKILL.md`) from modular taste skills to guide AI agents with grounded subject intent, distinctive typography, meaningful structure, and deliberate motion.
-- **⚡ Dual-Skill Automatic Provisioning**: `npx moryn init` automatically installs both `moryn` workflow skill and `frontend` design thinking skill into `.agents/skills/`.
-- **🛡️ Mandatory AH-019 Gate**: Added mandatory rule `AH-019` to enforce loading `frontend-design` thinking before modifying any frontend UI/UX component.
-- **💎 Dynamic Real-Time API Key Sync**: Instant plaintext resolution and zero-friction copying in MCP Connect Modal & Developer Profile.
+- **☁️ Cloud FastAPI Microservice Integration**: Direct compatibility with Moryn Cloud AI Engine backend with automatic retry and rate-limit recovery.
+- **⚡ Resilient Authentication**: Supports both `--token` and `--key` flags, plus native `sync` and `login` command aliases.
+- **🚀 Lossless Context Densification Engine**: Dense constraint syntax, unified UI governance (`<ui_governance>`), and active task windowing.
+- **🎨 Dual-Skill Auto-Provisioning**: `npx moryn-cli init` provisions both workflow skill (`moryn`) and design thinking skill (`frontend`).
+- **🛡️ AST Anti-Slop Linter**: Static code analysis engine (`npx moryn-cli validate-ui`) blocking AI slop visual patterns.
 
 ---
 
@@ -22,21 +22,21 @@ Official CLI & Agent Skill package for **Moryn** — AI PRD Generator, System Ar
 Run directly via `npx` (Zero Installation Required):
 
 ```bash
-npx moryn --help
+npx moryn-cli --help
 ```
 
 ### 1. Authenticate
 Authenticate using your API key from Moryn Settings:
 
 ```bash
-npx moryn login --token <YOUR_MORYN_API_KEY>
+npx moryn-cli login --token <YOUR_MORYN_API_KEY>
 ```
 
 ### 2. Connect Project & Install Agent Skills
 Run inside your codebase workspace:
 
 ```bash
-npx moryn init [--target web|mobile|iot|backend]
+npx moryn-cli init [--target web|mobile|iot|backend]
 ```
 
 This automatically:

@@ -1,9 +1,10 @@
 {
-  "name": "moryn",
-  "version": "2.13.0",
-  "description": "Moryn AI Agent CLI & Executable Function Package",
+  "name": "moryn-cli",
+  "version": "3.0.0",
+  "description": "Official Moryn AI Agent CLI & Visual Governance Engine",
   "main": "./dist/index.js",
   "bin": {
+    "moryn-cli": "dist/index.js",
     "moryn": "dist/index.js",
     "piardify": "dist/index.js"
   },
@@ -16,6 +17,12 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iqbaltech07/Piardify.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://moryn.vercel.app",
   "keywords": [
     "moryn",
     "piardify",
@@ -23,7 +30,8 @@
     "npx",
     "kanban",
     "prd",
-    "cli"
+    "cli",
+    "anti-slop"
   ],
   "author": "Moryn",
   "license": "MIT",

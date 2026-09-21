@@ -53,9 +53,9 @@ export default function Navbar() {
           <Image
             src="/logo/Moryn-Light-Mode.webp"
             alt="Moryn"
-            width={800}
-            height={200}
-            className="h-8 md:h-9 w-auto object-contain"
+            width={240}
+            height={76}
+            className="h-6 md:h-[25px] w-auto object-contain select-none transition-opacity duration-150 group-hover:opacity-90"
             priority
           />
         </Link>

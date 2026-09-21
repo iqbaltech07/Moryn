@@ -532,7 +532,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                     Run Moryn directly in your terminal or provide your key to the Antigravity IDE MCP server config:
                   </p>
                   <div className="bg-[#18181B] text-neutral-100 p-4 rounded-xl font-mono text-xs overflow-x-auto shadow-sm">
-                    <code>npx moryn login --token {apiKey || "YOUR_MORYN_API_KEY"}</code>
+                    <code>npx moryn-cli login --token {apiKey || "YOUR_MORYN_API_KEY"}</code>
                   </div>
                 </div>
               </div>

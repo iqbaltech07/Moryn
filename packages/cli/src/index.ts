@@ -121,19 +121,19 @@ async function main() {
     default:
       if (options.json) {
         console.log(JSON.stringify({
-          name: "moryn",
-          version: "2.13.0",
+          name: "moryn-cli",
+          version: "3.0.0",
           commands: ["login", "init", "status", "project", "design", "task", "kanban", "validate-ui", "clean", "init-theme", "hook", "scaffold", "generate"],
         }));
       } else {
-        console.log("\n  Moryn AI Agent CLI v2.13.0 (Anti-Slop Architecture)");
+        console.log("\n  Moryn AI Agent CLI v3.0.0 (Anti-Slop Architecture)");
         console.log("  ==========================");
-        console.log("  Usage: npx moryn <command> [options]\n");
+        console.log("  Usage: npx moryn-cli <command> [options]\n");
         console.log("  Core Developer & Scaffolding Commands:");
-        console.log("    npx moryn scaffold <Name> [--type <hero|bento|card|table|form|modal>]");
-        console.log("    npx moryn generate <Name> [--type <hero|bento|card|table|form|modal>]");
-        console.log("    npx moryn login --token <TOKEN>         Save auth token");
-        console.log("    npx moryn init [--target web|mobile...] Connect project & setup Agent Skill");
+        console.log("    npx moryn-cli scaffold <Name> [--type <hero|bento|card|table|form|modal>]");
+        console.log("    npx moryn-cli generate <Name> [--type <hero|bento|card|table|form|modal>]");
+        console.log("    npx moryn-cli login --token <TOKEN>         Save auth token");
+        console.log("    npx moryn-cli init [--target web|mobile...] Connect project & setup Agent Skill");
         console.log("    npx moryn status                        Display health & connection status\n");
         console.log("  Anti-Slop Visual Governance & Tooling:");
         console.log("    npx moryn design                        Fetch design context & tokens");

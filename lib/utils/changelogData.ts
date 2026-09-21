@@ -22,10 +22,65 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v3.0.0",
+    date: "21 September 2026",
+    title: "Moryn v3.0: Cloud FastAPI AI Engine, GitHub OAuth, & Unified Headless CLI v3.0",
+    badge: "Latest Release",
+    summary:
+      "Rilis arsitektur besar Moryn v3.0 menghadirkan pemisahan Dedicated Cloud FastAPI AI Engine, autentikasi sosial GitHub OAuth 2.0, standarisasi environment topology API_URL, publikasi paket resmi NPM moryn@3.0.0, serta penyegaran tampilan changelog berstandar editorial minimalis.",
+    highlights: [
+      {
+        type: "feat",
+        title: "Dedicated Cloud FastAPI AI Engine (Vercel Serverless Python)",
+        description:
+          "Pemisahan komputasi AI LLM dan Semantic Analysis ke microservice FastAPI mandiri berkinerja tinggi, dilengkapi multi-key pool cascade, automatic rate-limit cooldown, dan timeout resiliency.",
+        tags: ["FastAPI", "Python", "Vercel", "AI Microservice"],
+      },
+      {
+        type: "feat",
+        title: "GitHub OAuth 2.0 Social Login Integration",
+        description:
+          "Dukungan penuh masuk dengan akun GitHub melalui Better-Auth, melengkapi Google OAuth dengan session management terproteksi dan redirect instan ke workspace dashboard.",
+        tags: ["Auth", "GitHub OAuth", "Better-Auth", "Security"],
+      },
+      {
+        type: "feat",
+        title: "Official NPM Package moryn-cli@3.0.0 & Unified CLI Suite",
+        description:
+          "Publikasi paket NPM resmi 'moryn-cli' v3.0.0 dengan dukungan perintah instan 'npx moryn-cli', flag fleksibel --token dan --key, alias sync, serta backward-compatibility untuk piardify.",
+        tags: ["NPM", "CLI", "Developer Experience", "NPX"],
+      },
+      {
+        type: "improvement",
+        title: "Dynamic API_URL Environment Architecture",
+        description:
+          "Sentralisasi endpoint backend melalui environment variable API_URL dengan normalisasi trailing-slash otomatis dan fallback multi-tier ke FastAPI lokal.",
+        tags: ["Architecture", "Environment", "Next.js 16"],
+      },
+      {
+        type: "improvement",
+        title: "Editorial Minimalist Changelog & Frameless Brand Mark",
+        description:
+          "Redesign total halaman changelog dengan layout editorial bebas badge berlebih, tipografi tajam, serta standardisasi logo 1:1 frameless di seluruh antarmuka aplikasi.",
+        tags: ["Design System", "UI/UX", "Branding", "Anti-Slop"],
+      },
+    ],
+    codeSnippet: {
+      language: "bash",
+      code: `# Authenticate with Moryn CLI v3.0
+npx moryn-cli login --token <YOUR_MORYN_API_KEY>
+
+# Initialize workspace & provision dual agent skills
+npx moryn-cli init
+
+# Verify system & AI Engine connectivity
+npx moryn-cli status`,
+    },
+  },
+  {
     version: "v2.14.0",
     date: "24 Agustus 2026",
     title: "Custom Multi-API Key Pool & Intelligent Fallback Cascade (BYOK)",
-    badge: "Latest Release",
     summary:
       "Dukungan kustomisasi Bring Your Own Key (BYOK) yang memungkinkan pengguna memasukkan lebih dari satu API Key (Google Gemini & OpenRouter) dengan sistem Multi-Tier Fallback Cascade otomatis untuk mencegah kegagalan akibat limit kuota / rate limits.",
     highlights: [
