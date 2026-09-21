@@ -93,16 +93,16 @@ export default function DashboardSidebar({
           <div className="flex items-center justify-between">
             <Link
               href="/dashboard"
-              className="flex items-center gap-3 group text-decoration-none"
+              className="flex items-center gap-2.5 group text-decoration-none"
             >
               {/* Moryn 1:1 Logo (Frameless) */}
-              <div className="w-9 h-9 relative shrink-0 flex items-center justify-center">
+              <div className="w-8 h-8 relative shrink-0 flex items-center justify-center">
                 <Image
                   src="/logo/Moryn-1-1-Light-Transparent.webp"
                   alt="Moryn Logo"
-                  width={36}
-                  height={36}
-                  className="w-full h-full object-contain"
+                  width={32}
+                  height={32}
+                  className="w-full h-full object-contain select-none transition-transform duration-200 group-hover:scale-105"
                   draggable={false}
                   priority
                 />
@@ -112,9 +112,9 @@ export default function DashboardSidebar({
               <Image
                 src="/logo/Moryn-Light-Mode.webp"
                 alt="Moryn"
-                width={165}
-                height={50}
-                className="h-[40px] w-auto object-contain"
+                width={240}
+                height={76}
+                className="h-[22px] w-auto object-contain select-none transition-opacity duration-150 group-hover:opacity-85"
                 draggable={false}
                 priority
               />

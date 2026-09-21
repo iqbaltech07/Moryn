@@ -164,20 +164,22 @@ export default function ProjectHeaderBrand({
             textDecoration: "none",
             flexShrink: 0,
           }}
+          className="hover:opacity-85 transition-opacity"
         >
           <Image
             src="/logo/Moryn-Light-Mode.webp"
             alt="Moryn"
-            width={140}
-            height={44}
+            width={240}
+            height={76}
             priority
             draggable={false}
             style={{
-              height: 32,
+              height: 21,
               width: "auto",
               objectFit: "contain",
               display: "block",
             }}
+            className="select-none"
           />
         </Link>
 

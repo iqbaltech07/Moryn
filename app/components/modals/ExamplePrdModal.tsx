@@ -53,152 +53,52 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
       role="dialog"
       aria-modal="true"
       aria-label="Example PRD Preview"
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 100,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "rgba(8, 11, 20, 0.85)",
-        backdropFilter: "blur(4px)",
-        padding: "16px",
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/45 backdrop-blur-xs"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1000px",
-          height: "85vh",
-          background: "var(--bg-base)",
-          border: "1px solid var(--border-hairline)",
-          borderRadius: "var(--radius-lg)",
-          display: "flex",
-          flexDirection: "column",
-          overflow: "hidden",
-        }}
-      >
+      <div className="w-full max-w-[1060px] h-[88vh] bg-[#fcfbf8] border border-[#141817]/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-left">
         {/* Modal Header */}
-        <header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "12px 20px",
-            borderBottom: "1px solid var(--border-hairline)",
-            background: "var(--bg-elevated)",
-            flexShrink: 0,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: "var(--radius-md)",
-                border: "1px solid var(--border-hairline)",
-                background: "var(--bg-base)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--color-signal)",
-              }}
-              aria-hidden="true"
-            >
-              <FileText size={14} />
+        <header className="flex items-center justify-between px-5 sm:px-6 py-3.5 border-b border-[#141817]/8 bg-[#fcfbf8]/95 backdrop-blur-md shrink-0">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-[#e15b39]/12 flex items-center justify-center text-[#e15b39] shrink-0">
+              <FileText size={16} strokeWidth={2.2} />
             </div>
             <div>
-              <h3
-                style={{
-                  fontFamily: "var(--font-body)",
-                  fontSize: "14px",
-                  fontWeight: 700,
-                  color: "var(--fg-primary)",
-                  margin: 0,
-                }}
-              >
-                Example PRD Preview
-              </h3>
-              <p
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "10px",
-                  color: "var(--fg-muted)",
-                  margin: 0,
-                  letterSpacing: "0.06em",
-                }}
-              >
-                REF: PRD-2026-0088 · Moryn · 8 sections
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-[#141817] m-0">
+                  Example PRD Preview
+                </h3>
+                <span className="px-2 py-0.5 rounded-full bg-[#ecfdf5] border border-[#a7f3d0] text-[10px] font-mono text-[#065f46] font-medium hidden sm:inline-flex">
+                  Production Verified
+                </span>
+              </div>
+              <p className="text-[11px] font-mono text-[#71717a] m-0 mt-0.5 tracking-tight">
+                REF: PRD-2026-MORYN · 10-Section Anti-Drift Architecture · 10ms Sync
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close modal"
-            style={{
-              background: "transparent",
-              border: "1px solid var(--border-hairline)",
-              color: "var(--fg-secondary)",
-              cursor: "pointer",
-              padding: "6px",
-              borderRadius: "var(--radius-md)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "border-color 0.15s, color 0.15s",
-            }}
-            onMouseEnter={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.borderColor = "var(--color-mist)";
-              el.style.color = "var(--fg-primary)";
-            }}
-            onMouseLeave={(e) => {
-              const el = e.currentTarget as HTMLElement;
-              el.style.borderColor = "var(--border-hairline)";
-              el.style.color = "var(--fg-secondary)";
-            }}
+            className="p-1.5 rounded-lg border border-[#141817]/10 bg-white text-[#71717a] hover:text-[#141817] hover:bg-[#f5f2ea] transition cursor-pointer"
           >
             <X size={16} />
           </button>
         </header>
 
         {/* Body */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
+        <div className="flex flex-1 overflow-hidden">
           {/* TOC Sidebar */}
           <aside
-            style={{
-              width: "210px",
-              flexShrink: 0,
-              borderRight: "1px solid var(--border-hairline)",
-              background: "var(--bg-base)",
-              overflowY: "auto",
-              display: "flex",
-              flexDirection: "column",
-            }}
+            className="w-[220px] shrink-0 border-r border-[#141817]/8 bg-[#fcfbf9] overflow-y-auto flex flex-col hidden sm:flex"
             aria-label="Table of contents"
           >
-            <div
-              style={{
-                padding: "16px 14px 8px",
-                borderBottom: "1px solid var(--border-hairline)",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "var(--font-mono)",
-                  fontSize: "9px",
-                  fontWeight: 700,
-                  letterSpacing: "0.14em",
-                  color: "var(--fg-muted)",
-                  textTransform: "uppercase",
-                  margin: 0,
-                }}
-              >
+            <div className="px-4 py-3 border-b border-[#141817]/6">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#85858a] m-0">
                 Contents
               </p>
             </div>
-            <nav style={{ flex: 1, overflowY: "auto", padding: "8px 8px 16px" }}>
+            <nav className="flex-1 overflow-y-auto p-2 space-y-1">
               {toc.map((item) => {
                 const isActive = activeTocId === item.id;
                 const isSub = item.level === 3;
@@ -206,29 +106,15 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
                   <button
                     key={item.id}
                     onClick={() => scrollToHeading(item.id)}
-                    style={{
-                      display: "block",
-                      width: "100%",
-                      textAlign: "left",
-                      fontFamily: "var(--font-mono)",
-                      fontSize: isSub ? "10px" : "11px",
-                      lineHeight: 1.4,
-                      padding: isSub ? "5px 10px 5px 20px" : "7px 10px",
-                      borderRadius: "var(--radius-sm)",
-                      background: isActive ? "var(--bg-elevated)" : "transparent",
-                      color: isActive ? "var(--color-signal)" : (isSub ? "var(--fg-muted)" : "var(--fg-secondary)"),
-                      fontWeight: isActive ? 600 : 400,
-                      border: "none",
-                      borderLeft: isActive
-                        ? "2px solid var(--color-signal)"
-                        : "2px solid transparent",
-                      cursor: "pointer",
-                      transition: "all 0.1s ease",
-                      marginBottom: 2,
-                      letterSpacing: "0.02em",
-                    }}
+                    className={`block w-full text-left text-xs transition-all duration-100 rounded-md cursor-pointer ${
+                      isSub ? "pl-5 pr-2 py-1 text-[11px]" : "px-2.5 py-1.5 font-medium"
+                    } ${
+                      isActive
+                        ? "bg-[#e15b39]/10 text-[#e15b39] font-bold border-l-2 border-[#e15b39]"
+                        : "text-[#57575c] hover:text-[#141817] hover:bg-[#141817]/[0.03]"
+                    }`}
                   >
-                    {item.text}
+                    <span className="truncate block">{item.text}</span>
                   </button>
                 );
               })}
@@ -238,12 +124,7 @@ export default function ExamplePrdModal({ onClose }: { onClose: () => void }) {
           {/* Document content */}
           <div
             ref={contentRef}
-            style={{
-              flex: 1,
-              padding: "32px 44px",
-              overflowY: "auto",
-              background: "var(--bg-base)",
-            }}
+            className="flex-1 px-6 sm:px-10 py-8 overflow-y-auto bg-[#fcfbf8]"
           >
             <MarkdownRenderer
               content={PRD_TEMPLATE}
