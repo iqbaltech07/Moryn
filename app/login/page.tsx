@@ -38,14 +38,14 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FCFBF8] selection:bg-[#E05A38]/15 text-neutral-900 overflow-x-hidden">
-      <header className="h-[76px] sm:h-[84px] flex items-center justify-center border-b border-neutral-200/40 shrink-0 relative z-10">
+      <header className="h-16 flex items-center justify-center border-b border-neutral-200/40 shrink-0 relative z-10">
         <Link href="/" className="inline-flex items-center hover:opacity-85 transition-opacity">
           <Image
             src="/logo/Moryn-Light-Mode.webp"
             alt="Moryn"
-            width={800}
-            height={200}
-            className="h-11 sm:h-12 md:h-[52px] w-auto object-contain"
+            width={240}
+            height={76}
+            className="h-6 sm:h-[26px] w-auto object-contain select-none transition-opacity duration-150"
             priority
           />
         </Link>
@@ -151,9 +151,9 @@ export default function LoginPage() {
                 <Image
                   src="/logo/Moryn-1-1-Light-Transparent.webp"
                   alt="Moryn Logo"
-                  width={48}
-                  height={48}
-                  className="w-12 h-12 object-contain"
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 object-contain select-none"
                   priority
                 />
               </div>
@@ -229,9 +229,9 @@ export default function LoginPage() {
             <Image
               src="/logo/Moryn-Light-Mode.webp"
               alt="Moryn"
-              width={800}
-              height={200}
-              className="h-7 sm:h-8 w-auto object-contain"
+              width={240}
+              height={76}
+              className="h-5 sm:h-6 w-auto object-contain select-none"
             />
           </Link>
           <nav className="hidden sm:flex items-center gap-5 text-[11px] font-semibold tracking-widest uppercase text-neutral-400">
