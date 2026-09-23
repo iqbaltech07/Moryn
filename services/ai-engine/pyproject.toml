@@ -5,4 +5,4 @@ description = "Dedicated AI Generation and Agentic Engine for Moryn"
 requires-python = ">=3.10"
 
 [tool.vercel]
-entrypoint = "api/index.py:app"
+entrypoint = "app.main:app"

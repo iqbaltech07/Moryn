@@ -1,2 +1,2 @@
 [tool.vercel]
-entrypoint = "services/ai-engine/api/index.py:app"
+entrypoint = "main:app"
