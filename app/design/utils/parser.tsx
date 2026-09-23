@@ -492,8 +492,8 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
       return;
     }
 
-    // 3. Check Bullet List Item: - or * or â€¢
-    const bulletMatch = trimmed.match(/^[-*â€¢]\s+(.+)$/);
+    // 3. Check Bullet List Item: - or * or bullet
+    const bulletMatch = trimmed.match(/^[-*\u2022]\s+(.+)$/);
     if (bulletMatch) {
       flushKv();
       flushTable();
@@ -508,7 +508,7 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
         title = boldMatch[1].trim();
         desc = boldMatch[2].trim();
       } else {
-        const splitParts = itemText.split(/[:â€”â€“]\s*(.+)/);
+        const splitParts = itemText.split(/[:\u2014\u2013]\s*(.+)/);
         if (splitParts.length >= 2) {
           title = splitParts[0].trim();
           desc = splitParts[1] ? splitParts[1].trim() : "";
@@ -523,7 +523,7 @@ export function renderStructuredAccordionContent(content: string, colorMap: Reco
         token = tokenMatch[0];
       }
 
-      desc = desc.replace(/^[:â€”â€“]\s*/, "");
+      desc = desc.replace(/^[:\u2014\u2013]\s*/, "");
 
       if (indent >= 2 && currentListItems.length > 0) {
         const parent = currentListItems[currentListItems.length - 1];

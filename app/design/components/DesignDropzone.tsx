@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import { Upload, Sparkles, Layout, Globe, ShieldCheck } from "lucide-react";
 
 interface DesignDropzoneProps {
@@ -98,7 +98,7 @@ export default function DesignDropzone({
                 </span>
               </div>
               <span style={{ fontFamily: "var(--font-body)", fontSize: "10.5px", color: "var(--fg-muted)", lineHeight: 1.3 }}>
-                App Shell, Sidebar, TanStack Table, cmdk (âŒ˜K), Toasts & Skeletons.
+                App Shell, Sidebar, TanStack Table, cmdk (⌘K), Toasts & Skeletons.
               </span>
             </button>
 

@@ -8,12 +8,15 @@ export async function initCommand(options: { project?: string; target?: string; 
   try {
     const globalConfig = getGlobalConfig();
     const token = globalConfig.token || process.env.MORYN_API_KEY || process.env.PIARDIFY_API_KEY || "";
-    const baseUrl = (globalConfig.apiUrl || DEFAULT_API_URL).replace(/\/$/, "");
+    let baseUrl = (globalConfig.apiUrl || DEFAULT_API_URL).replace(/\/$/, "");
+    if (baseUrl.includes("moryn.vercel.app") || baseUrl.includes("piardify.vercel.app")) {
+      baseUrl = DEFAULT_API_URL;
+    }
     const targetDomain = (options.target || "web").toLowerCase();
 
     const statusRes = await apiRequest("/api/agent/status");
     if (!statusRes.authenticated) {
-      throw new Error("NOT_AUTHENTICATED: Run 'npx moryn login --token <TOKEN>' first.");
+      throw new Error("NOT_AUTHENTICATED: Run 'npx moryn-cli login --token <TOKEN>' first.");
     }
 
     let projectId = options.project || getProjectConfig().projectId;
@@ -142,15 +145,15 @@ if "%ACTION%"=="taste" (
   exit /b
 )
 if "%ACTION%"=="validate" (
-  npx moryn validate-ui
+  npx moryn-cli validate-ui
   exit /b
 )
 if "%ACTION%"=="theme" (
-  npx moryn init-theme
+  npx moryn-cli init-theme
   exit /b
 )
 if "%ACTION%"=="clean" (
-  npx moryn clean
+  npx moryn-cli clean
   exit /b
 )
 `;
@@ -182,9 +185,11 @@ elif [ "$ACTION" = "prd" ]; then
 elif [ "$ACTION" = "taste" ]; then
   curl -s "$API_URL/api/agent/project?projectId=$PROJECT_ID&section=taste-skill&skill=$TASK_ID" -H "Authorization: Bearer $TOKEN"
 elif [ "$ACTION" = "validate" ]; then
-  npx moryn validate-ui
+  npx moryn-cli validate-ui
 elif [ "$ACTION" = "theme" ]; then
-  npx moryn init-theme
+  npx moryn-cli init-theme
+elif [ "$ACTION" = "clean" ]; then
+  npx moryn-cli clean
 fi
 `;
     const shPath = path.join(morynDir, "sync");
@@ -216,7 +221,7 @@ fi
         fs.writeFileSync(targetSkillFile, skillContentToWrite, "utf-8");
         installedSkillPaths.push(targetSkillFile);
       } else if (skill.name === "moryn") {
-        throw new Error(`BUNDLED_SKILL_MISSING: Bundled skill file not found at ${bundledSkillPath}. Reinstall the moryn package.`);
+        throw new Error(`BUNDLED_SKILL_MISSING: Bundled skill file not found at ${bundledSkillPath}. Reinstall the moryn-cli package.`);
       }
     }
 
@@ -241,7 +246,7 @@ fi
       }));
     } else {
       console.log("\n==========================================");
-      console.log("  Moryn CLI v2.13.0 - Project Initialized");
+      console.log("  Moryn CLI v3.0.1 - Project Initialized");
       console.log("==========================================");
       console.log(`  Project Name  : ${project.appName}`);
       console.log(`  Project ID    : ${project.id}`);

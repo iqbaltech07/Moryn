@@ -61,7 +61,7 @@ async function loginCommand(options) {
             console.log(JSON.stringify({ success: false, error: "Missing --token argument or API Key input." }));
         }
         else {
-            console.error("\n[ERROR] Token is required.\nUsage: npx moryn login --token <YOUR_MORYN_API_KEY>\n");
+            console.error("\n[ERROR] Token is required.\nUsage: npx moryn-cli login --token <YOUR_MORYN_API_KEY>\n");
         }
         process.exit(1);
     }
@@ -82,7 +82,7 @@ async function loginCommand(options) {
             console.log("==========================================");
             console.log(`  User  : ${res.user?.name || "Authenticated User"} (${res.user?.email})`);
             console.log("  Status: Connected");
-            console.log("\nNext step: Run 'npx moryn init' in your project directory.\n");
+            console.log("\nNext step: Run 'npx moryn-cli init' in your project directory.\n");
         }
     }
     catch (err) {

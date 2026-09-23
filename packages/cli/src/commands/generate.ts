@@ -13,15 +13,15 @@ export async function generateCommand(
 
     if (!nameOrType && !options.type) {
       console.log("\n==========================================");
-      console.log("  🎨 Moryn Component Scaffolder v2.13.0");
+      console.log("  🎨 Moryn Component Scaffolder v3.0.1");
       console.log("==========================================");
-      console.log("  Usage: npx moryn scaffold <ComponentName> [--type <type>]\n");
+      console.log("  Usage: npx moryn-cli scaffold <ComponentName> [--type <type>]\n");
       console.log("  Available Anti-Slop Component Archetypes:");
       registry.forEach((item) => {
         console.log(`    • ${item.type.padEnd(10)} : ${item.description}`);
       });
       console.log();
-      throw new Error("MISSING_COMPONENT_NAME: Please specify component name (e.g. 'npx moryn scaffold HeroSection --type=hero')");
+      throw new Error("MISSING_COMPONENT_NAME: Please specify component name (e.g. 'npx moryn-cli scaffold HeroSection --type=hero')");
     }
 
     let componentType: ComponentType = "card";

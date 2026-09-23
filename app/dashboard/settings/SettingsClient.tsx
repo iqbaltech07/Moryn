@@ -375,8 +375,8 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   const maskedKey = apiKey
     ? `${apiKey.slice(0, 8)}${"•".repeat(16)}${apiKey.slice(-4)}`
     : hasApiKey
-    ? "••••••••••••••••••••••••••••••••"
-    : "No API Key generated yet.";
+      ? "••••••••••••••••••••••••••••••••"
+      : "No API Key generated yet.";
 
   const joinedFormatted = new Date(user.createdAt).toLocaleDateString("en-US", {
     month: "long",
@@ -415,11 +415,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
           <div className="flex items-center gap-2 mb-8 border-b border-neutral-200/60 pb-3">
             <button
               onClick={() => setActiveSection("keys")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeSection === "keys"
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${activeSection === "keys"
                   ? "bg-[#FAF3F0] text-[#E05A38] font-semibold"
                   : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70"
-              }`}
+                }`}
             >
               <Key size={16} />
               <span>{t.settings.tabWorkspaceKey}</span>
@@ -427,11 +426,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
             <button
               onClick={() => setActiveSection("byok")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeSection === "byok"
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${activeSection === "byok"
                   ? "bg-[#FAF3F0] text-[#E05A38] font-semibold"
                   : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70"
-              }`}
+                }`}
             >
               <Sparkles size={16} />
               <span>{t.settings.tabCustomKeys}</span>
@@ -439,11 +437,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
             <button
               onClick={() => setActiveSection("account")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeSection === "account"
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${activeSection === "account"
                   ? "bg-[#FAF3F0] text-[#E05A38] font-semibold"
                   : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70"
-              }`}
+                }`}
             >
               <User size={16} />
               <span>{t.settings.tabAccountPlan}</span>
@@ -451,11 +448,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
             <button
               onClick={() => setActiveSection("preferences")}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
-                activeSection === "preferences"
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${activeSection === "preferences"
                   ? "bg-[#FAF3F0] text-[#E05A38] font-semibold"
                   : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100/70"
-              }`}
+                }`}
             >
               <Languages size={16} />
               <span>{t.settings.tabPreferences}</span>
@@ -649,11 +645,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                       {customKeys.map((keyItem, index) => (
                         <article
                           key={keyItem.id}
-                          className={`${settingsStyles.keyRow} rounded-2xl border p-4 sm:p-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(20,24,23,0.06)] ${
-                            keyItem.inCooldown
+                          className={`${settingsStyles.keyRow} rounded-2xl border p-4 sm:p-5 transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgba(20,24,23,0.06)] ${keyItem.inCooldown
                               ? "border-[#E8C99F] bg-[#FFFBF4]"
                               : "border-neutral-200/80 bg-white hover:border-neutral-300"
-                          }`}
+                            }`}
                         >
                           <div className="flex flex-col lg:flex-row lg:items-center gap-4 lg:gap-6">
                             <div className="flex items-start gap-3.5 min-w-0 flex-1">
@@ -776,11 +771,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                               <button
                                 type="button"
                                 onClick={() => handleToggleCustomKey(keyItem.id, keyItem.isActive)}
-                                className={`p-2 rounded-xl border transition focus-visible:ring-2 focus-visible:ring-[#E05A38]/30 ${
-                                  keyItem.isActive
+                                className={`p-2 rounded-xl border transition focus-visible:ring-2 focus-visible:ring-[#E05A38]/30 ${keyItem.isActive
                                     ? "text-[#2F7D5C] bg-[#F0F7F3] border-[#C9E4D4] hover:bg-[#E5F3EA]"
                                     : "text-neutral-500 bg-white border-neutral-200 hover:bg-neutral-50"
-                                }`}
+                                  }`}
                                 title={keyItem.isActive ? "Disable key" : "Enable key"}
                                 aria-label={keyItem.isActive ? `Disable ${keyItem.label}` : `Enable ${keyItem.label}`}
                               >
@@ -834,11 +828,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                           {user.name || "Moryn Builder"}
                         </h2>
                         <span
-                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase border ${
-                            user.tier === "PRO"
+                          className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wider uppercase border ${user.tier === "PRO"
                               ? "bg-amber-50 text-amber-700 border-amber-200"
                               : "bg-neutral-100 text-neutral-600 border-neutral-200"
-                          }`}
+                            }`}
                         >
                           {user.tier} PLAN
                         </span>
@@ -998,13 +991,12 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
                             {/* Circle Icon */}
                             <div
-                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${
-                                isCurrent
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all ${isCurrent
                                   ? "ring-2 ring-[#E05A38] ring-offset-2 scale-110 shadow-xs text-white"
                                   : isUnlocked
-                                  ? "text-white shadow-2xs"
-                                  : "bg-neutral-100 text-neutral-400 border border-neutral-200"
-                              }`}
+                                    ? "text-white shadow-2xs"
+                                    : "bg-neutral-100 text-neutral-400 border border-neutral-200"
+                                }`}
                               style={isUnlocked ? { background: r.color } : {}}
                               title={`${r.name} - ${r.description}`}
                             >
@@ -1017,13 +1009,12 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
                             {/* Rank title */}
                             <p
-                              className={`text-[10px] font-bold mt-2 leading-tight max-w-[70px] truncate ${
-                                isCurrent
+                              className={`text-[10px] font-bold mt-2 leading-tight max-w-[70px] truncate ${isCurrent
                                   ? "text-[#E05A38]"
                                   : isUnlocked
-                                  ? "text-neutral-800"
-                                  : "text-neutral-400"
-                              }`}
+                                    ? "text-neutral-800"
+                                    : "text-neutral-400"
+                                }`}
                               title={r.name}
                             >
                               {r.name}
@@ -1115,11 +1106,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                       setLanguage("en");
                       toast.success(t.settings.switchedSuccess);
                     }}
-                    className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
-                      language === "en"
+                    className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${language === "en"
                         ? "border-[#E05A38] bg-[#FAF3F0]/40 shadow-xs"
                         : "border-neutral-200/80 bg-white hover:border-neutral-300"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -1158,11 +1148,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                       setLanguage("id");
                       toast.success(t.settings.switchedSuccess);
                     }}
-                    className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${
-                      language === "id"
+                    className={`relative p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between ${language === "id"
                         ? "border-[#E05A38] bg-[#FAF3F0]/40 shadow-xs"
                         : "border-neutral-200/80 bg-white hover:border-neutral-300"
-                    }`}
+                      }`}
                   >
                     <div>
                       <div className="flex items-center justify-between mb-3">
@@ -1234,11 +1223,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                           setNewProvider("gemini");
                           setNewModel(geminiModels[0]?.id || "gemini-2.5-flash");
                         }}
-                        className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${
-                          newProvider === "gemini"
+                        className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${newProvider === "gemini"
                             ? "bg-[#FAF3F0] text-[#E05A38] border-[#E05A38] font-semibold"
                             : "bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                        }`}
+                          }`}
                       >
                         Google Gemini
                       </button>
@@ -1252,11 +1240,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                             "meta-llama/llama-3.3-70b-instruct:free";
                           setNewModel(defaultModel);
                         }}
-                        className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${
-                          newProvider === "openrouter"
+                        className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${newProvider === "openrouter"
                             ? "bg-[#FAF3F0] text-[#E05A38] border-[#E05A38] font-semibold"
                             : "bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50"
-                        }`}
+                          }`}
                       >
                         OpenRouter
                       </button>

@@ -6,9 +6,12 @@ const constants_js_1 = require("../config/constants.js");
 async function apiRequest(endpoint, options = {}) {
     const globalConfig = (0, store_js_1.getGlobalConfig)();
     const token = options.token || globalConfig.token || process.env.MORYN_API_KEY || process.env.PIARDIFY_API_KEY || "";
-    const baseUrl = (options.apiUrl || globalConfig.apiUrl || constants_js_1.DEFAULT_API_URL).replace(/\/$/, "");
+    let baseUrl = (options.apiUrl || globalConfig.apiUrl || constants_js_1.DEFAULT_API_URL).replace(/\/$/, "");
+    if (baseUrl.includes("moryn.vercel.app") || baseUrl.includes("piardify.vercel.app")) {
+        baseUrl = constants_js_1.DEFAULT_API_URL;
+    }
     if (!token && !endpoint.includes("/api/agent/status")) {
-        throw new Error("NOT_AUTHENTICATED: Please run 'npx moryn login --token <TOKEN>' first.");
+        throw new Error("NOT_AUTHENTICATED: Please run 'npx moryn-cli login --token <TOKEN>' first.");
     }
     const url = `${baseUrl}${endpoint}`;
     const headers = {

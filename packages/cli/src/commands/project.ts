@@ -35,7 +35,7 @@ export async function projectCommand(section?: string, options: { project?: stri
     const projectId = options.project || getProjectConfig().projectId;
 
     if (!projectId) {
-      throw new Error("NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.");
+      throw new Error("NO_PROJECT_LINKED: Run 'npx moryn-cli init' or specify '--project <projectId>' first.");
     }
 
     if (sec === "current") sec = "overview";

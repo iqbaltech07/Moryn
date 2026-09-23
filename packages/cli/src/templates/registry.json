@@ -10,7 +10,7 @@
     "description": "Editorial technical hero section with structural narrative and domain-specific blueprint diagram.",
     "tags": ["hero", "landing", "header", "cta", "anti-slop"],
     "dependencies": ["react"],
-    "cliCommand": "npx moryn scaffold HeroSection --type=hero",
+    "cliCommand": "npx moryn-cli scaffold HeroSection --type=hero",
     "aiPrompt": "Tolong buatkan komponen 'HeroSection' di React + Tailwind CSS sesuai standar Moryn Anti-Slop:\n1. Editorial narrative di sisi kiri dengan judul tegas dan subtitle bergaris tepi hijau #408A71.\n2. Blueprint diagram di sisi kanan dengan grid background dan node input/engine/output terhubung.\n3. Tombol aksi berkarakter solid (#285A48) dengan ikon panah ↗.\n4. Header metadata transparan di bagian atas dengan font mono.\n5. Footer metadata arsitektur sistem (Input, Output, Mode)."
   },
   {
@@ -24,7 +24,7 @@
     "description": "Asymmetric Feature Grid (Anti-Slop Compliant). Spatial whitespace separation, no nested card-in-card > 2 levels.",
     "tags": ["bento", "grid", "cards", "features", "anti-slop"],
     "dependencies": ["react"],
-    "cliCommand": "npx moryn scaffold BentoGrid --type=bento",
+    "cliCommand": "npx moryn-cli scaffold BentoGrid --type=bento",
     "aiPrompt": "Tolong buatkan komponen 'BentoGrid' di React + Tailwind CSS sesuai standar Moryn Anti-Slop:\n1. Grid asimetris 3 kolom (2 kolom untuk kartu utama, 1 kolom untuk kartu pendukung).\n2. Background kartu #121318 dengan border halus #222634 dan rounded-md (6px).\n3. Badge nomor pilar font mono di pojok kiri atas (Pillar 01 text-[#6366F1], Pillar 02 text-[#10B981]).\n4. Tipografi tegas (#F3F4F6) dan teks deskripsi #9CA3AF.\n5. Bebas dari nested card bertingkat-tingkat dan efek glow berlebihan."
   },
   {
@@ -38,7 +38,7 @@
     "description": "Streamlined Metric KPI Cards with compact currency formatting (Rp M/Jt/Rb) and zero-slop solid surfaces.",
     "tags": ["card", "metrics", "kpi", "dashboard", "anti-slop"],
     "dependencies": ["react"],
-    "cliCommand": "npx moryn scaffold MetricCards --type=card",
+    "cliCommand": "npx moryn-cli scaffold MetricCards --type=card",
     "aiPrompt": "Tolong buatkan komponen 'MetricCards' di React + Tailwind CSS sesuai standar Moryn Anti-Slop:\n1. Tiga kartu metrik responsif berlatar #121318 dengan border halus #222634.\n2. Label uppercase dengan ukuran font 10px - 12px (#6B7280).\n3. Nilai angka menggunakan font-mono yang tebal (bold) dan angka yang jelas.\n4. Badge persentase perubahan di pojok kanan dengan background emerald transparan (#10B981/10).\n5. Hover effect transisi halus ke #181A22 tanpa efek zoom berlebihan."
   },
   {
@@ -52,7 +52,7 @@
     "description": "High-density Utilitarian Data Matrix. Clean row dividers, status pills, and transaction audit logs.",
     "tags": ["table", "data", "list", "grid", "anti-slop"],
     "dependencies": ["react"],
-    "cliCommand": "npx moryn scaffold DataTable --type=table",
+    "cliCommand": "npx moryn-cli scaffold DataTable --type=table",
     "aiPrompt": "Tolong buatkan komponen 'DataTable' di React + Tailwind CSS sesuai standar Moryn Anti-Slop:\n1. Header tabel berlatar #121318 dengan teks uppercase tracking-wider (#9CA3AF).\n2. Kolom ID dan tanggal menggunakan font-mono untuk keterbacaan tinggi.\n3. Row divider tipis #222634 dengan transisi hover baris ke #121318.\n4. Badge status ringkas (active / pending) dengan aksen warna yang proporsional.\n5. Angka nominal dirata kanan (text-right) dengan format yang rapi."
   },
   {
@@ -66,7 +66,7 @@
     "description": "Accessible Configuration Form with clear uppercase labels, focus rings, and environment selection.",
     "tags": ["form", "input", "select", "settings", "anti-slop"],
     "dependencies": ["react"],
-    "cliCommand": "npx moryn scaffold ConfigForm --type=form",
+    "cliCommand": "npx moryn-cli scaffold ConfigForm --type=form",
     "aiPrompt": "Tolong buatkan komponen 'ConfigForm' di React + Tailwind CSS sesuai standar Moryn Anti-Slop:\n1. Label input uppercase eksplisit (#9CA3AF) dengan font-semibold 11px.\n2. Input field berlatar #090A0C dengan border halus #222634 dan focus ring #6366F1.\n3. Dropdown select bergaya minimalis yang serasi dengan tema dark modern.\n4. Tombol submit berlatar #6366F1 dengan hover ke #4F46E5.\n5. Struktur kartu form #121318 dengan padding vertikal yang seimbang."
   },
   {
@@ -80,7 +80,7 @@
     "description": "Elevated Dialog Modal Layer. Surface level 2 (#181A22), backdrop blur, and explicit confirmation actions.",
     "tags": ["modal", "dialog", "overlay", "popup", "anti-slop"],
     "dependencies": ["react"],
-    "cliCommand": "npx moryn scaffold ConfirmModal --type=modal",
+    "cliCommand": "npx moryn-cli scaffold ConfirmModal --type=modal",
     "aiPrompt": "Tolong buatkan komponen 'ConfirmModal' di React + Tailwind CSS sesuai standar Moryn Anti-Slop:\n1. Modal elevated surface #181A22 dengan bayangan lembut dan backdrop blur gelap (black/70).\n2. Header modal dengan border-bottom #222634 dan tombol close ✕ yang halus.\n3. Paragraf deskripsi yang jelas (#9CA3AF) dengan line-height yang nyaman.\n4. Tombol aksi di kanan bawah: Batal (outline/muted) dan Konfirmasi (#6366F1).\n5. Bebas dari animasi popup berlebihan yang mengganggu interaksi."
   }
 ]

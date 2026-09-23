@@ -61,18 +61,17 @@ export function getScaffoldTemplate(name: string, type: ComponentType): string {
   const filename = found?.file || `${type}.tsx`;
   const targetName = name || defaultName;
 
-  // In Node.js CLI runtime, read the component file dynamically
-  if (typeof window === "undefined") {
+  // In Node.js CLI runtime (not Next.js web / SSR runtime), read the component file dynamically
+  if (typeof window === "undefined" && !process.env.NEXT_RUNTIME) {
     try {
       const nodeFs = require("fs");
       const nodePath = require("path");
-      const templatesDir = typeof __dirname !== "undefined" ? __dirname : process.cwd();
+      const templatesDir = typeof __dirname !== "undefined" ? __dirname : ".";
 
       const candidatePaths = [
         nodePath.join(templatesDir, filename),
         nodePath.join(templatesDir, "src", "templates", filename),
         nodePath.join(templatesDir, "packages", "cli", "src", "templates", filename),
-        nodePath.join(process.cwd(), "packages", "cli", "src", "templates", filename),
       ];
 
       for (const p of candidatePaths) {

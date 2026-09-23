@@ -1,8 +1,8 @@
 """Quick test to verify imports, schemas, and FastAPI route registration."""
 from fastapi.testclient import TestClient
-from app.main import app
+from app.main import app as _app
 
-client = TestClient(app)
+client = TestClient(_app)
 
 def test_root():
     response = client.get("/")

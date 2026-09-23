@@ -185,6 +185,7 @@ export const apiClient = {
         updatedMarkdown: string;
         markdown?: string;
         diffSummary?: string;
+        patchedSection?: string;
         modelUsed?: string;
         provider?: string;
         actions?: Array<{

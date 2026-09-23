@@ -151,7 +151,7 @@ async function cleanCommand(options) {
     }
     else {
         console.log("\n==========================================");
-        console.log("  Moryn Codebase Cleaner v2.13.0");
+        console.log("  Moryn Codebase Cleaner v3.0.1");
         console.log("==========================================\n");
         if (orphanedFiles.length > 0) {
             console.log(`  ${autoFix ? "🗑️  Pruned" : "⚠️  Found"} ${orphanedFiles.length} Unused/Orphaned Component(s):`);

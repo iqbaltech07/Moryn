@@ -130,7 +130,7 @@ export async function cleanCommand(options: { fix?: boolean; dryRun?: boolean; j
     }));
   } else {
     console.log("\n==========================================");
-    console.log("  Moryn Codebase Cleaner v2.13.0");
+    console.log("  Moryn Codebase Cleaner v3.0.1");
     console.log("==========================================\n");
 
     if (orphanedFiles.length > 0) {

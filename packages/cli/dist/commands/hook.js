@@ -50,7 +50,7 @@ async function hookCommand(options) {
             const preCommitScript = `#!/bin/sh
 # Moryn Anti-Slop Visual Governance Pre-Commit Hook
 echo "🔍 Running Moryn Anti-Slop Linter..."
-npx moryn validate-ui
+npx moryn-cli validate-ui
 if [ $? -ne 0 ]; then
   echo "❌ Commit rejected: Moryn Anti-Slop Linter found violations."
   exit 1
@@ -67,7 +67,7 @@ fi
                 const pkgContent = fs.readFileSync(pkgPath, "utf-8");
                 const pkg = JSON.parse(pkgContent);
                 pkg.scripts = pkg.scripts || {};
-                pkg.scripts.prebuild = "npx moryn validate-ui";
+                pkg.scripts.prebuild = "npx moryn-cli validate-ui";
                 fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2), "utf-8");
                 packageJsonUpdated = true;
             }
@@ -85,7 +85,7 @@ fi
             console.log("  Moryn Guardrail Hooks Installed");
             console.log("==========================================");
             console.log(`  Git Pre-Commit : ${gitHookInstalled ? "Installed -> .git/hooks/pre-commit" : "Skipped (No .git folder)"}`);
-            console.log(`  Package Prebuild: ${packageJsonUpdated ? "Added 'prebuild': 'npx moryn validate-ui'" : "Skipped"}`);
+            console.log(`  Package Prebuild: ${packageJsonUpdated ? "Added 'prebuild': 'npx moryn-cli validate-ui'" : "Skipped"}`);
             console.log("\nCommits and builds will now automatically enforce Anti-Slop rules.\n");
         }
     }

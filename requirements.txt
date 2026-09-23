@@ -1,0 +1,14 @@
+# Core Web & API Framework
+fastapi>=0.115.0
+
+# Modern Schema & Settings (Pydantic v2)
+pydantic>=2.10.0
+pydantic-settings>=2.6.0
+
+# AI & LLM SDKs
+google-genai>=1.0.0
+openai>=1.50.0
+
+# Async HTTP Client & Environment
+httpx>=0.28.0
+python-dotenv>=1.0.0

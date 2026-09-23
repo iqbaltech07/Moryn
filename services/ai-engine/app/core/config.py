@@ -23,6 +23,8 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "https://localhost:3000",
         "http://127.0.0.1:3000",
+        "https://moryn.web.id",
+        "http://moryn.web.id",
         "https://moryn.vercel.app",
         "https://piardify.vercel.app",
     ]

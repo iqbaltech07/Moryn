@@ -1,6 +1,6 @@
 {
   "name": "moryn-cli",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Official Moryn AI Agent CLI & Visual Governance Engine",
   "main": "./dist/index.js",
   "bin": {
@@ -22,7 +22,7 @@
     "url": "https://github.com/iqbaltech07/Piardify.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://moryn.vercel.app",
+  "homepage": "https://moryn.web.id",
   "keywords": [
     "moryn",
     "piardify",

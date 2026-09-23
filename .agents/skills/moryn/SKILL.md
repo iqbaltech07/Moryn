@@ -18,23 +18,23 @@ To prevent AI Agent cognitive overload or token duplication confusion, follow th
 
 ## 🛠️ Direct Native Commands (Ultra-Fast 10ms Execution)
 
-The Moryn CLI (`npx moryn init`) pre-generates lightweight 10ms native helper scripts (`.moryn/sync` or `.moryn/sync.cmd`) and local blueprint file `.moryn/context.md` for zero-latency execution:
+The Moryn CLI (`npx moryn-cli init`) pre-generates lightweight 10ms native helper scripts (`.moryn/sync` or `.moryn/sync.cmd`) and local blueprint file `.moryn/context.md` for zero-latency execution:
 
 | Action | Native Command (10ms Execution) | Fallback NPX Command |
 | :--- | :--- | :--- |
-| **Read Project Blueprint & Context** | Read `.moryn/context.md` (0ms) | `npx moryn project context --json` |
-| **Fetch Design Context & Tokens** | Read `.moryn/tokens.json` | `npx moryn design` |
-| **Get Active Task** | `.moryn/sync current` | `npx moryn task current --json` |
-| **Start Task (`IN_PROGRESS`)** | `.moryn/sync start <id>` | `npx moryn task start <id>` |
-| **Complete Task (`DONE`)** | `.moryn/sync complete <id>` | `npx moryn task complete <id>` |
-| **Record Task Failure (`FAILED`)** | `.moryn/sync fail <id> "<reason>"` | `npx moryn task fail <id> --reason "<r>"` |
-| **Fetch Complete Taste Skill** | `.moryn/sync taste <skill-key>` | `npx moryn project taste-skill --skill <skill-key>` |
-| **Fetch Modular Design Tokens** | Read `.moryn/tokens.json` | `npx moryn project tokens` |
-| **Fetch Anti-Slop Rules** | Read `.moryn/anti_slop_rules.md` | `npx moryn project rules` |
-| **Run AST Anti-Slop Linter** | `.moryn/sync validate` | `npx moryn validate-ui` |
-| **Generate Theme Boilerplate** | `.moryn/sync theme` | `npx moryn init-theme` |
-| **Scaffold Anti-Slop Component** | N/A | `npx moryn scaffold <Name> --type=<hero\|bento\|card\|table\|form\|modal>` |
-| **Install Guardrail Hooks** | N/A | `npx moryn hook` |
+| **Read Project Blueprint & Context** | Read `.moryn/context.md` (0ms) | `npx moryn-cli project context --json` |
+| **Fetch Design Context & Tokens** | Read `.moryn/tokens.json` | `npx moryn-cli design` |
+| **Get Active Task** | `.moryn/sync current` | `npx moryn-cli task current --json` |
+| **Start Task (`IN_PROGRESS`)** | `.moryn/sync start <id>` | `npx moryn-cli task start <id>` |
+| **Complete Task (`DONE`)** | `.moryn/sync complete <id>` | `npx moryn-cli task complete <id>` |
+| **Record Task Failure (`FAILED`)** | `.moryn/sync fail <id> "<reason>"` | `npx moryn-cli task fail <id> --reason "<r>"` |
+| **Fetch Complete Taste Skill** | `.moryn/sync taste <skill-key>` | `npx moryn-cli project taste-skill --skill <skill-key>` |
+| **Fetch Modular Design Tokens** | Read `.moryn/tokens.json` | `npx moryn-cli project tokens` |
+| **Fetch Anti-Slop Rules** | Read `.moryn/anti_slop_rules.md` | `npx moryn-cli project rules` |
+| **Run AST Anti-Slop Linter** | `.moryn/sync validate` | `npx moryn-cli validate-ui` |
+| **Generate Theme Boilerplate** | `.moryn/sync theme` | `npx moryn-cli init-theme` |
+| **Scaffold Anti-Slop Component** | N/A | `npx moryn-cli scaffold <Name> --type=<hero\|bento\|card\|table\|form\|modal>` |
+| **Install Guardrail Hooks** | N/A | `npx moryn-cli hook` |
 
 ---
 
@@ -82,7 +82,7 @@ Before starting code modifications, update the Kanban status to `IN_PROGRESS`:
 >    - `1. PRODUCT VISUAL METAPHOR` (Karakter estetika spesifik domain produk)
 >    - `2. BESPOKE INTERACTION RECIPES` (Interaksi unik yang dipilih beserta alasannya)
 >    - `3. INTENTIONALLY REJECTED CLICHES` (Template generik yang sengaja ditolak demi keunikan)
-- **MANDATORY DESIGN CONTEXT GATE (AH-018)**: Sebelum menulis/mengubah komponen UI/frontend, AI Agent WAJIB membaca 100% Konteks Desain (`npx moryn design` atau `.moryn/sync design`) TANPA ADA SATUPUN ATURAN/TOKEN YANG TERABAIKAN.
+- **MANDATORY DESIGN CONTEXT GATE (AH-018)**: Sebelum menulis/mengubah komponen UI/frontend, AI Agent WAJIB membaca 100% Konteks Desain (`npx moryn-cli design` atau `.moryn/sync design`) TANPA ADA SATUPUN ATURAN/TOKEN YANG TERABAIKAN.
 - **MANDATORY SHADCN/UI MANDATE (AH-021)**: AI Agent WAJIB MUTLAK menggunakan `shadcn/ui` primitives (`@/components/ui/*`) untuk seluruh pembuatan dan pengeditan komponen UI (Button, Input, Dialog, Select, Card, Sheet, DropdownMenu, Table, Tabs, Tooltip, Popover, Avatar, Badge). Dilarang mengarang komponen raw HTML polos dari nol.
 - **MANDATORY RUNTIME FIDELITY GATE (AH-022)**: Seluruh tombol, link, form, dan modal WAJIB memiliki *runtime handler* aktif (state mutation, toast notification, modal dispatch, atau deep link). DILARANG MENINGGALKAN stub kosong (`onClick={() => {}}`), dead link (`href="#"`), atau `alert()` primitif.
 - **MANDATORY DEAD-CODE REFACTORING HYGIENE (AH-023)**: Saat merefaktor atau mengubah kode, AI Agent WAJIB menghapus tuntas kode mati, blok komentar usang, dan import yang tidak terpakai. Dilarang menumpuk kode baru di atas kode lama tanpa *pruning*.
@@ -93,12 +93,12 @@ Before starting code modifications, update the Kanban status to `IN_PROGRESS`:
   ```bash
   .moryn/sync taste <active_key>
   ```
-  atau `npx moryn project taste-skill --skill <active_key>`.
+  atau `npx moryn-cli project taste-skill --skill <active_key>`.
 
 ### Step 4: Local Verification (CRITICAL GATE)
 **DO NOT claim completion or mark a task as DONE before running local checks.**
 Execute the following in the terminal:
-1. `npx moryn validate-ui` (or `.moryn/sync validate`)
+1. `npx moryn-cli validate-ui` (or `.moryn/sync validate`)
 2. `npm run lint` (or project linter)
 3. `npm run build` (or relevant compiler/type check)
 

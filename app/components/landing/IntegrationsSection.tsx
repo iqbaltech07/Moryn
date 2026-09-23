@@ -229,8 +229,8 @@ export default function IntegrationsSection() {
                     onMouseLeave={() => setHoveredAgent(null)}
                     whileHover={{ y: -4, scale: 1.02 }}
                     className={`bg-white p-5 rounded-2xl border transition-all duration-200 flex flex-col items-center text-center cursor-pointer shadow-xs ${isHovered
-                        ? "border-[#e85d3f] shadow-[0_10px_28px_rgba(232,93,63,0.14)]"
-                        : "border-[#141817]/8 hover:border-[#141817]/18 hover:shadow-md"
+                      ? "border-[#e85d3f] shadow-[0_10px_28px_rgba(232,93,63,0.14)]"
+                      : "border-[#141817]/8 hover:border-[#141817]/18 hover:shadow-md"
                       }`}
                   >
                     {/* Tool Icon */}
@@ -272,8 +272,8 @@ export default function IntegrationsSection() {
                     onMouseLeave={() => setHoveredAgent(null)}
                     whileHover={{ y: -4, scale: 1.02 }}
                     className={`bg-white p-5 rounded-2xl border transition-all duration-200 flex flex-col items-center text-center cursor-pointer shadow-xs ${isHovered
-                        ? "border-[#e85d3f] shadow-[0_10px_28px_rgba(232,93,63,0.14)]"
-                        : "border-[#141817]/8 hover:border-[#141817]/18 hover:shadow-md"
+                      ? "border-[#e85d3f] shadow-[0_10px_28px_rgba(232,93,63,0.14)]"
+                      : "border-[#141817]/8 hover:border-[#141817]/18 hover:shadow-md"
                       }`}
                   >
                     {/* Tool Icon */}

@@ -135,6 +135,8 @@ export class FastApiClient {
     reply: string;
     isPrdUpdated: boolean;
     updatedMarkdown?: string | null;
+    patchedSection?: string | null;
+    diffSummary?: string | null;
     modelUsed: string;
     actions?: Array<{
       id: string;

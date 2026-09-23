@@ -4,10 +4,13 @@ import { DEFAULT_API_URL } from "../config/constants.js";
 export async function apiRequest(endpoint: string, options: { method?: string; body?: any; token?: string; apiUrl?: string; rawText?: boolean } = {}): Promise<any> {
   const globalConfig = getGlobalConfig();
   const token = options.token || globalConfig.token || process.env.MORYN_API_KEY || process.env.PIARDIFY_API_KEY || "";
-  const baseUrl = (options.apiUrl || globalConfig.apiUrl || DEFAULT_API_URL).replace(/\/$/, "");
+  let baseUrl = (options.apiUrl || globalConfig.apiUrl || DEFAULT_API_URL).replace(/\/$/, "");
+  if (baseUrl.includes("moryn.vercel.app") || baseUrl.includes("piardify.vercel.app")) {
+    baseUrl = DEFAULT_API_URL;
+  }
 
   if (!token && !endpoint.includes("/api/agent/status")) {
-    throw new Error("NOT_AUTHENTICATED: Please run 'npx moryn login --token <TOKEN>' first.");
+    throw new Error("NOT_AUTHENTICATED: Please run 'npx moryn-cli login --token <TOKEN>' first.");
   }
 
   const url = `${baseUrl}${endpoint}`;
