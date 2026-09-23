@@ -1,0 +1,8 @@
+[project]
+name = "moryn-ai-engine"
+version = "1.0.0"
+description = "Dedicated AI Generation and Agentic Engine for Moryn"
+requires-python = ">=3.10"
+
+[tool.vercel]
+entrypoint = "api/index.py:app"

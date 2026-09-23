@@ -25,8 +25,6 @@ import { apiClient } from "@/lib/utils/apiClient";
 import { useProjectStore } from "@/stores/useProjectStore";
 import { useTranslation } from "@/lib/i18n";
 
-export { DEFAULT_COLOR_TOKENS, DEFAULT_ACCORDION_SECTIONS } from "./utils/parser";
-export type { ProjectDetailData, ColorToken } from "./types";
 
 function ProjectDetailContent() {
   const searchParams = useSearchParams();

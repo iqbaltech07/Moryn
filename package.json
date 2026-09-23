@@ -6,7 +6,8 @@
     "dev": "next dev --experimental-https",
     "dev:ai": "powershell -Command \"cd services/ai-engine; .\\.venv\\Scripts\\python.exe run.py\"",
     "dev:all": "concurrently -n \"NEXT,AI\" -c \"cyan,magenta\" \"npm run dev\" \"npm run dev:ai\"",
-    "build": "next build",
+    "postinstall": "prisma generate",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
