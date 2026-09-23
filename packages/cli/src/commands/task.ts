@@ -10,7 +10,7 @@ export async function taskCommand(
     const projectId = options.project || getProjectConfig().projectId;
 
     if (!projectId) {
-      throw new Error("NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.");
+      throw new Error("NO_PROJECT_LINKED: Run 'npx moryn-cli init' or specify '--project <projectId>' first.");
     }
 
     const act = (action || "current").toLowerCase();
@@ -66,7 +66,7 @@ export async function taskCommand(
     if (act === "get") {
       const idToFetch = taskId || options.status;
       if (!idToFetch) {
-        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn task get 42");
+        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn-cli task get 42");
       }
       const res = await apiRequest(`/api/agent/tasks/${idToFetch}?projectId=${projectId}`);
       if (options.json) {
@@ -79,7 +79,7 @@ export async function taskCommand(
 
     if (act === "start") {
       if (!taskId) {
-        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn task start 42");
+        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn-cli task start 42");
       }
       const res = await apiRequest(`/api/agent/tasks/${taskId}/start`, {
         method: "POST",
@@ -95,7 +95,7 @@ export async function taskCommand(
 
     if (act === "complete") {
       if (!taskId) {
-        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn task complete 42");
+        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn-cli task complete 42");
       }
       const res = await apiRequest(`/api/agent/tasks/${taskId}/complete`, {
         method: "POST",
@@ -111,7 +111,7 @@ export async function taskCommand(
 
     if (act === "fail") {
       if (!taskId) {
-        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn task fail 42");
+        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn-cli task fail 42");
       }
       const res = await apiRequest(`/api/agent/tasks/${taskId}/fail`, {
         method: "POST",
@@ -127,7 +127,7 @@ export async function taskCommand(
 
     if (act === "update") {
       if (!taskId) {
-        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn task update 42 --status done");
+        throw new Error("MISSING_TASK_ID: Specify task ID. Example: npx moryn-cli task update 42 --status done");
       }
       const res = await apiRequest(`/api/agent/tasks/${taskId}`, {
         method: "PATCH",

@@ -67,7 +67,7 @@ async function projectCommand(section, options = {}) {
         }
         const projectId = options.project || (0, store_js_1.getProjectConfig)().projectId;
         if (!projectId) {
-            throw new Error("NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.");
+            throw new Error("NO_PROJECT_LINKED: Run 'npx moryn-cli init' or specify '--project <projectId>' first.");
         }
         if (sec === "current")
             sec = "overview";

@@ -164,6 +164,8 @@ export async function POST(req: NextRequest) {
       isPrdUpdated: res.isPrdUpdated,
       updatedMarkdown: res.isPrdUpdated ? updatedMarkdown : null,
       markdown: res.isPrdUpdated ? updatedMarkdown : null,
+      patchedSection: res.patchedSection || null,
+      diffSummary: res.diffSummary || null,
       chatCount: currentChats + 1,
       chatLimit: chatLimit === Infinity ? null : chatLimit,
       actions: res.actions || null,

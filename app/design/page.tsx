@@ -157,7 +157,7 @@ function ProjectDetailContent() {
         <McpConnectModal projectId={projectId} appName={project?.appName} onClose={() => setShowMcpModal(false)} />
       )}
 
-      {/* â”€â”€ Topbar â”€â”€ */}
+      {/* ── Topbar ── */}
       <header
         style={{
           position: "fixed",

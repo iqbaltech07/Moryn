@@ -1,9 +1,9 @@
-# 🚀 Moryn — AI PRD Architect & System Architecture Tracking Platform (v2.13.0)
+# 🚀 Moryn — AI PRD Architect & System Architecture Tracking Platform (v3.0.1)
 
 **Moryn** is an AI-powered platform for generating **Product Requirements Documents (PRDs)**, tracking System Architecture, and enforcing Anti-Slop Visual Governance for AI Agents and software developers.
 
 [![Next.js 16](https://img.shields.io/badge/Next.js-16.2.3-black.svg)](https://nextjs.org/)
-[![CLI Version](https://img.shields.io/npm/v/moryn.svg)](https://www.npmjs.com/package/moryn)
+[![CLI Version](https://img.shields.io/npm/v/moryn-cli.svg)](https://www.npmjs.com/package/moryn-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ---
@@ -12,10 +12,10 @@
 
 - 📝 **AI PRD Generator**: Synthesize structured PRDs with tech stack recommendations powered by Google Gemini 3.7 Flash.
 - 🗺️ **Visual Architecture Mindmap**: Interactive graph canvas with `@xyflow/react` for visual-to-JSON system structure.
-- 🪝 **Moryn CLI v2.13.0**: Autonomous Agent Skill & CLI package for 10ms realtime Kanban task sync (`npx moryn`).
-- 🛡️ **AST Anti-Slop Linter**: Static code analysis engine (`npx moryn validate-ui`) blocking AI slop visual patterns.
+- 🪝 **Moryn CLI v3.0.1**: Autonomous Agent Skill & CLI package for 10ms realtime Kanban task sync (`npx moryn-cli`).
+- 🛡️ **AST Anti-Slop Linter**: Static code analysis engine (`npx moryn-cli validate-ui`) blocking AI slop visual patterns.
 - 🎨 **Multi-Archetype Component Generator**: Scaffold 100% Anti-Slop UI components (`card`, `hero`, `table`, `form`, `modal`, `bento`).
-- 🔒 **Automated Guardrail Hooks**: Git pre-commit & NPM pre-build hooks via `npx moryn hook`.
+- 🔒 **Automated Guardrail Hooks**: Git pre-commit & NPM pre-build hooks via `npx moryn-cli hook`.
 
 ---
 
@@ -35,26 +35,27 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to explore
 
 ```bash
 # Authenticate CLI
-npx moryn login --token <YOUR_TOKEN>
+npx moryn-cli login --token <YOUR_TOKEN>
 
 # Connect workspace to project
-npx moryn init [--target web|mobile|iot|backend]
+npx moryn-cli init [--target web|mobile|iot|backend]
 
 # Fetch live design tokens
-npx moryn design
+npx moryn-cli design
 
 # Run AST Anti-Slop Linter
-npx moryn validate-ui
+npx moryn-cli validate-ui
 
 # Scaffold Anti-Slop UI component
-npx moryn generate hero LandingHero
+npx moryn-cli generate hero LandingHero
 
 # Install automated Git pre-commit & build guardrails
-npx moryn hook
+npx moryn-cli hook
 ```
 
 ---
 
 ## 📋 License
 
-MIT © [Moryn](https://moryn.vercel.app)
+MIT © [Moryn](https://moryn.web.id)
+

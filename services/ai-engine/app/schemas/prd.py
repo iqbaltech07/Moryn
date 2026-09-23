@@ -44,6 +44,8 @@ class EditPrdResponse(BaseModel):
     reply: str
     isPrdUpdated: bool
     updatedMarkdown: Optional[str] = None
+    patchedSection: Optional[str] = Field(default=None, description="The heading of the section that was patched, for auto-scroll & highlight")
+    diffSummary: Optional[str] = Field(default=None, description="Human-readable summary of what changed in the patch")
     modelUsed: str = "gemini"
     actions: Optional[list[ChatAction]] = None
 

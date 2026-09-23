@@ -122,11 +122,11 @@ async function main() {
       if (options.json) {
         console.log(JSON.stringify({
           name: "moryn-cli",
-          version: "3.0.0",
+          version: "3.0.1",
           commands: ["login", "init", "status", "project", "design", "task", "kanban", "validate-ui", "clean", "init-theme", "hook", "scaffold", "generate"],
         }));
       } else {
-        console.log("\n  Moryn AI Agent CLI v3.0.0 (Anti-Slop Architecture)");
+        console.log("\n  Moryn AI Agent CLI v3.0.1 (Anti-Slop Architecture)");
         console.log("  ==========================");
         console.log("  Usage: npx moryn-cli <command> [options]\n");
         console.log("  Core Developer & Scaffolding Commands:");
@@ -134,17 +134,17 @@ async function main() {
         console.log("    npx moryn-cli generate <Name> [--type <hero|bento|card|table|form|modal>]");
         console.log("    npx moryn-cli login --token <TOKEN>         Save auth token");
         console.log("    npx moryn-cli init [--target web|mobile...] Connect project & setup Agent Skill");
-        console.log("    npx moryn status                        Display health & connection status\n");
+        console.log("    npx moryn-cli status                        Display health & connection status\n");
         console.log("  Anti-Slop Visual Governance & Tooling:");
-        console.log("    npx moryn design                        Fetch design context & tokens");
-        console.log("    npx moryn validate-ui                   Run AST Anti-Slop Linter on workspace");
-        console.log("    npx moryn clean                         Automatically prune unused components & dead code");
-        console.log("    npx moryn init-theme                    Generate Tailwind preset & CSS tokens");
-        console.log("    npx moryn hook                          Install Git pre-commit & build hooks\n");
+        console.log("    npx moryn-cli design                        Fetch design context & tokens");
+        console.log("    npx moryn-cli validate-ui                   Run AST Anti-Slop Linter on workspace");
+        console.log("    npx moryn-cli clean                         Automatically prune unused components & dead code");
+        console.log("    npx moryn-cli init-theme                    Generate Tailwind preset & CSS tokens");
+        console.log("    npx moryn-cli hook                          Install Git pre-commit & build hooks\n");
         console.log("  AI Agent Task Commands:");
-        console.log("    npx moryn project [tokens|rules|prd...] Fetch modular context or full hybrid");
-        console.log("    npx moryn task <action> [id]            Task lifecycle (list, current, start, complete, fail)");
-        console.log("    npx moryn kanban                        Fetch full Kanban board state\n");
+        console.log("    npx moryn-cli project [tokens|rules|prd...] Fetch modular context or full hybrid");
+        console.log("    npx moryn-cli task <action> [id]            Task lifecycle (list, current, start, complete, fail)");
+        console.log("    npx moryn-cli kanban                        Fetch full Kanban board state\n");
         console.log("  Flags:");
         console.log("    --type <hero|bento|card|table|form|modal>  Component archetype type");
         console.log("    --target <web|mobile|iot|backend>          Specify multi-domain target ecosystem");

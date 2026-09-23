@@ -89,7 +89,7 @@ async function designCommand(options = {}) {
             }
         }
         if (!remoteDesign && !localTokens && !localRules) {
-            const errReason = fetchError ? fetchError.message : "NO_PROJECT_LINKED: Run 'npx moryn init' or specify '--project <projectId>' first.";
+            const errReason = fetchError ? fetchError.message : "NO_PROJECT_LINKED: Run 'npx moryn-cli init' or specify '--project <projectId>' first.";
             throw new Error(errReason);
         }
         if (options.json) {

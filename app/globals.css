@@ -386,6 +386,21 @@ body {
   text-underline-offset: 3px;
 }
 
+/* ── Combo Architecture: Section Patch Highlight Pulse ── */
+@keyframes prd-highlight-pulse {
+  0%   { background-color: rgba(225, 91, 57, 0.18); box-shadow: 0 0 0 4px rgba(225, 91, 57, 0.10); }
+  50%  { background-color: rgba(225, 91, 57, 0.10); box-shadow: 0 0 0 2px rgba(225, 91, 57, 0.06); }
+  100% { background-color: transparent; box-shadow: none; }
+}
+
+.markdown-preview .prd-section-highlight {
+  animation: prd-highlight-pulse 2.5s ease-out forwards;
+  border-radius: 6px;
+  padding: 2px 6px;
+  margin: -2px -6px;
+  transition: background-color 0.3s ease;
+}
+
 /* ==============================
    LINK & BUTTON RESETS
    ============================== */

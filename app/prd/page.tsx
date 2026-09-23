@@ -115,6 +115,10 @@ function PreviewPageContent() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
 
+  // ── Combo Architecture: Undo & Visual Highlight state ──
+  const [previousMarkdown, setPreviousMarkdown] = useState<string | null>(null);
+  const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
+
   // Dynamic auto-expanding input height adjustment (1 line -> fulltext/desc)
   const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
@@ -235,6 +239,16 @@ function PreviewPageContent() {
 
   useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMessages, isAiEditing]);
 
+  // ── Combo: Apply highlight CSS class to patched section heading ──
+  useEffect(() => {
+    if (!highlightedSectionId) return;
+    const el = contentRef.current?.querySelector<HTMLElement>(`#${highlightedSectionId}`);
+    if (!el) return;
+    el.classList.add("prd-section-highlight");
+    const timer = setTimeout(() => el.classList.remove("prd-section-highlight"), 2600);
+    return () => { clearTimeout(timer); el.classList.remove("prd-section-highlight"); };
+  }, [highlightedSectionId]);
+
   const handleAiSubmit = async (promptText?: string) => {
     const textToSubmit = promptText || aiPrompt;
     if (!projectId || !textToSubmit.trim() || isAiEditing) return;
@@ -260,10 +274,41 @@ function PreviewPageContent() {
       });
       const newMd = data.updatedMarkdown || (data as any).markdown;
       if (newMd && (data as any).isPrdUpdated) {
+        // ── Combo: Save snapshot for undo ──
+        setPreviousMarkdown(markdown);
+
         setMarkdown(newMd);
         setEditContent(newMd);
         updateProjectLocally({ prdData: newMd });
-        toast.success("PRD berhasil diperbarui!");
+
+        const patchedSection = (data as any).patchedSection;
+        const diffSummary = (data as any).diffSummary;
+        toast.success(diffSummary || "PRD berhasil diperbarui!");
+
+        // ── Combo: Auto-scroll & highlight patched section ──
+        if (patchedSection && toc.length > 0) {
+          // Match patched section heading to TOC items
+          const normalizeTitle = (t: string) => t.replace(/^#+\s*/, "").replace(/^\d+[\.\)]\s*/, "").toLowerCase().trim();
+          const patchNorm = normalizeTitle(patchedSection);
+          const matchedToc = toc.find((item) => {
+            const tocNorm = normalizeTitle(item.text);
+            // Match by substring containment or numeric prefix
+            const patchNum = patchedSection.match(/\d+/);
+            const tocNum = item.text.match(/^\s*(\d+)/);
+            if (patchNum && tocNum && patchNum[0] === tocNum[1]) return true;
+            return tocNorm === patchNorm || tocNorm.includes(patchNorm) || patchNorm.includes(tocNorm);
+          });
+          if (matchedToc) {
+            // Wait for re-render, then scroll & highlight
+            setTimeout(() => {
+              scrollToHeading(matchedToc.id);
+              setHighlightedSectionId(matchedToc.id);
+              // Clear highlight after 2.5s
+              setTimeout(() => setHighlightedSectionId(null), 2500);
+            }, 300);
+          }
+        }
+
         try {
           window.dispatchEvent(new CustomEvent("prdUpdated", { detail: { prdData: newMd } }));
         } catch { }
@@ -286,6 +331,16 @@ function PreviewPageContent() {
       addMessage({ id: (Date.now() + 1).toString(), role: "assistant", content: `❌ ${err.message}`, timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) });
     } finally { setIsAiEditing(false); }
   };
+
+  // ── Combo: Undo last PRD edit ──
+  const handleUndoEdit = useCallback(() => {
+    if (!previousMarkdown) return;
+    setMarkdown(previousMarkdown);
+    setEditContent(previousMarkdown);
+    updateProjectLocally({ prdData: previousMarkdown });
+    setPreviousMarkdown(null);
+    toast.success("Perubahan dibatalkan. PRD dikembalikan ke versi sebelumnya.");
+  }, [previousMarkdown, updateProjectLocally]);
 
   const handleActionClick = (action: ChatAction, messageId?: string) => {
     if (isAiEditing) return;
@@ -311,6 +366,9 @@ function PreviewPageContent() {
     } else if (action.actionType === "copy_text" && action.payload) {
       navigator.clipboard.writeText(action.payload);
       toast.success("Disalin ke clipboard!");
+    } else if ((action as any).actionType === "undo_edit") {
+      // ── Combo: Undo last PRD edit via action button ──
+      handleUndoEdit();
     }
   };
 

@@ -305,7 +305,7 @@ export async function validateCommand(options: { target?: string; json?: boolean
           message: `Component '${baseName}' is declared but never imported anywhere in the project`,
           file: relPath,
           line: 1,
-          advice: "Run 'npx moryn clean' or delete this unused component to keep the codebase lean and clean.",
+          advice: "Run 'npx moryn-cli clean' or delete this unused component to keep the codebase lean and clean.",
         });
       }
     }
@@ -324,7 +324,7 @@ export async function validateCommand(options: { target?: string; json?: boolean
       }));
     } else {
       console.log("\n==========================================");
-      console.log(`  Moryn UI/UX Anti-Slop Linter v2.13.0`);
+      console.log(`  Moryn UI/UX Anti-Slop Linter v3.0.1`);
       console.log(`  Target Domain: ${target.toUpperCase()}`);
       console.log(`  Scanned Files: ${filesToScan.length}`);
       console.log("==========================================\n");

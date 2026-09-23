@@ -174,7 +174,7 @@ Tolong jalankan alur kerja otomatisasi berikut:
 
         {/* Content - Scrollable */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-8">
-          
+
           {/* Section: API Key */}
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
@@ -230,7 +230,7 @@ Tolong jalankan alur kerja otomatisasi berikut:
 
           {/* Section: Agent Prompt */}
           <div className="flex flex-col gap-3">
-             <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <span className="font-[family-name:var(--font-mono)] text-[11px] font-semibold text-[var(--fg-secondary)] tracking-widest uppercase flex items-center gap-2">
                 2. Agent Initialization Prompt
               </span>
@@ -247,7 +247,7 @@ Tolong jalankan alur kerja otomatisasi berikut:
                 {isLoadingKey ? "Menyiapkan prompt..." : aiPromptDisplay}
               </pre>
             </div>
-             <p className="font-[family-name:var(--font-body)] text-xs text-[var(--fg-muted)] leading-relaxed mt-1">
+            <p className="font-[family-name:var(--font-body)] text-xs text-[var(--fg-muted)] leading-relaxed mt-1">
               Paste prompt ini secara langsung ke AI Assistant Anda (Antigravity, Cursor, Claude, dll) untuk memulai alur kerja PRD terpandu secara otomatis.
             </p>
           </div>

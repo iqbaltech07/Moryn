@@ -221,7 +221,7 @@ export default function ProjectHeaderBrand({
               >
                 <Loader2 size={13} className="animate-spin" style={{ color: "#e15b39" }} />
                 <span style={{ fontSize: "12px", color: "var(--fg-muted, #71717a)" }}>
-                  Loadingâ€¦
+                  Loading...
                 </span>
               </div>
             ) : (
