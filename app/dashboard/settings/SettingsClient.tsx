@@ -388,6 +388,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
     <div className="min-h-[100dvh] bg-[#FCFBF8] text-neutral-900 font-sans selection:bg-[#E05A38]/15 selection:text-neutral-900 flex">
       {/* ── Left Sidebar ── */}
       <DashboardSidebar
+        currentTab="settings"
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />

@@ -363,7 +363,13 @@ function StrukturPageContent() {
       toast.error(t.structure.rootMissing);
       return;
     }
-    const categoryNodes = nodes.filter((n) => n.type === "category");
+    const categoryNodes = nodes
+      .filter((n) => n.type === "category")
+      .sort((a, b) => {
+        const pA = typeof a.data.phase === "number" && !isNaN(a.data.phase) ? a.data.phase : 1;
+        const pB = typeof b.data.phase === "number" && !isNaN(b.data.phase) ? b.data.phase : 1;
+        return pA - pB;
+      });
     const parsedData: StrukturData = {
       title: String(rootNode.data.label || ""),
       description: String(rootNode.data.description || ""),
@@ -477,30 +483,37 @@ function StrukturPageContent() {
               {t.structure.editMode}
             </button>
           )}
-          <button
-            onClick={() => router.push(`/prd${projectId ? `?projectId=${projectId}` : ""}`)}
-            disabled={isLoading || !projectId || isEditing}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 18px",
-              borderRadius: "8px",
-              background: "#e15b39",
-              color: "#ffffff",
-              border: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: "13px",
-              fontWeight: 700,
-              letterSpacing: "0.02em",
-              cursor: isLoading || !projectId || isEditing ? "not-allowed" : "pointer",
-              opacity: isLoading || !projectId || isEditing ? 0.4 : 1,
-              transition: "opacity 0.15s, transform 0.1s",
-            }}
-          >
-            <span>{t.structure.nextStep}</span>
-            <ArrowRight size={14} strokeWidth={2.2} />
-          </button>
+          {(() => {
+            const isContentReady = Boolean(!isLoading && !error && rawData && rawData.nodes && rawData.nodes.length > 0);
+            const isNextDisabled = !isContentReady || !projectId || isEditing;
+
+            return (
+              <button
+                onClick={() => router.push(`/prd${projectId ? `?projectId=${projectId}` : ""}`)}
+                disabled={isNextDisabled}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  background: "#e15b39",
+                  color: "#ffffff",
+                  border: "none",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "13px",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  cursor: isNextDisabled ? "not-allowed" : "pointer",
+                  opacity: isNextDisabled ? 0.4 : 1,
+                  transition: "opacity 0.15s, transform 0.1s",
+                }}
+              >
+                <span>{t.structure.nextStep}</span>
+                <ArrowRight size={14} strokeWidth={2.2} />
+              </button>
+            );
+          })()}
         </div>
       </header>
 

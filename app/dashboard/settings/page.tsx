@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/prisma";
 import { getMonthlyProjectLimit } from "@/lib/analytics/planQuota";
 import { Suspense } from "react";
 import SettingsClient from "./SettingsClient";
+import SettingsLoading from "./loading";
 
 export const metadata: Metadata = {
   title: "Settings - Moryn Workspace",
@@ -47,7 +48,7 @@ export default async function SettingsPage() {
   const isUnlimited = prdLimit === Infinity;
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#FCFBF8]" />}>
+    <Suspense fallback={<SettingsLoading />}>
       <SettingsClient
         user={{
           name: session.user.name,

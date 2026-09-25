@@ -121,8 +121,22 @@ export function buildGraph(
   const nodes: Node[] = [];
   const edges: Edge[] = [];
 
+  // Sort categories strictly and stably by Phase (Phase 1 on top, Phase 2, Phase 3, etc.)
+  const sortedCategories = [...(data.nodes || [])]
+    .map((catNode, originalIndex) => {
+      const phaseNum = typeof catNode.phase === "number" && !isNaN(catNode.phase) ? catNode.phase : 1;
+      return { catNode, originalIndex, phaseNum };
+    })
+    .sort((a, b) => {
+      if (a.phaseNum !== b.phaseNum) {
+        return a.phaseNum - b.phaseNum;
+      }
+      return a.originalIndex - b.originalIndex;
+    })
+    .map((item) => item.catNode);
+
   const hasTasks = Boolean(allTasks && allTasks.length > 0);
-  const matchedTasksMap = hasTasks ? matchTasksToCategories(data.nodes || [], allTasks!) : {};
+  const matchedTasksMap = hasTasks ? matchTasksToCategories(sortedCategories, allTasks!) : {};
 
   const ROOT_X = 40;
   const CAT_X = hasTasks ? 400 : 420;
@@ -132,7 +146,7 @@ export function buildGraph(
   const ROW_HEIGHT = 180;
   const GAP_Y = 48;
 
-  const totalCategories = data.nodes?.length || 0;
+  const totalCategories = sortedCategories.length;
   const totalH = totalCategories * ROW_HEIGHT + Math.max(0, totalCategories - 1) * GAP_Y;
 
   // 1. Root Node
@@ -153,7 +167,7 @@ export function buildGraph(
   });
 
   // 2. Build Category, SubFeature, & Task Nodes per row
-  (data.nodes || []).forEach((catNode, idx) => {
+  sortedCategories.forEach((catNode, idx) => {
     const catId = `cat-${idx}`;
     const subId = `sub-${idx}`;
     const taskId = `task-node-${idx}`;

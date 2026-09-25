@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -22,6 +22,7 @@ import {
   ArrowRight,
   ArrowUp,
   ChevronDown,
+  ChevronRight,
   Pencil,
   Copy,
   Download,
@@ -37,6 +38,13 @@ import { useProjectStore } from "@/stores/useProjectStore";
 import { useUiStore } from "@/stores/useUiStore";
 import { isTextGenerationModel, type AiModelOption } from "@/lib/ai/models";
 import { useTranslation } from "@/lib/i18n";
+
+interface TocSection {
+  id: string;
+  text: string;
+  level: number;
+  subItems: TocItem[];
+}
 
 const SECTION_TITLE_MAP: Record<number, string> = {
   1: "1. Overview",
@@ -86,11 +94,256 @@ function getSimplifiedTocTitle(rawText: string, level: number): string {
     return rawText.slice(0, 18).trim() + (rawText.length > 18 ? "…" : "");
   }
 
-  // Level 3 (Sub-sections under Core Features, e.g. "Fase 1 — ...")
+  // Level 3 (Sub-sections)
   return rawText
     .replace(/^#+\s*/, "")
     .replace(/^\s*\d+\.\d+\s*/, "")
     .trim();
+}
+
+function parseTocSubItem(rawText: string): { phaseBadge: string | null; title: string } {
+  const clean = rawText
+    .replace(/^#+\s*/, "")
+    .replace(/^\s*\d+\.\d+\s*/, "")
+    .trim();
+
+  const phaseMatch = clean.match(/^(?:fase|phase)\s*(\d+)\s*(?:[—–\-\:]\s*)?(.*)$/i);
+  if (phaseMatch) {
+    const num = phaseMatch[1];
+    const rest = phaseMatch[2]?.trim() || `Fase ${num}`;
+    return {
+      phaseBadge: `Fase ${num}`,
+      title: rest,
+    };
+  }
+
+  return {
+    phaseBadge: null,
+    title: clean,
+  };
+}
+
+function PrdTocSkeleton() {
+  const skeletonRows = [
+    { level: 2, w: "78%" },
+    { level: 2, w: "85%" },
+    { level: 2, w: "82%" },
+    { level: 3, w: "68%" },
+    { level: 3, w: "60%" },
+    { level: 3, w: "64%" },
+    { level: 2, w: "80%" },
+    { level: 2, w: "74%" },
+    { level: 2, w: "86%" },
+    { level: 2, w: "70%" },
+  ];
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6, padding: "4px 2px" }}>
+      {skeletonRows.map((row, i) => (
+        <div
+          key={i}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: row.level === 3 ? "4px 8px 4px 20px" : "6px 8px",
+            borderRadius: 6,
+          }}
+        >
+          {row.level === 2 ? (
+            <div
+              className="prd-buffering-shimmer"
+              style={{
+                width: 16,
+                height: 16,
+                borderRadius: 4,
+                flexShrink: 0,
+              }}
+            />
+          ) : (
+            <div
+              className="prd-buffering-shimmer"
+              style={{
+                width: 5,
+                height: 5,
+                borderRadius: "50%",
+                flexShrink: 0,
+              }}
+            />
+          )}
+          <div
+            className="prd-buffering-shimmer"
+            style={{
+              height: row.level === 2 ? 11 : 9,
+              width: row.w,
+              borderRadius: 3,
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function PrdContentBuffering({ projectName }: { projectName?: string }) {
+  return (
+    <div style={{ maxWidth: 820, margin: "0 auto", padding: "44px 36px 120px" }}>
+      {/* Orange Buffering Card Header */}
+      <div
+        style={{
+          border: "1px solid rgba(225, 91, 57, 0.28)",
+          borderRadius: 12,
+          background: "linear-gradient(135deg, rgba(225, 91, 57, 0.06) 0%, rgba(225, 91, 57, 0.02) 100%)",
+          padding: "20px 24px",
+          marginBottom: 36,
+          boxShadow: "0 6px 24px rgba(225, 91, 57, 0.08)",
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        {/* Animated Top Buffer Bar */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 3,
+            background: "rgba(225, 91, 57, 0.15)",
+            overflow: "hidden",
+          }}
+        >
+          <div className="prd-buffering-line" />
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: "rgba(225, 91, 57, 0.15)",
+              border: "1px solid rgba(225, 91, 57, 0.3)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#e15b39",
+              flexShrink: 0,
+            }}
+          >
+            <Loader2 size={20} className="animate-spin" />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "#e15b39",
+                  background: "rgba(225, 91, 57, 0.12)",
+                  padding: "2px 8px",
+                  borderRadius: 4,
+                }}
+              >
+                GENERATING PRD
+              </span>
+              <span style={{ fontSize: 11, color: "var(--fg-muted)" }}>
+                Sinkronisasi dengan Struktur Blueprint
+              </span>
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 15,
+                fontWeight: 700,
+                color: "var(--fg-primary)",
+                margin: 0,
+                lineHeight: 1.3,
+              }}
+            >
+              Menyusun Spesifikasi & Detail Arsitektur {projectName ? `"${projectName}"` : ""}...
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      {/* Structured Document Skeletons with Warm Orange Shimmer */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+        {/* Document Title Skeleton */}
+        <div>
+          <div className="prd-buffering-shimmer" style={{ width: "65%", height: 32, borderRadius: 6, marginBottom: 12 }} />
+          <div className="prd-buffering-shimmer" style={{ width: "40%", height: 14, borderRadius: 4 }} />
+        </div>
+
+        {/* Section 1: Overview */}
+        <div style={{ borderTop: "1px solid var(--border-hairline, #e5e7eb)", paddingTop: 20 }}>
+          <div className="prd-buffering-shimmer" style={{ width: "26%", height: 20, borderRadius: 4, marginBottom: 16 }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div className="prd-buffering-shimmer" style={{ width: "100%", height: 13, borderRadius: 3 }} />
+            <div className="prd-buffering-shimmer" style={{ width: "95%", height: 13, borderRadius: 3 }} />
+            <div className="prd-buffering-shimmer" style={{ width: "90%", height: 13, borderRadius: 3 }} />
+            <div className="prd-buffering-shimmer" style={{ width: "70%", height: 13, borderRadius: 3 }} />
+          </div>
+        </div>
+
+        {/* Section 2: Requirements Grid */}
+        <div style={{ borderTop: "1px solid var(--border-hairline, #e5e7eb)", paddingTop: 20 }}>
+          <div className="prd-buffering-shimmer" style={{ width: "30%", height: 20, borderRadius: 4, marginBottom: 16 }} />
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+            <div style={{ padding: 14, borderRadius: 8, border: "1px solid rgba(225,91,57,0.12)", background: "rgba(225,91,57,0.02)" }}>
+              <div className="prd-buffering-shimmer" style={{ width: "50%", height: 14, borderRadius: 3, marginBottom: 10 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "100%", height: 11, borderRadius: 3, marginBottom: 6 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "85%", height: 11, borderRadius: 3 }} />
+            </div>
+            <div style={{ padding: 14, borderRadius: 8, border: "1px solid rgba(225,91,57,0.12)", background: "rgba(225,91,57,0.02)" }}>
+              <div className="prd-buffering-shimmer" style={{ width: "50%", height: 14, borderRadius: 3, marginBottom: 10 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "100%", height: 11, borderRadius: 3, marginBottom: 6 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "85%", height: 11, borderRadius: 3 }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Core Features (Matches Structure Blueprint) */}
+        <div style={{ borderTop: "1px solid var(--border-hairline, #e5e7eb)", paddingTop: 20 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+            <div className="prd-buffering-shimmer" style={{ width: "35%", height: 20, borderRadius: 4 }} />
+            <span style={{ fontSize: 10, fontFamily: "var(--font-mono)", color: "#e15b39", fontWeight: 700 }}>
+              FASE 1 · FASE 2 · FASE 3
+            </span>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div style={{ padding: 16, borderRadius: 8, border: "1px solid rgba(225,91,57,0.16)", background: "rgba(225,91,57,0.025)" }}>
+              <div className="prd-buffering-shimmer" style={{ width: "42%", height: 15, borderRadius: 3, marginBottom: 10 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "95%", height: 11, borderRadius: 3, marginBottom: 6 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "88%", height: 11, borderRadius: 3 }} />
+            </div>
+            <div style={{ padding: 16, borderRadius: 8, border: "1px solid var(--border-hairline, #e5e7eb)" }}>
+              <div className="prd-buffering-shimmer" style={{ width: "38%", height: 15, borderRadius: 3, marginBottom: 10 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "92%", height: 11, borderRadius: 3, marginBottom: 6 }} />
+              <div className="prd-buffering-shimmer" style={{ width: "80%", height: 11, borderRadius: 3 }} />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: Architecture Diagram Skeleton Box */}
+        <div style={{ borderTop: "1px solid var(--border-hairline, #e5e7eb)", paddingTop: 20 }}>
+          <div className="prd-buffering-shimmer" style={{ width: "30%", height: 20, borderRadius: 4, marginBottom: 16 }} />
+          <div
+            className="prd-buffering-shimmer"
+            style={{
+              width: "100%",
+              height: 180,
+              borderRadius: 10,
+              border: "1px dashed rgba(225,91,57,0.25)",
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function PreviewPageContent() {
@@ -101,6 +354,7 @@ function PreviewPageContent() {
   const [markdown, setMarkdown] = useState<string>("");
   const [toc, setToc] = useState<TocItem[]>([]);
   const [activeTocId, setActiveTocId] = useState<string>("");
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -448,6 +702,69 @@ function PreviewPageContent() {
     }
   };
 
+  const groupedSections = useMemo<TocSection[]>(() => {
+    const sections: TocSection[] = [];
+    let currentSection: TocSection | null = null;
+
+    for (const item of toc) {
+      if (item.level === 2) {
+        currentSection = {
+          id: item.id,
+          text: item.text,
+          level: item.level,
+          subItems: [],
+        };
+        sections.push(currentSection);
+      } else if (item.level === 3) {
+        if (currentSection) {
+          currentSection.subItems.push(item);
+        } else {
+          currentSection = {
+            id: item.id,
+            text: item.text,
+            level: 2,
+            subItems: [],
+          };
+          sections.push(currentSection);
+        }
+      }
+    }
+
+    return sections;
+  }, [toc]);
+
+  // Auto-expand section containing active heading so active element is always visible
+  useEffect(() => {
+    if (!activeTocId) return;
+    const parent = groupedSections.find(
+      (s) => s.id === activeTocId || s.subItems.some((sub) => sub.id === activeTocId)
+    );
+    if (parent && parent.subItems.length > 0) {
+      setExpandedSections((prev) => {
+        if (prev[parent.id]) return prev;
+        return { ...prev, [parent.id]: true };
+      });
+    }
+  }, [activeTocId, groupedSections]);
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  const toggleAllSections = () => {
+    const allExpanded = groupedSections.every((s) => s.subItems.length === 0 || expandedSections[s.id]);
+    const next: Record<string, boolean> = {};
+    if (!allExpanded) {
+      groupedSections.forEach((s) => {
+        if (s.subItems.length > 0) next[s.id] = true;
+      });
+    }
+    setExpandedSections(next);
+  };
+
   const wordCount = markdown ? markdown.trim().split(/\s+/).filter(Boolean).length : 0;
   const currentProjectName = projectInfo?.appName || "GerobakLink";
 
@@ -470,30 +787,42 @@ function PreviewPageContent() {
 
         {/* Right: ONLY Next Step button */}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
-          <button
-            onClick={handleContinueToDesign}
-            disabled={isGenerating}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 18px",
-              borderRadius: "8px",
-              background: "#e15b39",
-              color: "#ffffff",
-              border: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: "12px",
-              fontWeight: 700,
-              letterSpacing: "0.02em",
-              cursor: isGenerating ? "not-allowed" : "pointer",
-              opacity: isGenerating ? 0.4 : 1,
-              transition: "opacity 0.15s, transform 0.1s",
-            }}
-          >
-            <span>{t.prd.nextStep}</span>
-            <ArrowRight size={14} strokeWidth={2.2} />
-          </button>
+          {(() => {
+            const isContentReady = Boolean(
+              !isGenerating &&
+              markdown &&
+              markdown.trim().length > 0 &&
+              !markdown.startsWith("# Error")
+            );
+            const isNextDisabled = !isContentReady || !projectId;
+
+            return (
+              <button
+                onClick={handleContinueToDesign}
+                disabled={isNextDisabled}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  background: "#e15b39",
+                  color: "#ffffff",
+                  border: "none",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  cursor: isNextDisabled ? "not-allowed" : "pointer",
+                  opacity: isNextDisabled ? 0.4 : 1,
+                  transition: "opacity 0.15s, transform 0.1s",
+                }}
+              >
+                <span>{t.prd.nextStep}</span>
+                <ArrowRight size={14} strokeWidth={2.2} />
+              </button>
+            );
+          })()}
         </div>
       </header>
 
@@ -671,142 +1000,337 @@ function PreviewPageContent() {
             </div>
           </div>
 
-          {/* CONTENTS Header */}
+          {/* CONTENTS Header with Structure Sync Indicator & Dropdown Controls */}
           <div style={{
-            padding: "8px 16px 6px",
-            fontFamily: "var(--font-body)",
-            fontSize: "10px",
-            fontWeight: 700,
-            letterSpacing: "0.12em",
-            color: "var(--fg-muted, #71717a)",
-            textTransform: "uppercase",
+            padding: "8px 14px 6px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
             flexShrink: 0,
+            borderBottom: "1px solid rgba(0,0,0,0.03)",
           }}>
-            {t.prd.contents}
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{
+                fontFamily: "var(--font-body)",
+                fontSize: "10px",
+                fontWeight: 700,
+                letterSpacing: "0.12em",
+                color: "var(--fg-muted, #71717a)",
+                textTransform: "uppercase",
+              }}>
+                {t.prd.contents}
+              </span>
+              {groupedSections.some((s) => s.subItems.length > 0) && (
+                <button
+                  type="button"
+                  onClick={toggleAllSections}
+                  title="Expand / Collapse all sections"
+                  style={{
+                    fontSize: "8.5px",
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--fg-muted, #71717a)",
+                    background: "rgba(0,0,0,0.04)",
+                    border: "none",
+                    borderRadius: 3,
+                    padding: "1px 5px",
+                    cursor: "pointer",
+                    lineHeight: 1.3,
+                    transition: "all 0.12s",
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.08)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.04)";
+                  }}
+                >
+                  {groupedSections.every((s) => s.subItems.length === 0 || expandedSections[s.id])
+                    ? "Collapse"
+                    : "Expand"}
+                </button>
+              )}
+            </div>
+            <span
+              title="Daftar konten PRD terhubung langsung dengan Struktur Arsitektur"
+              style={{
+                fontSize: "9px",
+                fontFamily: "var(--font-mono)",
+                color: "#16a34a",
+                fontWeight: 600,
+                letterSpacing: "0.02em",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 4,
+                background: "rgba(22, 163, 74, 0.08)",
+                padding: "2px 6px",
+                borderRadius: 4,
+              }}
+            >
+              <span style={{ width: 4.5, height: 4.5, borderRadius: "50%", background: "#16a34a" }} />
+              BLUEPRINT SYNC
+            </span>
           </div>
 
-          {/* TOC Items */}
+          {/* TOC Items (Collapsible Accordion / Dropdown) */}
           <div style={{
             flex: 1,
             overflowY: "auto",
             overflowX: "hidden",
-            padding: "0 10px 14px",
+            padding: "6px 8px 14px",
             display: "flex",
             flexDirection: "column",
-            gap: 3,
+            gap: 2,
             width: "100%",
             boxSizing: "border-box",
           }}>
-            {toc.length === 0 && isGenerating && (
-              <div style={{ padding: "8px 12px", fontFamily: "var(--font-body)", fontSize: 11, color: "var(--fg-muted)" }}>
-                Generating contents…
-              </div>
-            )}
-            {toc.map((item) => {
-              const isActive = activeTocId === item.id;
-              const isMain = item.level === 2;
-              const displayTitle = getSimplifiedTocTitle(item.text, item.level);
+            {isGenerating || groupedSections.length === 0 ? (
+              <PrdTocSkeleton />
+            ) : (
+              groupedSections.map((section) => {
+                const isSectionActive = activeTocId === section.id;
+                const isChildActive = section.subItems.some((sub) => sub.id === activeTocId);
+                const hasSubItems = section.subItems.length > 0;
+                const isExpanded = Boolean(expandedSections[section.id]);
 
-              if (isMain) {
+                const displayTitle = getSimplifiedTocTitle(section.text, section.level);
+                const numMatch = displayTitle.match(/^\s*(\d+)\.\s*(.*)$/);
+                const numBadge = numMatch ? numMatch[1] : null;
+                const labelText = numMatch ? numMatch[2] : displayTitle;
+
                 return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => scrollToHeading(item.id)}
+                  <div
+                    key={section.id}
                     style={{
                       display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      maxWidth: "100%",
-                      boxSizing: "border-box",
-                      overflow: "hidden",
-                      textAlign: "left",
-                      padding: "7px 10px",
+                      flexDirection: "column",
                       borderRadius: 6,
-                      fontFamily: "var(--font-body)",
-                      fontSize: "11px",
-                      fontWeight: isActive ? 700 : 500,
-                      letterSpacing: "0.01em",
-                      color: isActive ? "#ffffff" : "var(--fg-secondary, #4b5563)",
-                      background: isActive ? "#e15b39" : "transparent",
-                      border: "none",
-                      cursor: "pointer",
-                      transition: "all 0.12s",
-                      marginTop: 2,
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.03)";
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                      background: (isSectionActive || isChildActive) && !isExpanded ? "rgba(225, 91, 57, 0.04)" : "transparent",
+                      transition: "background 0.12s",
                     }}
                   >
-                    <span
-                      style={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        flexShrink: 0,
-                        maxWidth: "calc(100% - 20px)",
-                      }}
-                    >
-                      {displayTitle}
-                    </span>
+                    {/* Section Header Row */}
                     <div
                       style={{
-                        flex: 1,
-                        height: 2,
-                        borderRadius: 1,
-                        background: isActive
-                          ? "rgba(255, 255, 255, 0.45)"
-                          : "var(--border-zinc-soft, #e4e4e7)",
-                        marginLeft: 8,
-                        minWidth: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        width: "100%",
+                        boxSizing: "border-box",
+                        padding: "5px 6px 5px 8px",
+                        borderRadius: 6,
+                        background: isSectionActive ? "#e15b39" : isChildActive ? "rgba(225, 91, 57, 0.08)" : "transparent",
+                        transition: "all 0.12s",
+                        gap: 6,
                       }}
-                    />
-                  </button>
-                );
-              }
+                      onMouseEnter={(e) => {
+                        if (!isSectionActive && !isChildActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.035)";
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isSectionActive && !isChildActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                      }}
+                    >
+                      {/* Left Area: Badge + Title -> Navigates to Section */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          scrollToHeading(section.id);
+                          if (hasSubItems && !isExpanded) {
+                            toggleSection(section.id);
+                          }
+                        }}
+                        title={section.text}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          flex: 1,
+                          minWidth: 0,
+                          gap: 6,
+                          background: "none",
+                          border: "none",
+                          padding: 0,
+                          margin: 0,
+                          textAlign: "left",
+                          cursor: "pointer",
+                        }}
+                      >
+                        {numBadge && (
+                          <span
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "9.5px",
+                              fontWeight: 700,
+                              padding: "1px 4.5px",
+                              borderRadius: 4,
+                              background: isSectionActive ? "rgba(255, 255, 255, 0.22)" : isChildActive ? "rgba(225, 91, 57, 0.16)" : "var(--border-zinc-soft, #e4e4e7)",
+                              color: isSectionActive ? "#ffffff" : isChildActive ? "#e15b39" : "var(--fg-muted, #71717a)",
+                              flexShrink: 0,
+                              lineHeight: 1.25,
+                            }}
+                          >
+                            {numBadge}
+                          </span>
+                        )}
+                        <span
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontSize: "11px",
+                            fontWeight: isSectionActive || isChildActive ? 700 : 500,
+                            letterSpacing: "0.01em",
+                            color: isSectionActive ? "#ffffff" : isChildActive ? "#e15b39" : "var(--fg-secondary, #4b5563)",
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            lineHeight: 1.3,
+                            flex: 1,
+                          }}
+                        >
+                          {labelText}
+                        </span>
+                      </button>
 
-              // Sub-sections (Level 3 - Fase 1, Fase 2, etc.)
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => scrollToHeading(item.id)}
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    maxWidth: "100%",
-                    boxSizing: "border-box",
-                    overflow: "hidden",
-                    textAlign: "left",
-                    padding: "5px 10px 5px 22px",
-                    borderRadius: 6,
-                    fontFamily: "var(--font-body)",
-                    fontSize: "10.5px",
-                    lineHeight: 1.35,
-                    fontWeight: isActive ? 600 : 400,
-                    color: isActive ? "#e15b39" : "var(--fg-muted, #6b7280)",
-                    background: isActive ? "rgba(225, 91, 57, 0.08)" : "transparent",
-                    border: "none",
-                    cursor: "pointer",
-                    transition: "all 0.12s",
-                    whiteSpace: "normal",
-                    wordBreak: "break-word",
-                    overflowWrap: "anywhere",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.03)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent";
-                  }}
-                >
-                  {displayTitle}
-                </button>
-              );
-            })}
+                      {/* Right Dropdown Toggle Icon (Only if has subsections) */}
+                      {hasSubItems && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSection(section.id);
+                          }}
+                          title={isExpanded ? "Tutup submenu" : `Buka ${section.subItems.length} submenu`}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 3,
+                            padding: "2px 4px",
+                            borderRadius: 4,
+                            border: "none",
+                            background: isSectionActive
+                              ? "rgba(255, 255, 255, 0.2)"
+                              : isExpanded
+                              ? "rgba(225, 91, 57, 0.12)"
+                              : "rgba(0, 0, 0, 0.04)",
+                            color: isSectionActive ? "#ffffff" : isExpanded ? "#e15b39" : "var(--fg-muted, #9ca3af)",
+                            cursor: "pointer",
+                            flexShrink: 0,
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "var(--font-mono)",
+                              fontSize: "8.5px",
+                              fontWeight: 700,
+                            }}
+                          >
+                            {section.subItems.length}
+                          </span>
+                          {isExpanded ? (
+                            <ChevronDown size={11} strokeWidth={2.5} />
+                          ) : (
+                            <ChevronRight size={11} strokeWidth={2.5} />
+                          )}
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Sub-sections Dropdown (Collapsed by default, opens cleanly) */}
+                    {hasSubItems && isExpanded && (
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: 1.5,
+                          padding: "3px 4px 4px 18px",
+                          borderLeft: "2px solid rgba(225, 91, 57, 0.2)",
+                          marginLeft: 14,
+                          marginTop: 2,
+                          marginBottom: 3,
+                        }}
+                      >
+                        {section.subItems.map((subItem) => {
+                          const isSubActive = activeTocId === subItem.id;
+                          const subParsed = parseTocSubItem(subItem.text);
+
+                          return (
+                            <button
+                              key={subItem.id}
+                              type="button"
+                              onClick={() => scrollToHeading(subItem.id)}
+                              title={subItem.text}
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                width: "100%",
+                                maxWidth: "100%",
+                                boxSizing: "border-box",
+                                overflow: "hidden",
+                                textAlign: "left",
+                                padding: "4px 6px",
+                                borderRadius: 5,
+                                fontFamily: "var(--font-body)",
+                                fontSize: "10.5px",
+                                lineHeight: 1.35,
+                                fontWeight: isSubActive ? 600 : 400,
+                                color: isSubActive ? "#e15b39" : "var(--fg-muted, #6b7280)",
+                                background: isSubActive ? "rgba(225, 91, 57, 0.09)" : "transparent",
+                                border: "none",
+                                cursor: "pointer",
+                                transition: "all 0.12s",
+                                gap: 6,
+                              }}
+                              onMouseEnter={(e) => {
+                                if (!isSubActive) (e.currentTarget as HTMLElement).style.background = "rgba(0,0,0,0.03)";
+                              }}
+                              onMouseLeave={(e) => {
+                                if (!isSubActive) (e.currentTarget as HTMLElement).style.background = "transparent";
+                              }}
+                            >
+                              {subParsed.phaseBadge ? (
+                                <span
+                                  style={{
+                                    fontFamily: "var(--font-mono)",
+                                    fontSize: "8px",
+                                    fontWeight: 700,
+                                    padding: "1px 3.5px",
+                                    borderRadius: 3,
+                                    background: isSubActive ? "rgba(225, 91, 57, 0.2)" : "rgba(225, 91, 57, 0.08)",
+                                    color: "#e15b39",
+                                    flexShrink: 0,
+                                    textTransform: "uppercase",
+                                  }}
+                                >
+                                  {subParsed.phaseBadge}
+                                </span>
+                              ) : (
+                                <span
+                                  style={{
+                                    width: 3.5,
+                                    height: 3.5,
+                                    borderRadius: "50%",
+                                    background: isSubActive ? "#e15b39" : "rgba(0,0,0,0.22)",
+                                    flexShrink: 0,
+                                  }}
+                                />
+                              )}
+                              <span
+                                style={{
+                                  whiteSpace: "nowrap",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  flex: 1,
+                                }}
+                              >
+                                {subParsed.title}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* Sidebar Footer Info */}
@@ -821,13 +1345,13 @@ function PreviewPageContent() {
             gap: 6,
             flexShrink: 0,
           }}>
-            <span>{toc.length} sections</span>
+            <span>{isGenerating ? "Loading..." : `${groupedSections.length} sections`}</span>
             <span>•</span>
-            <span>{wordCount.toLocaleString()} words</span>
+            <span>{isGenerating ? "Generating..." : `${wordCount.toLocaleString()} words`}</span>
           </div>
         </aside>
 
-        {/* â”€â”€ Main document area â”€â”€ */}
+        {/* ── Main document area ── */}
         <div ref={contentRef} style={{ flex: 1, minWidth: 0, height: "100%", overflowY: "auto", position: "relative" }}>
           {isEditing ? (
             <div style={{ padding: 32, height: "100%", display: "flex", flexDirection: "column", gap: 12 }}>
@@ -849,6 +1373,8 @@ function PreviewPageContent() {
                 }}
               />
             </div>
+          ) : isGenerating || !markdown || markdown.trim() === "" ? (
+            <PrdContentBuffering projectName={projectInfo?.appName} />
           ) : (
             <div style={{ maxWidth: 780, margin: "0 auto", padding: "48px 36px 120px" }}>
               <MarkdownRenderer
@@ -1250,6 +1776,31 @@ function PreviewPageContent() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes dotBounce { 0%,80%,100%{transform:translateY(0);opacity:0.4} 40%{transform:translateY(-5px);opacity:1} }
+        @keyframes prdBufferingShimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+        @keyframes prdBufferLineMove {
+          0% { transform: translateX(-100%); }
+          50% { transform: translateX(0%); }
+          100% { transform: translateX(100%); }
+        }
+        .prd-buffering-shimmer {
+          background: linear-gradient(
+            90deg,
+            rgba(225, 91, 57, 0.04) 25%,
+            rgba(225, 91, 57, 0.15) 50%,
+            rgba(225, 91, 57, 0.04) 75%
+          );
+          background-size: 200% 100%;
+          animation: prdBufferingShimmer 1.6s ease-in-out infinite;
+        }
+        .prd-buffering-line {
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, #e15b39, transparent);
+          animation: prdBufferLineMove 1.8s ease-in-out infinite;
+        }
         aside::-webkit-scrollbar { width: 4px; }
         aside::-webkit-scrollbar-thumb { background: var(--border-hairline); border-radius: 3px; }
         select option, select optgroup { background: var(--bg-elevated); color: var(--fg-primary); }

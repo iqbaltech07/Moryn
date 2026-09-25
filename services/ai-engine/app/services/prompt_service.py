@@ -317,10 +317,11 @@ def build_prd_user_prompt(
         parts.append(f"User Question Answers:\n{ans_str}")
     if structure_context:
         parts.append(
-            f"=== GENERATED ARCHITECTURE STRUCTURE & MODULE HIERARCHY ===\n"
+            f"=== GENERATED ARCHITECTURE STRUCTURE & MODULE HIERARCHY (SINGLE SOURCE OF TRUTH) ===\n"
             f"{structure_context}\n"
-            f"CRITICAL DIRECTIVE: The PRD Functional Requirements (Section 3) and Technical Architecture (Section 5) "
-            f"must explicitly reflect, align with, and expand upon the modules and capabilities defined in this structure."
+            f"CRITICAL DIRECTIVE: The PRD Functional Requirements (Section 3: Core Features) and Technical Architecture (Section 5) "
+            f"must STRICTLY reflect, align with, and use the exact modules, phases, and sub-capabilities defined in this structure. "
+            f"Never create divergent or ambiguous feature names so that the Structure/Blueprint, PRD, and Kanban remain 100% synchronized."
         )
     if design_preference:
         parts.append(f"Design Preference: {design_preference}")

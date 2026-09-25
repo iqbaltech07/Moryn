@@ -88,7 +88,12 @@ export default function DashboardClient({
       {/* ── Left Sidebar ── */}
       <DashboardSidebar
         currentTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === "overview") {
+            setShowNewProject(false);
+          }
+        }}
         mobileOpen={mobileOpen}
         onCloseMobile={() => setMobileOpen(false)}
       />
