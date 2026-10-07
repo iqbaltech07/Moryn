@@ -367,3 +367,167 @@ export function UserProfileSkeleton() {
   );
 }
 
+/**
+ * Dashboard Top Header Skeleton
+ */
+export function DashboardHeaderSkeleton() {
+  return (
+    <header className="h-16 border-b border-transparent flex items-center justify-between px-6 lg:px-14">
+      <div className="flex items-center gap-3">
+        <div className="lg:hidden w-9 h-9 rounded-lg skeleton-shimmer" />
+      </div>
+      <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+        <div className="w-9 h-9 rounded-xl skeleton-shimmer" />
+        <div className="ml-1 h-9 w-28 rounded-lg skeleton-shimmer" />
+      </div>
+    </header>
+  );
+}
+
+/**
+ * Dashboard Overview Tab Skeleton Page
+ */
+export function DashboardOverviewSkeleton() {
+  return (
+    <div className="animate-in fade-in duration-200">
+      {/* Greeting Skeleton */}
+      <div className="mb-8">
+        <div className="h-9 w-64 max-w-full rounded-xl skeleton-shimmer mb-2.5" />
+        <div className="h-4 w-96 max-w-full rounded-md skeleton-shimmer" />
+      </div>
+
+      {/* Hero Card Skeleton */}
+      <div className="rounded-2xl border border-neutral-200/80 bg-white p-6 sm:p-8 mb-10 shadow-xs">
+        <div className="h-6 w-36 rounded-full skeleton-shimmer mb-3.5" />
+        <div className="h-8 w-72 max-w-full rounded-xl skeleton-shimmer mb-3" />
+        <div className="space-y-2 mb-6 max-w-lg">
+          <div className="h-4 w-full rounded-md skeleton-shimmer" />
+          <div className="h-4 w-3/4 rounded-md skeleton-shimmer" />
+        </div>
+        <div className="h-10 w-44 rounded-xl skeleton-shimmer" />
+      </div>
+
+      {/* All Projects Section Skeleton */}
+      <section className="mb-16">
+        <div className="flex items-center justify-between mb-4">
+          <div className="h-3.5 w-28 rounded-md skeleton-shimmer" />
+          <div className="h-3.5 w-16 rounded-md skeleton-shimmer" />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map((idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-2xl border border-neutral-200/70 p-6 flex flex-col justify-between h-56 shadow-xs"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="h-5 w-16 rounded-md skeleton-shimmer" />
+                  <div className="w-5 h-5 rounded-md skeleton-shimmer" />
+                </div>
+                <div className="h-5 w-36 rounded-md skeleton-shimmer mb-2.5" />
+                <div className="space-y-1.5">
+                  <div className="h-3.5 w-full rounded-md skeleton-shimmer" />
+                  <div className="h-3.5 w-4/5 rounded-md skeleton-shimmer" />
+                </div>
+              </div>
+              <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
+                <div className="h-3.5 w-24 rounded-md skeleton-shimmer" />
+                <div className="h-8 w-28 rounded-lg skeleton-shimmer" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+/**
+ * Dashboard Projects Tab Skeleton Page
+ */
+export function DashboardProjectsSkeleton() {
+  return (
+    <div className="animate-in fade-in duration-200">
+      {/* Header row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <div className="h-9 w-44 max-w-full rounded-xl skeleton-shimmer mb-2.5" />
+          <div className="h-4 w-80 max-w-full rounded-md skeleton-shimmer" />
+        </div>
+        <div className="h-10 w-36 rounded-xl skeleton-shimmer shrink-0" />
+      </div>
+
+      {/* Search & Filter Controls */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <div className="h-11 flex-1 rounded-xl skeleton-shimmer" />
+        <div className="h-11 w-64 rounded-xl skeleton-shimmer shrink-0" />
+      </div>
+
+      {/* Projects Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[1, 2, 3, 4, 5, 6].map((idx) => (
+          <div
+            key={idx}
+            className="bg-white rounded-2xl border border-neutral-200/80 p-6 flex flex-col justify-between h-56 shadow-xs"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-6 w-20 rounded-full skeleton-shimmer" />
+                <div className="w-8 h-8 rounded-lg skeleton-shimmer" />
+              </div>
+              <div className="h-5 w-40 rounded-md skeleton-shimmer mb-2.5" />
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-full rounded-md skeleton-shimmer" />
+                <div className="h-3.5 w-2/3 rounded-md skeleton-shimmer" />
+              </div>
+            </div>
+            <div className="pt-4 border-t border-neutral-100 flex items-center justify-between">
+              <div className="h-4 w-28 rounded-md skeleton-shimmer" />
+              <div className="h-8 w-28 rounded-lg skeleton-shimmer" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Dashboard Settings Tab Skeleton Page
+ */
+export function DashboardSettingsSkeleton() {
+  return (
+    <div className="animate-in fade-in duration-200">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="h-9 w-40 max-w-full rounded-xl skeleton-shimmer mb-2.5" />
+        <div className="h-4 w-96 max-w-full rounded-md skeleton-shimmer" />
+      </div>
+
+      {/* Tabs Row */}
+      <div className="flex items-center gap-2 mb-8 border-b border-neutral-200/60 pb-3 overflow-x-auto">
+        <div className="h-9 w-36 rounded-xl skeleton-shimmer shrink-0" />
+        <div className="h-9 w-44 rounded-xl skeleton-shimmer shrink-0" />
+        <div className="h-9 w-36 rounded-xl skeleton-shimmer shrink-0" />
+        <div className="h-9 w-32 rounded-xl skeleton-shimmer shrink-0" />
+      </div>
+
+      {/* Card Content Skeleton */}
+      <div className="bg-white rounded-2xl border border-neutral-200/80 p-6 sm:p-8 shadow-xs">
+        <div className="h-6 w-48 rounded-md skeleton-shimmer mb-2" />
+        <div className="h-4 w-96 max-w-full rounded-md skeleton-shimmer mb-6" />
+
+        <div className="space-y-4 max-w-2xl">
+          <div className="h-12 w-full rounded-xl skeleton-shimmer" />
+          <div className="flex gap-3">
+            <div className="h-10 w-32 rounded-xl skeleton-shimmer" />
+            <div className="h-10 w-28 rounded-xl skeleton-shimmer" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+

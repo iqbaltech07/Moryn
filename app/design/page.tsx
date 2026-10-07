@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
 import { ArrowRight } from "lucide-react";
@@ -27,6 +27,7 @@ import { useTranslation } from "@/lib/i18n";
 
 
 function ProjectDetailContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get("projectId");
   const { t } = useTranslation();
@@ -176,28 +177,38 @@ function ProjectDetailContent() {
         <ProjectHeaderBrand projectId={projectId} />
         <StepNavbar currentStep="design" projectId={projectId} />
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
-          <Link
-            href={`/task?projectId=${projectId}`}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 18px",
-              borderRadius: "8px",
-              background: "#e15b39",
-              color: "#ffffff",
-              border: "none",
-              fontFamily: "var(--font-body)",
-              fontSize: "12px",
-              fontWeight: 700,
-              letterSpacing: "0.02em",
-              textDecoration: "none",
-              transition: "opacity 0.15s, transform 0.1s",
-            }}
-          >
-            <span>{t.design.nextStep}</span>
-            <ArrowRight size={14} strokeWidth={2.2} />
-          </Link>
+          {(() => {
+            const isContentReady = Boolean(!isLoading && !isUploading && hasDesignData && project);
+            const isNextDisabled = !isContentReady || !projectId;
+
+            return (
+              <button
+                type="button"
+                onClick={() => router.push(`/task${projectId ? `?projectId=${projectId}` : ""}`)}
+                disabled={isNextDisabled}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "8px 18px",
+                  borderRadius: "8px",
+                  background: "#e15b39",
+                  color: "#ffffff",
+                  border: "none",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  letterSpacing: "0.02em",
+                  cursor: isNextDisabled ? "not-allowed" : "pointer",
+                  opacity: isNextDisabled ? 0.4 : 1,
+                  transition: "opacity 0.15s, transform 0.1s",
+                }}
+              >
+                <span>{t.design.nextStep}</span>
+                <ArrowRight size={14} strokeWidth={2.2} />
+              </button>
+            );
+          })()}
         </div>
       </header>
 

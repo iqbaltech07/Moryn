@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutGrid, Folder, Layers, Settings, HelpCircle, LogOut, X, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signOut } from "@/lib/auth/auth-client";
 import { useTranslation } from "@/lib/i18n";
 
@@ -24,7 +24,24 @@ export default function DashboardSidebar({
   const pathname = usePathname();
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [optimisticTab, setOptimisticTab] = useState<string | null>(null);
   const { t } = useTranslation();
+
+  // Reset optimistic tab when pathname updates
+  useEffect(() => {
+    setOptimisticTab(null);
+  }, [pathname]);
+
+  const activeTabId =
+    optimisticTab ||
+    currentTab ||
+    (pathname === "/dashboard"
+      ? "overview"
+      : pathname.startsWith("/dashboard/projects")
+      ? "projects"
+      : pathname.startsWith("/dashboard/settings")
+      ? "settings"
+      : "overview");
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -47,28 +64,28 @@ export default function DashboardSidebar({
       label: t.nav.overview,
       icon: LayoutGrid,
       href: "/dashboard",
-      active: currentTab ? currentTab === "overview" : pathname === "/dashboard",
+      active: activeTabId === "overview",
     },
     {
       id: "projects",
       label: t.nav.projects,
       icon: Folder,
       href: "/dashboard/projects",
-      active: currentTab ? currentTab === "projects" : pathname.startsWith("/dashboard/projects"),
+      active: activeTabId === "projects",
     },
     // {
     //   id: "templates",
     //   label: t.nav.templates,
     //   icon: Layers,
     //   href: "/#features",
-    //   active: currentTab ? currentTab === "templates" : pathname.startsWith("/dashboard/templates"),
+    //   active: activeTabId === "templates",
     // },
     {
       id: "settings",
       label: t.nav.settings,
       icon: Settings,
       href: "/dashboard/settings",
-      active: currentTab ? currentTab === "settings" : pathname.startsWith("/dashboard/settings"),
+      active: activeTabId === "settings",
     },
   ];
 
@@ -139,6 +156,7 @@ export default function DashboardSidebar({
                   key={item.id}
                   href={item.href}
                   onClick={() => {
+                    setOptimisticTab(item.id);
                     if (onTabChange) onTabChange(item.id);
                     if (onCloseMobile) onCloseMobile();
                   }}

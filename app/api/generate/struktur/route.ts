@@ -78,6 +78,13 @@ export async function POST(req: NextRequest) {
 
     if (project.strukturData) {
       const data = JSON.parse(project.strukturData);
+      if (Array.isArray(data?.nodes)) {
+        data.nodes.sort((a: any, b: any) => {
+          const pA = typeof a.phase === "number" && !isNaN(a.phase) ? a.phase : 1;
+          const pB = typeof b.phase === "number" && !isNaN(b.phase) ? b.phase : 1;
+          return pA - pB;
+        });
+      }
       try {
         await redis.set(cacheKeyStruktur, data);
       } catch {}
@@ -93,7 +100,16 @@ export async function POST(req: NextRequest) {
           where: { id: projectId },
           select: { strukturData: true },
         });
-        return p?.strukturData ? JSON.parse(p.strukturData) : null;
+        if (!p?.strukturData) return null;
+        const parsed = JSON.parse(p.strukturData);
+        if (Array.isArray(parsed?.nodes)) {
+          parsed.nodes.sort((a: any, b: any) => {
+            const pA = typeof a.phase === "number" && !isNaN(a.phase) ? a.phase : 1;
+            const pB = typeof b.phase === "number" && !isNaN(b.phase) ? b.phase : 1;
+            return pA - pB;
+          });
+        }
+        return parsed;
       },
       12000,
       1000
@@ -121,6 +137,13 @@ export async function POST(req: NextRequest) {
     }
 
     const parsedStruktur = strukturRes.data;
+    if (Array.isArray(parsedStruktur?.nodes)) {
+      parsedStruktur.nodes.sort((a: any, b: any) => {
+        const pA = typeof a.phase === "number" && !isNaN(a.phase) ? a.phase : 1;
+        const pB = typeof b.phase === "number" && !isNaN(b.phase) ? b.phase : 1;
+        return pA - pB;
+      });
+    }
 
     // Save to Database
     await prisma.project.update({

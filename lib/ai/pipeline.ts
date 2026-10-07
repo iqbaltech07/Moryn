@@ -44,19 +44,37 @@ export function formatStructureSummary(strukturData: unknown): string {
 
     if (data.title) lines.push(`Project Title: ${data.title}`);
     if (data.description) lines.push(`Summary: ${data.description}`);
-    lines.push("\nFeature & Module Hierarchy:");
+    lines.push("\nFeature & Module Hierarchy by Rollout Phase (FROM ARCHITECTURE BLUEPRINT):");
 
-    if (Array.isArray(data.nodes)) {
-      data.nodes.forEach((node, idx) => {
-        const phaseLabel = node.phase ? ` [Phase ${node.phase}]` : "";
-        lines.push(`${idx + 1}. Module: ${node.label || "Untitled"}${phaseLabel}`);
-        if (Array.isArray(node.children) && node.children.length > 0) {
-          node.children.forEach((c) => {
-            const label = typeof c === "string" ? c : c.label || "";
-            if (label) lines.push(`   - ${label}`);
-          });
-        }
+    if (Array.isArray(data.nodes) && data.nodes.length > 0) {
+      // Group by phase in ascending order (Phase 1, Phase 2, Phase 3...)
+      const phaseMap: Record<number, StrukturNodeItem[]> = {};
+      data.nodes.forEach((node) => {
+        const p = typeof node.phase === "number" && !isNaN(node.phase) ? node.phase : 1;
+        if (!phaseMap[p]) phaseMap[p] = [];
+        phaseMap[p].push(node);
       });
+
+      const sortedPhases = Object.keys(phaseMap).map(Number).sort((a, b) => a - b);
+      sortedPhases.forEach((p) => {
+        lines.push(`\n=== FASE ${p} MODULES ===`);
+        phaseMap[p].forEach((node, nodeIdx) => {
+          lines.push(`- Module ${p}.${nodeIdx + 1}: ${node.label || "Untitled"}`);
+          if (Array.isArray(node.children) && node.children.length > 0) {
+            node.children.forEach((c) => {
+              const label = typeof c === "string" ? c : c.label || "";
+              if (label) lines.push(`   * Sub-feature: ${label}`);
+            });
+          }
+        });
+      });
+
+      lines.push(
+        "\nCRITICAL DIRECTIVE FOR PRD SECTION 3 (CORE FEATURES):\n" +
+        "You MUST organize Section 3 (Core Features) strictly according to these phases and modules above.\n" +
+        "Use exact H3 headers for each phase (e.g. '### Fase 1 — [Module Name]', '### Fase 2 — [Module Name]').\n" +
+        "Include the exact sub-features listed under each module so the PRD and Structure Blueprint are 100% identical, coherent, and unambiguous."
+      );
     }
 
     return lines.join("\n");
