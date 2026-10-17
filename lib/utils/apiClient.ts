@@ -289,6 +289,14 @@ export const apiClient = {
         success: boolean;
         message?: string;
         error?: string;
+        latencyMs?: number;
+        details?: {
+          label?: string;
+          usage?: number;
+          limit?: number | null;
+          isFreeTier?: boolean;
+          modelCount?: number;
+        };
       }>("/api/user/custom-keys/test", {
         method: "POST",
         body: JSON.stringify(payload),

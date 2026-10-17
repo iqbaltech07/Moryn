@@ -16,6 +16,7 @@ import { useTranslation } from "@/lib/i18n";
 import { useLanguageStore } from "@/stores/useLanguageStore";
 import Step2TechStack from "./setup/Step2TechStack";
 import Step3Personalize from "./setup/Step3Personalize";
+import CustomDesignUploadCard from "./setup/CustomDesignUploadCard";
 
 interface NewProjectSetupProps {
   onBack: () => void;
@@ -38,6 +39,8 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
     setAppIdea,
     setStackMode,
     setDesignData,
+    setCustomDesignMeta,
+    clearCustomDesign,
     setDynamicAnswer,
     resetWizard,
   } = useWizardStore();
@@ -51,7 +54,13 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
     setLoading(true);
     try {
       const language = useLanguageStore.getState().language;
-      const data = await apiClient.projects.create({ ...form, language });
+      // Prioritize user's custom design markdown over preset designData
+      const payload = {
+        ...form,
+        designData: form.customDesignMeta?.rawMarkdown || form.designData,
+        language,
+      };
+      const data = await apiClient.projects.create(payload);
       resetWizard();
       router.push(`/structure?projectId=${data.projectId}`);
     } catch (err: unknown) {
@@ -261,6 +270,25 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
                   </span>
                 </div>
               </div>
+
+              {/* Optional Custom Schema Upload Banner */}
+              <div className="pt-1">
+                <CustomDesignUploadCard
+                  compact={true}
+                  customMeta={form.customDesignMeta ?? null}
+                  onParsed={(rawMarkdown, meta) => {
+                    setCustomDesignMeta({ ...meta, rawMarkdown });
+                  }}
+                  onClear={() => {
+                    clearCustomDesign();
+                  }}
+                  onAutoTitleDetected={(detectedTitle) => {
+                    if (!form.appName.trim()) {
+                      setAppName(detectedTitle);
+                    }
+                  }}
+                />
+              </div>
             </div>
 
             {/* Bottom Actions Bar */}
@@ -354,6 +382,13 @@ export default function NewProjectSetup({ onBack }: NewProjectSetupProps) {
           setStackMode={setStackMode}
           setStack={setStack}
           setDesignData={setDesignData}
+          customDesignMeta={form.customDesignMeta ?? null}
+          onCustomDesignParsed={(rawMarkdown, meta) => {
+            setCustomDesignMeta({ ...meta, rawMarkdown });
+          }}
+          onCustomDesignClear={() => {
+            clearCustomDesign();
+          }}
         >
           <div className="flex items-center justify-between gap-4 mt-8 pt-6 border-t border-neutral-100">
             <button

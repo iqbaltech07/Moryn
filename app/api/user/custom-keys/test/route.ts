@@ -50,12 +50,18 @@ export async function POST(req: NextRequest) {
     const result = await testApiKey(resolvedProvider, resolvedKey);
 
     if (result.success) {
-      return NextResponse.json({ success: true, message: "Connection successful!" });
+      return NextResponse.json({
+        success: true,
+        message: "Connection successful!",
+        latencyMs: result.latencyMs,
+        details: result.details,
+      });
     } else {
       return NextResponse.json(
         {
           success: false,
           error: result.error || "Connection failed. Please check the API key.",
+          latencyMs: result.latencyMs,
         },
         { status: 422 }
       );

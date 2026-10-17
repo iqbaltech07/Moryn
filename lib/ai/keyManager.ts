@@ -216,32 +216,55 @@ export async function getSanitizedUserKeys(userId: string): Promise<SanitizedApi
   return result.sort((a, b) => a.priority - b.priority);
 }
 
+export interface TestApiKeyResult {
+  success: boolean;
+  error?: string;
+  latencyMs?: number;
+  details?: {
+    label?: string;
+    usage?: number;
+    limit?: number | null;
+    isFreeTier?: boolean;
+    modelCount?: number;
+  };
+}
+
 /**
  * Tests an API Key connection with a lightweight probe call.
  */
 export async function testApiKey(
   provider: AIKeyProvider,
   apiKey: string
-): Promise<{ success: boolean; error?: string }> {
+): Promise<TestApiKeyResult> {
   if (!apiKey || typeof apiKey !== "string") {
     return { success: false, error: "API Key is empty" };
   }
 
   const trimmedKey = apiKey.trim();
+  const startTime = Date.now();
 
   if (provider === "gemini") {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${trimmedKey}`, {
         signal: AbortSignal.timeout(6000),
       });
+      const latencyMs = Date.now() - startTime;
       if (res.ok) {
-        return { success: true };
+        const data = await res.json().catch(() => ({}));
+        return {
+          success: true,
+          latencyMs,
+          details: {
+            modelCount: Array.isArray(data.models) ? data.models.length : undefined,
+          },
+        };
       }
       const errData = await res.json().catch(() => ({}));
-      return { success: false, error: errData.error?.message || "Invalid Gemini API Key" };
+      return { success: false, latencyMs, error: errData.error?.message || "Invalid Gemini API Key" };
     } catch (err: unknown) {
+      const latencyMs = Date.now() - startTime;
       const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg };
+      return { success: false, latencyMs, error: msg };
     }
   }
 
@@ -251,14 +274,27 @@ export async function testApiKey(
         headers: { Authorization: `Bearer ${trimmedKey}` },
         signal: AbortSignal.timeout(6000),
       });
+      const latencyMs = Date.now() - startTime;
       if (res.ok) {
-        return { success: true };
+        const json = await res.json().catch(() => ({}));
+        const keyData = json?.data || {};
+        return {
+          success: true,
+          latencyMs,
+          details: {
+            label: keyData.label || undefined,
+            usage: typeof keyData.usage === "number" ? keyData.usage : undefined,
+            limit: keyData.limit ?? null,
+            isFreeTier: Boolean(keyData.is_free_tier),
+          },
+        };
       }
       const errData = await res.json().catch(() => ({}));
-      return { success: false, error: errData.error?.message || "Invalid OpenRouter API Key" };
+      return { success: false, latencyMs, error: errData.error?.message || "Invalid OpenRouter API Key" };
     } catch (err: unknown) {
+      const latencyMs = Date.now() - startTime;
       const msg = err instanceof Error ? err.message : String(err);
-      return { success: false, error: msg };
+      return { success: false, latencyMs, error: msg };
     }
   }
 
