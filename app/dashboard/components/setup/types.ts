@@ -14,6 +14,17 @@ export interface DynamicQuestion {
   conditionalInputType?: "text" | "textarea";
 }
 
+export interface CustomDesignMeta {
+  fileName: string;
+  fileSize: number;
+  uploadedAt: string;
+  tokenCount: number;
+  sectionCount: number;
+  tokensSample: Array<{ token: string; hex: string; role: string }>;
+  sectionsSample: Array<{ id: string; title: string }>;
+  rawMarkdown?: string;
+}
+
 export interface FormData {
   appIdea: string;
   appName: string;
@@ -27,6 +38,7 @@ export interface FormData {
   dynamicQuestions: DynamicQuestion[];
   dynamicAnswers: Record<string, string | string[]>;
   designData?: string;
+  customDesignMeta?: CustomDesignMeta | null;
 }
 
 export type StackCategory = "frontend" | "backend" | "database" | "deployment";

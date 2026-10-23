@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { FormData, Step, StackCategory } from "@/app/dashboard/components/setup/types";
+import type { FormData, Step, StackCategory, CustomDesignMeta } from "@/app/dashboard/components/setup/types";
 import { apiClient } from "@/lib/utils/apiClient";
 import { useLanguageStore } from "@/stores/useLanguageStore";
 
@@ -21,6 +21,8 @@ interface WizardStore {
   setStackMode: (mode: "manual" | "ai") => void;
   setStack: (category: StackCategory, label: string) => void;
   setDesignData: (designData: string) => void;
+  setCustomDesignMeta: (meta: CustomDesignMeta | null) => void;
+  clearCustomDesign: () => void;
   setDynamicAnswer: (
     key: string,
     value: string | string[],
@@ -77,6 +79,24 @@ export const useWizardStore = create<WizardStore>()(
 
       setDesignData: (designData) =>
         set((state) => ({ form: { ...state.form, designData } })),
+
+      setCustomDesignMeta: (meta) =>
+        set((state) => ({
+          form: {
+            ...state.form,
+            customDesignMeta: meta,
+            designData: meta?.rawMarkdown || state.form.designData,
+          },
+        })),
+
+      clearCustomDesign: () =>
+        set((state) => ({
+          form: {
+            ...state.form,
+            customDesignMeta: null,
+            designData: undefined,
+          },
+        })),
 
       setDynamicAnswer: (key, value, type = "single") =>
         set((state) => {

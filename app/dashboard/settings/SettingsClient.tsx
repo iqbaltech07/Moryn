@@ -40,6 +40,8 @@ import {
   Folder,
   Calendar,
   Languages,
+  XCircle,
+  ExternalLink,
 } from "lucide-react";
 import DashboardSidebar from "../components/DashboardSidebar";
 import DashboardHeader from "../components/DashboardHeader";
@@ -106,7 +108,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   const [activeSection, setActiveSection] = useState<"keys" | "byok" | "account" | "preferences">(
     tabParam === "preferences" ? "preferences" : tabParam === "account" ? "account" : tabParam === "byok" ? "byok" : "keys"
   );
-  const { t, language, setLanguage } = useTranslation();
+  const { t, language, setLanguage, isId } = useTranslation();
 
   useEffect(() => {
     const tab = searchParams.get("tab");
@@ -151,6 +153,22 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   const [newKeyValue, setNewKeyValue] = useState("");
   const [newModel, setNewModel] = useState("gemini-2.5-flash");
   const [isSavingKey, setIsSavingKey] = useState(false);
+  const [showModalKey, setShowModalKey] = useState(false);
+  const [isTestingModalKey, setIsTestingModalKey] = useState(false);
+  const [modalTestResult, setModalTestResult] = useState<{
+    tested: boolean;
+    success: boolean;
+    message?: string;
+    error?: string;
+    latencyMs?: number;
+    details?: {
+      label?: string;
+      usage?: number;
+      limit?: number | null;
+      isFreeTier?: boolean;
+      modelCount?: number;
+    };
+  } | null>(null);
 
   useEffect(() => {
     fetchMorynApiKey();
@@ -220,8 +238,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   }
 
   // Handle Regenerate Key
-  async function handleRegenerateApiKey() {
-    if (!confirm("Regenerate Moryn API Key? Your previous key will be immediately invalidated.")) return;
+  async function executeRegenerateApiKey() {
     try {
       setIsRegenerating(true);
       const data = await apiClient.user.generateApiKey();
@@ -237,6 +254,50 @@ export default function SettingsClient({ user }: SettingsClientProps) {
     }
   }
 
+  function handleRegenerateApiKey() {
+    toast.custom(
+      (tId) => (
+        <div className="w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.06)] border border-neutral-200/90 p-4 font-sans text-neutral-900 pointer-events-auto">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-amber-50 border border-amber-200/60 flex items-center justify-center text-amber-600 shrink-0 mt-0.5">
+              <Key size={16} />
+            </div>
+            <div className="flex-1 min-w-0 pr-1">
+              <h4 className="text-[13px] font-semibold text-neutral-900 leading-snug">
+                {isId ? "Regenerasi API Key?" : "Regenerate Moryn API Key?"}
+              </h4>
+              <p className="text-[12px] text-neutral-500 mt-1 leading-relaxed">
+                {isId
+                  ? "Key sebelumnya akan langsung dinonaktifkan secara permanen."
+                  : "Your previous key will be immediately and permanently invalidated."}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 mt-3.5 pt-3 border-t border-neutral-100">
+            <button
+              type="button"
+              onClick={() => toast.dismiss(tId)}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+            >
+              {isId ? "Batal" : "Cancel"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                toast.dismiss(tId);
+                executeRegenerateApiKey();
+              }}
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#E05A38] hover:bg-[#d04e2e] active:scale-95 rounded-lg shadow-xs transition-all cursor-pointer"
+            >
+              {isId ? "Regenerasi" : "Regenerate"}
+            </button>
+          </div>
+        </div>
+      ),
+      { id: "confirm-regenerate-key", duration: 8000 }
+    );
+  }
+
   // Handle Copy Key
   const handleCopyKey = async (textToCopy: string) => {
     try {
@@ -248,6 +309,64 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       console.warn("Copy failed:", e);
     }
   };
+
+  // Helper to reset and close Add Modal
+  function closeAddModal() {
+    setShowAddModal(false);
+    setNewLabel("");
+    setNewKeyValue("");
+    setShowModalKey(false);
+    setModalTestResult(null);
+  }
+
+  // Handle Test Key inside Add Key Modal
+  async function handleTestModalKey() {
+    const trimmed = newKeyValue.trim();
+    if (!trimmed) {
+      toast.error("Please enter an API Key first");
+      return;
+    }
+
+    try {
+      setIsTestingModalKey(true);
+      setModalTestResult(null);
+
+      const res = await apiClient.user.testCustomAiKey({
+        provider: newProvider,
+        apiKey: trimmed,
+      });
+
+      if (res.success) {
+        setModalTestResult({
+          tested: true,
+          success: true,
+          message: res.message || "Connection verified successfully!",
+          latencyMs: res.latencyMs,
+          details: res.details,
+        });
+        toast.success("API Key connection verified!");
+      } else {
+        setModalTestResult({
+          tested: true,
+          success: false,
+          error: res.error || "Key verification failed",
+          latencyMs: res.latencyMs,
+        });
+        toast.error(res.error || "Key verification failed");
+      }
+    } catch (err: unknown) {
+      const error = err as { message?: string };
+      const errMsg = error.message || "Verification failed";
+      setModalTestResult({
+        tested: true,
+        success: false,
+        error: errMsg,
+      });
+      toast.error(errMsg);
+    } finally {
+      setIsTestingModalKey(false);
+    }
+  }
 
   // Handle Add Custom AI Key
   async function handleAddCustomKey(e: React.FormEvent) {
@@ -267,9 +386,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       });
 
       toast.success("Custom AI key saved successfully");
-      setShowAddModal(false);
-      setNewLabel("");
-      setNewKeyValue("");
+      closeAddModal();
       fetchCustomAiKeys();
     } catch (err: unknown) {
       const error = err as { message?: string };
@@ -294,8 +411,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   }
 
   // Handle Delete Custom Key
-  async function handleDeleteCustomKey(id: string, label: string) {
-    if (!confirm(`Delete custom key "${label}"?`)) return;
+  async function executeDeleteCustomKey(id: string) {
     try {
       await apiClient.user.deleteCustomAiKey(id);
       setCustomKeys((prev) => prev.filter((k) => k.id !== id));
@@ -304,6 +420,51 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       const error = err as { message?: string };
       toast.error(error.message || "Failed to delete key");
     }
+  }
+
+  function handleDeleteCustomKey(id: string, label: string) {
+    toast.custom(
+      (tId) => (
+        <div className="w-[360px] max-w-[calc(100vw-32px)] bg-white rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.06)] border border-neutral-200/90 p-4 font-sans text-neutral-900 pointer-events-auto">
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-lg bg-red-50 border border-red-200/60 flex items-center justify-center text-red-600 shrink-0 mt-0.5">
+              <Trash2 size={16} />
+            </div>
+            <div className="flex-1 min-w-0 pr-1">
+              <h4 className="text-[13px] font-semibold text-neutral-900 leading-snug truncate">
+                {isId ? `Hapus key "${label}"?` : `Delete key "${label}"?`}
+              </h4>
+              <p className="text-[12px] text-neutral-500 mt-1 leading-relaxed">
+                {isId
+                  ? "Kredensial API key kustom ini akan dihapus permanen."
+                  : "This custom API key credential will be permanently removed."}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 mt-3.5 pt-3 border-t border-neutral-100">
+            <button
+              type="button"
+              onClick={() => toast.dismiss(tId)}
+              className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+            >
+              {isId ? "Batal" : "Cancel"}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                toast.dismiss(tId);
+                executeDeleteCustomKey(id);
+              }}
+              className="px-3.5 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 active:scale-95 rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <Trash2 size={13} />
+              {isId ? "Hapus" : "Delete"}
+            </button>
+          </div>
+        </div>
+      ),
+      { id: `confirm-delete-key-${id}`, duration: 8000 }
+    );
   }
 
   // Handle Test Custom Key Connection
@@ -1205,7 +1366,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-lg font-bold text-neutral-900">Add Custom AI Key</h3>
                   <button
-                    onClick={() => setShowAddModal(false)}
+                    onClick={closeAddModal}
                     className="text-neutral-400 hover:text-neutral-700 p-1 rounded-lg text-sm"
                   >
                     ✕
@@ -1223,6 +1384,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                         onClick={() => {
                           setNewProvider("gemini");
                           setNewModel(geminiModels[0]?.id || "gemini-2.5-flash");
+                          setModalTestResult(null);
                         }}
                         className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${newProvider === "gemini"
                             ? "bg-[#FAF3F0] text-[#E05A38] border-[#E05A38] font-semibold"
@@ -1240,6 +1402,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                             openRouterRankedModels[0]?.id ||
                             "meta-llama/llama-3.3-70b-instruct:free";
                           setNewModel(defaultModel);
+                          setModalTestResult(null);
                         }}
                         className={`py-2 px-3 rounded-xl border text-xs font-medium transition ${newProvider === "openrouter"
                             ? "bg-[#FAF3F0] text-[#E05A38] border-[#E05A38] font-semibold"
@@ -1265,17 +1428,132 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                   </div>
 
                   <div>
-                    <label className="text-xs font-semibold text-neutral-700 block mb-1.5">
-                      API Secret Key <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="password"
-                      value={newKeyValue}
-                      onChange={(e) => setNewKeyValue(e.target.value)}
-                      placeholder={newProvider === "gemini" ? "AIzaSy..." : "sk-or-v1-..."}
-                      required
-                      className="w-full h-10 px-3 rounded-xl bg-white border border-neutral-200 text-sm font-mono text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition"
-                    />
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="text-xs font-semibold text-neutral-700 block">
+                        API Secret Key <span className="text-red-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleTestModalKey}
+                        disabled={isTestingModalKey || !newKeyValue.trim()}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition border shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed bg-white border-neutral-200 text-neutral-700 hover:bg-neutral-50 hover:border-neutral-300 active:translate-y-px"
+                        title="Test API Key connection with provider"
+                      >
+                        {isTestingModalKey ? (
+                          <RefreshCw size={12} className="animate-spin text-[#E05A38]" />
+                        ) : (
+                          <Zap size={12} className="text-[#E05A38]" />
+                        )}
+                        <span>{isTestingModalKey ? "Testing..." : "Test Key"}</span>
+                      </button>
+                    </div>
+
+                    <div className="relative">
+                      <input
+                        type={showModalKey ? "text" : "password"}
+                        value={newKeyValue}
+                        onChange={(e) => {
+                          setNewKeyValue(e.target.value);
+                          if (modalTestResult) setModalTestResult(null);
+                        }}
+                        placeholder={newProvider === "gemini" ? "AIzaSy..." : "sk-or-v1-..."}
+                        required
+                        className="w-full h-10 pl-3 pr-10 rounded-xl bg-white border border-neutral-200 text-sm font-mono text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-900/10 focus:border-neutral-400 transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowModalKey(!showModalKey)}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700 p-1 rounded-md transition"
+                        title={showModalKey ? "Hide key" : "Show key"}
+                        aria-label={showModalKey ? "Hide key" : "Show key"}
+                      >
+                        {showModalKey ? <EyeOff size={15} /> : <Eye size={15} />}
+                      </button>
+                    </div>
+
+                    {/* Test Result Feedback Box */}
+                    {modalTestResult && (
+                      <div
+                        className={`mt-2.5 p-3 rounded-xl border text-xs transition-all duration-200 ${
+                          modalTestResult.success
+                            ? "bg-[#F0FDF4] border-[#BBF7D0] text-[#14532D]"
+                            : "bg-[#FEF2F2] border-[#FECACA] text-[#991B1B]"
+                        }`}
+                      >
+                        {modalTestResult.success ? (
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between font-semibold">
+                              <span className="flex items-center gap-1.5">
+                                <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                                Connection Verified
+                              </span>
+                              {modalTestResult.latencyMs !== undefined && (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-100/70 text-emerald-800">
+                                  ⚡ {modalTestResult.latencyMs}ms
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-emerald-700 leading-relaxed">
+                              {newProvider === "gemini"
+                                ? "Google Gemini API key valid & ready to generate PRDs and architectures."
+                                : "OpenRouter API key authorized and active."}
+                            </p>
+                            {modalTestResult.details && (
+                              <div className="pt-1 flex flex-wrap gap-1.5 text-[10px]">
+                                {modalTestResult.details.label && (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-100/60 font-mono text-emerald-800">
+                                    Label: {modalTestResult.details.label}
+                                  </span>
+                                )}
+                                {modalTestResult.details.usage !== undefined && (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-100/60 font-mono text-emerald-800">
+                                    Usage: ${modalTestResult.details.usage.toFixed(4)}
+                                  </span>
+                                )}
+                                {modalTestResult.details.isFreeTier && (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-100/60 font-mono text-emerald-800">
+                                    Free Tier
+                                  </span>
+                                )}
+                                {modalTestResult.details.modelCount !== undefined && (
+                                  <span className="px-1.5 py-0.5 rounded bg-emerald-100/60 font-mono text-emerald-800">
+                                    {modalTestResult.details.modelCount} models accessible
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-1.5 font-semibold text-rose-800">
+                              <XCircle size={14} className="text-rose-600 shrink-0" />
+                              Verification Failed
+                            </div>
+                            <p className="text-[11px] text-rose-700 leading-relaxed font-mono break-all">
+                              {modalTestResult.error || "The provider rejected this key."}
+                            </p>
+                            <div className="pt-1 flex items-center justify-between text-[11px]">
+                              <span className="text-rose-600 text-[10px]">
+                                Pastikan menyalin key secara lengkap tanpa spasi tambahan.
+                              </span>
+                              <a
+                                href={
+                                  newProvider === "gemini"
+                                    ? "https://aistudio.google.com/apikey"
+                                    : "https://openrouter.ai/keys"
+                                }
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-rose-800 hover:text-rose-950 underline shrink-0 ml-2"
+                              >
+                                {newProvider === "gemini" ? "Google AI Studio" : "OpenRouter Dashboard"}
+                                <ExternalLink size={10} />
+                              </a>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -1348,7 +1626,7 @@ export default function SettingsClient({ user }: SettingsClientProps) {
                   <div className="pt-3 flex items-center justify-end gap-2 border-t border-neutral-100">
                     <button
                       type="button"
-                      onClick={() => setShowAddModal(false)}
+                      onClick={closeAddModal}
                       className="px-4 py-2 rounded-xl border border-neutral-200 text-neutral-700 text-sm font-medium hover:bg-neutral-50 transition"
                     >
                       Cancel

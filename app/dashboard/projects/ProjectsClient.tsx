@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus, Search, Folder, Trash2, Calendar, FolderOpen, ArrowRight } from "lucide-react";
 import DashboardSidebar from "../components/DashboardSidebar";
@@ -37,17 +37,27 @@ export default function ProjectsClient({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const { t, isId } = useTranslation();
 
-  const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const [projectToDelete, setProjectToDelete] = useState<ProjectItem | null>(null);
 
-    if (!confirm(t.projectsPage.deleteConfirm(name))) return;
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && projectToDelete && !deletingId) {
+        setProjectToDelete(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [projectToDelete, deletingId]);
 
+  const handleConfirmDelete = async () => {
+    if (!projectToDelete) return;
+    const { id } = projectToDelete;
     setDeletingId(id);
     try {
       await apiClient.projects.delete(id);
       setProjects((prev) => prev.filter((p) => p.id !== id));
       toast.success(t.projectsPage.deletedSuccess);
+      setProjectToDelete(null);
       router.refresh();
     } catch (err: unknown) {
       const error = err as { message?: string };
@@ -117,31 +127,28 @@ export default function ProjectsClient({
             <div className="flex items-center gap-1.5 p-1 bg-neutral-100/80 rounded-xl border border-neutral-200/60 w-fit">
               <button
                 onClick={() => setStatusFilter("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  statusFilter === "all"
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${statusFilter === "all"
                     ? "bg-white text-neutral-900 shadow-2xs font-semibold"
                     : "text-neutral-500 hover:text-neutral-900"
-                }`}
+                  }`}
               >
                 {t.projectsPage.allFilter} ({projects.length})
               </button>
               <button
                 onClick={() => setStatusFilter("finished")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  statusFilter === "finished"
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${statusFilter === "finished"
                     ? "bg-white text-neutral-900 shadow-2xs font-semibold"
                     : "text-neutral-500 hover:text-neutral-900"
-                }`}
+                  }`}
               >
                 {t.projectsPage.finishedFilter} ({finishedCount})
               </button>
               <button
                 onClick={() => setStatusFilter("in_progress")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  statusFilter === "in_progress"
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${statusFilter === "in_progress"
                     ? "bg-white text-neutral-900 shadow-2xs font-semibold"
                     : "text-neutral-500 hover:text-neutral-900"
-                }`}
+                  }`}
               >
                 {t.projectsPage.inProgressFilter} ({inProgressCount})
               </button>
@@ -213,25 +220,31 @@ export default function ProjectsClient({
 
                         <div className="flex items-center gap-2">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium tracking-tight ${
-                              isFinished
+                            className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium tracking-tight ${isFinished
                                 ? "bg-emerald-50 text-emerald-700 border border-emerald-200/60"
                                 : "bg-neutral-100 text-neutral-600 border border-neutral-200/60"
-                            }`}
+                              }`}
                           >
                             {isFinished ? t.dashboard.finished : t.dashboard.unfinished}
                           </span>
 
                           <button
-                            onClick={(e) =>
-                              handleDelete(e, project.id, project.appName)
-                            }
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setProjectToDelete(project);
+                            }}
                             disabled={deletingId === project.id}
-                            className="p-1.5 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
-                            title="Delete Project"
-                            aria-label="Delete Project"
+                            className="p-1.5 rounded-lg text-neutral-400 hover:text-red-600 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-50 cursor-pointer"
+                            title={isId ? "Hapus Proyek" : "Delete Project"}
+                            aria-label={isId ? "Hapus Proyek" : "Delete Project"}
                           >
-                            <Trash2 size={15} />
+                            {deletingId === project.id ? (
+                              <div className="w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <Trash2 size={15} />
+                            )}
                           </button>
                         </div>
                       </div>
@@ -263,6 +276,82 @@ export default function ProjectsClient({
           )}
         </main>
       </div>
+
+      {/* ── Centered Delete Confirmation Modal ── */}
+      {projectToDelete && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => {
+            if (!deletingId) setProjectToDelete(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.18)] border border-neutral-200/90 p-6 max-w-[420px] w-full text-neutral-900 pointer-events-auto transform animate-in zoom-in-95 duration-150 font-sans"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-4">
+              <div className="w-11 h-11 rounded-xl bg-red-50 border border-red-200/70 flex items-center justify-center text-red-600 shrink-0">
+                <Trash2 size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold text-neutral-900 leading-tight">
+                  {isId ? "Hapus Proyek Ini?" : "Delete This Project?"}
+                </h3>
+                <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
+                  {isId ? (
+                    <>
+                      Apakah Anda yakin ingin menghapus proyek{" "}
+                      <span className="font-semibold text-neutral-900 break-words">
+                        &ldquo;{projectToDelete.appName}&rdquo;
+                      </span>
+                      ? Seluruh data dokumen, PRD, dan task akan dihapus permanen.
+                    </>
+                  ) : (
+                    <>
+                      Are you sure you want to delete{" "}
+                      <span className="font-semibold text-neutral-900 break-words">
+                        &ldquo;{projectToDelete.appName}&rdquo;
+                      </span>
+                      ? All associated documents, PRDs, and tasks will be permanently removed.
+                    </>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 mt-6 pt-4 border-t border-neutral-100">
+              <button
+                type="button"
+                onClick={() => setProjectToDelete(null)}
+                disabled={Boolean(deletingId)}
+                className="px-4 py-2 text-sm font-medium text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100 rounded-xl transition-colors cursor-pointer disabled:opacity-50"
+              >
+                {isId ? "Batal" : "Cancel"}
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={Boolean(deletingId)}
+                className="px-4 py-2 text-sm font-semibold text-white bg-red-600 hover:bg-red-700 active:scale-98 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-2 disabled:opacity-50"
+              >
+                {deletingId ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>{isId ? "Menghapus..." : "Deleting..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={15} />
+                    <span>{isId ? "Ya, Hapus Proyek" : "Yes, Delete Project"}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

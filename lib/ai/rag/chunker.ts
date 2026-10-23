@@ -162,3 +162,70 @@ export function chunkTaskData(taskData: unknown): RawKnowledgeChunk[] {
 
   return chunks;
 }
+
+/**
+ * Chunks custom user design schema markdown into searchable RAG knowledge chunks.
+ */
+export function chunkDesignData(designData: unknown): RawKnowledgeChunk[] {
+  const chunks: RawKnowledgeChunk[] = [];
+  if (!designData) return chunks;
+
+  try {
+    let rawMarkdown = "";
+    let colorTokens: Array<{ token: string; hex: string; role: string }> = [];
+
+    if (typeof designData === "string") {
+      if (designData.startsWith("{") && designData.includes("rawMarkdown")) {
+        const parsed = JSON.parse(designData);
+        rawMarkdown = parsed.rawMarkdown || "";
+        colorTokens = parsed.colorTokens || [];
+      } else {
+        rawMarkdown = designData;
+      }
+    } else if (typeof designData === "object" && designData !== null) {
+      const obj = designData as Record<string, unknown>;
+      rawMarkdown = (obj.rawMarkdown as string) || "";
+      colorTokens = (obj.colorTokens as Array<{ token: string; hex: string; role: string }>) || [];
+    }
+
+    if (!rawMarkdown && colorTokens.length === 0) return chunks;
+
+    // 1. Color Tokens & Palette Chunk
+    if (colorTokens.length > 0) {
+      const tokenList = colorTokens
+        .map((tok) => `- \`${tok.token}\`: ${tok.hex} (${tok.role})`)
+        .join("\n");
+
+      chunks.push({
+        category: "user_input",
+        title: "User Custom Design System: Color Tokens & Palette",
+        content: `Custom UI Palette & Color Tokens:\n${tokenList}`,
+        metadata: { type: "custom_design_tokens", tokenCount: colorTokens.length },
+      });
+    }
+
+    // 2. Sections of Markdown
+    if (rawMarkdown) {
+      const sections = rawMarkdown.split(/(?=\n##?\s+[0-9A-Za-z])/g);
+      sections.forEach((sec, idx) => {
+        const trimmed = sec.trim();
+        if (!trimmed) return;
+
+        const headerMatch = trimmed.match(/^##?\s+(.+)/m);
+        const title = headerMatch ? headerMatch[1].trim() : `Design Specification Part ${idx + 1}`;
+
+        chunks.push({
+          category: "user_input",
+          title: `User Design Spec: ${title}`,
+          content: trimmed.slice(0, 3000),
+          metadata: { type: "custom_design_section", sectionIndex: idx + 1 },
+        });
+      });
+    }
+  } catch (err) {
+    console.warn("[Chunker] Failed to chunk designData:", err);
+  }
+
+  return chunks;
+}
+

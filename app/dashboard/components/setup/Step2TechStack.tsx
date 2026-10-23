@@ -15,8 +15,10 @@ import {
   AlertCircle,
   Palette,
   Layers,
+  Upload,
 } from "lucide-react";
-import { StackCategory, FormData } from "./types";
+import { StackCategory, FormData, CustomDesignMeta } from "./types";
+import CustomDesignUploadCard from "./CustomDesignUploadCard";
 import { apiClient } from "@/lib/utils/apiClient";
 
 export interface TechPreset {
@@ -187,6 +189,9 @@ interface Step2TechStackProps {
   setStackMode: (mode: FormData["stackMode"]) => void;
   setStack: (category: StackCategory, label: string) => void;
   setDesignData?: (val: string) => void;
+  customDesignMeta?: CustomDesignMeta | null;
+  onCustomDesignParsed?: (rawMarkdown: string, meta: CustomDesignMeta) => void;
+  onCustomDesignClear?: () => void;
   children?: React.ReactNode;
 }
 
@@ -214,8 +219,14 @@ export default function Step2TechStack({
   setStackMode,
   setStack,
   setDesignData,
+  customDesignMeta,
+  onCustomDesignParsed,
+  onCustomDesignClear,
   children,
 }: Step2TechStackProps) {
+  const [designMode, setDesignMode] = useState<"preset" | "custom">(
+    customDesignMeta ? "custom" : "preset"
+  );
   const [selectedPresetId, setSelectedPresetId] = useState<string>("next-postgres");
   const [selectedPaletteId, setSelectedPaletteId] = useState<string>("editorial-tech");
   const [openDropdown, setOpenDropdown] = useState<StackCategory | null>(null);
@@ -714,67 +725,107 @@ export default function Step2TechStack({
           </div>
         </div>
 
-        {/* Section 3: Visual Design System Preset */}
+        {/* Section 3: Visual Design System — Mode Switcher + Preset/Custom */}
         <div>
           <div className="flex items-center justify-between mb-3.5">
             <span className="text-[11px] font-bold tracking-widest text-neutral-700 uppercase">
               Design Theme &amp; Palette
             </span>
-            <span className="text-xs text-neutral-400 font-medium">
-              Applied to UI specifications
-            </span>
+
+            {/* Design Mode Switcher Pill */}
+            <div className="flex items-center p-1 bg-[#FAF9F6] border border-neutral-200/80 rounded-xl shrink-0">
+              <button
+                type="button"
+                onClick={() => setDesignMode("preset")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                  designMode === "preset"
+                    ? "bg-white text-neutral-900 shadow-2xs border border-neutral-200/60"
+                    : "text-neutral-500 hover:text-neutral-800"
+                }`}
+              >
+                <Palette size={12} className={designMode === "preset" ? "text-[#E05A38]" : "text-neutral-400"} />
+                <span>Preset Palettes</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDesignMode("custom")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+                  designMode === "custom"
+                    ? "bg-white text-[#E05A38] shadow-2xs border border-neutral-200/60"
+                    : "text-neutral-500 hover:text-[#E05A38]"
+                }`}
+              >
+                <Upload size={12} className={designMode === "custom" ? "text-[#E05A38]" : "text-neutral-400"} />
+                <span>Upload design.md</span>
+              </button>
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {COLOR_PALETTES.map((pal) => {
-              const isSelected = selectedPaletteId === pal.id;
+          {designMode === "custom" ? (
+            /* ── CUSTOM UPLOAD MODE ── */
+            <CustomDesignUploadCard
+              customMeta={customDesignMeta}
+              onParsed={(rawMarkdown, meta) => {
+                onCustomDesignParsed?.(rawMarkdown, meta);
+              }}
+              onClear={() => {
+                onCustomDesignClear?.();
+                setDesignMode("preset");
+              }}
+            />
+          ) : (
+            /* ── PRESET PALETTE MODE ── */
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {COLOR_PALETTES.map((pal) => {
+                const isSelected = selectedPaletteId === pal.id;
 
-              return (
-                <div
-                  key={pal.id}
-                  onClick={() => handleSelectPalette(pal)}
-                  className={`p-3 rounded-xl border cursor-pointer transition text-left ${
-                    isSelected
-                      ? "border-[#E05A38] bg-[#FCFAF8] ring-1 ring-[#E05A38]/30 shadow-2xs"
-                      : "border-neutral-200/80 bg-white hover:border-neutral-300"
-                  }`}
-                >
-                  {/* Swatches strip */}
-                  <div className="flex h-5 rounded-md overflow-hidden mb-2.5 border border-black/5">
-                    {pal.swatches.map((color, idx) => (
-                      <div
-                        key={idx}
-                        className="flex-1 h-full"
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-
-                  <div className="flex items-center justify-between gap-1">
-                    <h5 className="text-xs font-bold text-neutral-900 truncate">
-                      {pal.name}
-                    </h5>
-                    {isSelected && (
-                      <Check
-                        size={12}
-                        strokeWidth={3}
-                        className="text-[#E05A38] shrink-0"
-                      />
-                    )}
-                  </div>
-                  <p
-                    className={`text-[10px] mt-0.5 truncate ${
+                return (
+                  <div
+                    key={pal.id}
+                    onClick={() => handleSelectPalette(pal)}
+                    className={`p-3 rounded-xl border cursor-pointer transition text-left ${
                       isSelected
-                        ? "text-[#E05A38] font-medium"
-                        : "text-neutral-400"
+                        ? "border-[#E05A38] bg-[#FCFAF8] ring-1 ring-[#E05A38]/30 shadow-2xs"
+                        : "border-neutral-200/80 bg-white hover:border-neutral-300"
                     }`}
                   >
-                    {isSelected ? "Active Theme" : pal.sub}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
+                    {/* Swatches strip */}
+                    <div className="flex h-5 rounded-md overflow-hidden mb-2.5 border border-black/5">
+                      {pal.swatches.map((color, idx) => (
+                        <div
+                          key={idx}
+                          className="flex-1 h-full"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between gap-1">
+                      <h5 className="text-xs font-bold text-neutral-900 truncate">
+                        {pal.name}
+                      </h5>
+                      {isSelected && (
+                        <Check
+                          size={12}
+                          strokeWidth={3}
+                          className="text-[#E05A38] shrink-0"
+                        />
+                      )}
+                    </div>
+                    <p
+                      className={`text-[10px] mt-0.5 truncate ${
+                        isSelected
+                          ? "text-[#E05A38] font-medium"
+                          : "text-neutral-400"
+                      }`}
+                    >
+                      {isSelected ? "Active Theme" : pal.sub}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {children}

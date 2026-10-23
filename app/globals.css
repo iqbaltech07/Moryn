@@ -519,6 +519,14 @@ button { font-family: inherit; }
   color: var(--color-foreground-muted, #737b78) !important;
 }
 
+/* Custom toast container reset */
+[data-sonner-toaster] [data-sonner-toast][data-type="custom"] {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 /* ==============================
    MERMAID DIAGRAM THEME & TEXT CONTRAST FIX
    ============================== */

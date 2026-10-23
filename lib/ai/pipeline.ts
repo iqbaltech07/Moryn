@@ -4,6 +4,7 @@ import { FastApiClient } from "@/lib/ai/fastapiClient";
 import { fixMermaidBlocks } from "@/lib/utils/mermaidFix";
 import {
   chunkUserInput,
+  chunkDesignData,
   chunkStructureData,
   chunkPrdMarkdown,
   chunkTaskData,
@@ -104,6 +105,7 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
         appName: true,
         appIdea: true,
         formInputs: true,
+        designData: true,
         strukturData: true,
         prdData: true,
         taskData: true,
@@ -133,6 +135,10 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
     // ──────────────────────────────────────────────────────────────────────────
     try {
       const userChunks = chunkUserInput(project.appName, project.appIdea, formInputs);
+      if (project.designData) {
+        const designChunks = chunkDesignData(project.designData);
+        userChunks.push(...designChunks);
+      }
       await storeProjectChunks(projectId, userChunks);
       console.log(`[Pipeline] Stage 0 completed: User input chunks embedded in vector store.`);
     } catch (ingestErr) {
@@ -207,12 +213,28 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
         ragContext ? `\n=== GROUNDED VECTOR KNOWLEDGE (RAG) ===\n${ragContext}` : "",
       ].filter(Boolean).join("\n\n");
 
+      // Extract custom design system instructions if provided by user
+      let customDesignPrompt = "";
+      if (project.designData) {
+        try {
+          const parsed = JSON.parse(project.designData);
+          if (parsed.rawMarkdown) {
+            customDesignPrompt = `=== USER CUSTOM DESIGN SYSTEM & GUIDELINES (design.md) ===\n${parsed.rawMarkdown.slice(0, 3500)}\n=== END CUSTOM DESIGN GUIDELINES ===\nCRITICAL DIRECTIVE: The PRD Section on UI/UX, Design Guidelines, and Design Tokens MUST strictly adhere to the user's custom design.md uploaded above, using these exact color tokens and layout conventions.`;
+          }
+        } catch {
+          if (typeof project.designData === "string" && project.designData.trim()) {
+            customDesignPrompt = `=== USER CUSTOM DESIGN SYSTEM & GUIDELINES (design.md) ===\n${project.designData.slice(0, 3500)}\n=== END CUSTOM DESIGN GUIDELINES ===\nCRITICAL DIRECTIVE: The PRD Section on UI/UX, Design Guidelines, and Design Tokens MUST strictly adhere to the user's custom design.md uploaded above.`;
+          }
+        }
+      }
+
       const prdRes = await FastApiClient.generatePrd({
         appName: project.appName,
         appIdea: project.appIdea,
         stacks,
         dynamicAnswers,
         designPreference,
+        customPrompt: customDesignPrompt || undefined,
         structureContext: combinedStructureContext,
         language,
       });

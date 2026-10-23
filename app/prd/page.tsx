@@ -1420,10 +1420,47 @@ function PreviewPageContent() {
                   <button
                     type="button"
                     onClick={() => {
-                      if (window.confirm("Hapus seluruh riwayat chat untuk proyek ini?")) {
-                        clearChat();
-                        toast.success("Riwayat percakapan dibersihkan");
-                      }
+                      toast.custom(
+                        (tId) => (
+                          <div className="w-[340px] max-w-[calc(100vw-32px)] bg-white rounded-xl shadow-[0_12px_32px_rgba(0,0,0,0.12),0_2px_6px_rgba(0,0,0,0.06)] border border-neutral-200/90 p-4 font-sans text-neutral-900 pointer-events-auto">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-red-50 border border-red-200/60 flex items-center justify-center text-red-600 shrink-0 mt-0.5">
+                                <Trash2 size={15} />
+                              </div>
+                              <div className="flex-1 min-w-0 pr-1">
+                                <h4 className="text-[13px] font-semibold text-neutral-900 leading-snug">
+                                  Hapus riwayat chat?
+                                </h4>
+                                <p className="text-[12px] text-neutral-500 mt-1 leading-relaxed">
+                                  Seluruh percakapan AI untuk proyek ini akan dibersihkan.
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-end gap-2 mt-3 pt-3 border-t border-neutral-100">
+                              <button
+                                type="button"
+                                onClick={() => toast.dismiss(tId)}
+                                className="px-3 py-1.5 text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer"
+                              >
+                                Batal
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  toast.dismiss(tId);
+                                  clearChat();
+                                  toast.success("Riwayat percakapan dibersihkan");
+                                }}
+                                className="px-3.5 py-1.5 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 active:scale-95 rounded-lg shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+                              >
+                                <Trash2 size={13} />
+                                Hapus
+                              </button>
+                            </div>
+                          </div>
+                        ),
+                        { id: "confirm-clear-chat", duration: 8000 }
+                      );
                     }}
                     title="Bersihkan riwayat percakapan"
                     style={{
