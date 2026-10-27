@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef, useMemo, Suspense } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -15,7 +15,7 @@ import {
   CheckCircle2, PartyPopper, Award, ArrowRight, Check,
   Plus, MoreHorizontal, LayoutGrid, List, Cpu, RefreshCw, RotateCw, Download,
   Terminal, PanelsTopLeft, Server, Layers, ShieldCheck, AlertCircle, X, ChevronRight,
-  Database
+  Database, Lock, ShieldAlert, RotateCcw, MessageSquareWarning
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ interface Task {
   tags: string[];
   status?: ColumnId;
   code?: string;
+  isCheckpoint?: boolean;
+  notes?: string;
 }
 
 interface Phase {
@@ -150,6 +152,12 @@ function KanbanTaskCard({
                 <span className="font-mono text-[10px] font-semibold text-neutral-600 bg-neutral-100/90 border border-neutral-200 px-1.5 py-0.5 rounded tracking-tight">
                   {taskCode}
                 </span>
+                {(task.isCheckpoint || task.title?.toLowerCase().includes("checkpoint")) && (
+                  <span className="inline-flex items-center gap-1 font-mono text-[9px] font-extrabold text-amber-700 bg-amber-50 border border-amber-300 px-1.5 py-0.5 rounded">
+                    <ShieldAlert size={9} className="text-amber-600" />
+                    CHECKPOINT
+                  </span>
+                )}
               </div>
 
               {/* Priority / Status Tag */}
@@ -351,6 +359,15 @@ function TaskPageContent() {
   // Priority Scope Filter: null = all, or "blocker" | "high" | "normal"
   const [priorityFilter, setPriorityFilter] = useState<"blocker" | "high" | "normal" | null>(null);
 
+  // Checkpoint Verification & Revision State
+  const [checkpointNotes, setCheckpointNotes] = useState<Record<string, string>>({});
+  const latestNotesRef = useRef<Record<string, string>>({});
+  latestNotesRef.current = checkpointNotes;
+
+  const [isRevisionModalOpen, setIsRevisionModalOpen] = useState(false);
+  const [revisionTargetTaskId, setRevisionTargetTaskId] = useState<string | null>(null);
+  const [revisionNotesInput, setRevisionNotesInput] = useState("");
+
   const fetchTasks = async (force = false) => {
     if (!projectId) return;
     if (force) setIsSyncing(true);
@@ -362,10 +379,42 @@ function TaskPageContent() {
         if (force) toast.error(json.error);
         else setError(json.error);
       } else {
-        setData(json);
-        if (json.phases?.[0]?.id && !activePhase) setActivePhase(json.phases[0].id);
-
         const serverSaved = json.savedStatus || {};
+
+        // Parse any checkpoint revision notes
+        const parsedNotes: Record<string, string> = {};
+        Object.keys(serverSaved).forEach((k) => {
+          if (k.endsWith("_notes")) {
+            const baseId = k.replace(/_notes$/, "");
+            parsedNotes[baseId] = String(serverSaved[k]);
+          }
+        });
+        setCheckpointNotes(parsedNotes);
+        latestNotesRef.current = parsedNotes;
+
+        // Ensure every single phase has a verification checkpoint at the end
+        const normalizedPhases = (json.phases || []).map((p: Phase, idx: number) => {
+          const hasCp = p.tasks.some(
+            (t) => t.isCheckpoint || t.title?.toLowerCase().includes("checkpoint")
+          );
+          if (hasCp) return p;
+          const cpTask: Task = {
+            id: `cp-phase-${p.id || idx + 1}`,
+            title: `[CHECKPOINT] Verifikasi Hasil Implementasi: ${p.name.replace(/^\d+[\.\)]\s*/, "")}`,
+            description: `Verifikasi hasil implementasi ${p.name} sebelum melanjutkan ke fase berikutnya. Jika hasil belum sesuai, user dapat melakukan perbaikan terlebih dahulu sebelum menyetujui checkpoint.`,
+            priority: "high",
+            estimasi: "15m",
+            tags: ["Checkpoint", "Verifikasi", p.name],
+            status: (serverSaved[`cp-phase-${p.id || idx + 1}`] as ColumnId) || "todo",
+            isCheckpoint: true,
+          };
+          return { ...p, tasks: [...p.tasks, cpTask] };
+        });
+
+        const normalizedData: TaskData = { ...json, phases: normalizedPhases };
+        setData(normalizedData);
+        if (normalizedPhases?.[0]?.id && !activePhase) setActivePhase(normalizedPhases[0].id);
+
         let initialStatuses: Record<string, ColumnId> = {};
 
         const localKey = `kanban_status_${projectId}`;
@@ -375,10 +424,15 @@ function TaskPageContent() {
           if (localSaved) localStatuses = JSON.parse(localSaved);
         } catch (e) {}
 
-        json.phases.forEach((p: Phase) => {
+        normalizedPhases.forEach((p: Phase) => {
           p.tasks.forEach((t: Task) => {
             if (serverSaved[t.id]) {
-              initialStatuses[t.id] = typeof serverSaved[t.id] === "string" ? serverSaved[t.id] : (serverSaved[t.id] === true ? "done" : "todo");
+              initialStatuses[t.id] =
+                typeof serverSaved[t.id] === "string"
+                  ? (serverSaved[t.id] as ColumnId)
+                  : serverSaved[t.id] === true
+                  ? "done"
+                  : "todo";
             } else if (localStatuses[t.id]) {
               initialStatuses[t.id] = localStatuses[t.id];
             } else {
@@ -427,13 +481,25 @@ function TaskPageContent() {
 
       try {
         const json = await apiClient.projects.getStatus(projectId);
-        const serverStatuses: Record<string, ColumnId> = (json.taskStatus as any) || {};
+        const rawServerStatus: Record<string, any> = (json.taskStatus as any) || {};
 
         let hasChange = false;
         const updated = { ...latestTaskStatusRef.current };
+        const updatedNotes = { ...latestNotesRef.current };
+        let notesChanged = false;
 
-        Object.keys(serverStatuses).forEach((taskId) => {
-          const rawStatus = serverStatuses[taskId];
+        Object.keys(rawServerStatus).forEach((key) => {
+          if (key.endsWith("_notes")) {
+            const baseId = key.replace(/_notes$/, "");
+            const val = String(rawServerStatus[key]);
+            if (updatedNotes[baseId] !== val) {
+              updatedNotes[baseId] = val;
+              notesChanged = true;
+            }
+            return;
+          }
+
+          const rawStatus = rawServerStatus[key];
           const normStatus: ColumnId =
             typeof rawStatus === "string"
               ? (rawStatus as ColumnId)
@@ -441,11 +507,16 @@ function TaskPageContent() {
               ? "done"
               : "todo";
 
-          if (updated[taskId] !== normStatus) {
-            updated[taskId] = normStatus;
+          if (updated[key] !== normStatus) {
+            updated[key] = normStatus;
             hasChange = true;
           }
         });
+
+        if (notesChanged) {
+          setCheckpointNotes(updatedNotes);
+          latestNotesRef.current = updatedNotes;
+        }
 
         if (hasChange) {
           setTaskStatus(updated);
@@ -493,7 +564,12 @@ function TaskPageContent() {
   const syncToDatabase = () => {
     if (!projectId || !isDirtyRef.current || Object.keys(latestTaskStatusRef.current).length === 0) return;
     
-    const payload = JSON.stringify({ projectId, taskStatus: latestTaskStatusRef.current });
+    const combinedTasks: Record<string, any> = { ...latestTaskStatusRef.current };
+    Object.keys(latestNotesRef.current).forEach((k) => {
+      combinedTasks[`${k}_notes`] = latestNotesRef.current[k];
+    });
+
+    const payload = JSON.stringify({ projectId, taskStatus: combinedTasks });
     
     if (navigator.sendBeacon) {
       const blob = new Blob([payload], { type: "application/json" });
@@ -504,7 +580,7 @@ function TaskPageContent() {
       }
     }
     
-    apiClient.projects.update({ projectId, checkedTasks: latestTaskStatusRef.current })
+    apiClient.projects.update({ projectId, checkedTasks: combinedTasks })
       .then(() => {
         isDirtyRef.current = false;
       })
@@ -584,16 +660,112 @@ function TaskPageContent() {
     return { blocker, high, normal };
   }, [allTasks]);
 
+  const isPhaseUnlocked = useCallback(
+    (targetIdx: number): boolean => {
+      if (targetIdx === 0) return true; // Phase 1 is always unlocked
+      if (!data?.phases) return false;
+      for (let i = 0; i < targetIdx; i++) {
+        const p = data.phases[i];
+        if (!p) continue;
+        const cp =
+          p.tasks.find((t) => t.isCheckpoint || t.title?.toLowerCase().includes("checkpoint")) ||
+          p.tasks[p.tasks.length - 1];
+        const cpId = cp ? cp.id : `cp-phase-${p.id || i + 1}`;
+        if (taskStatus[cpId] !== "done") {
+          return false;
+        }
+      }
+      return true;
+    },
+    [data, taskStatus]
+  );
+
   const activePhaseIndex = useMemo(() => {
     if (!data || !activePhase) return 0;
     const idx = data.phases.findIndex((p) => p.id === activePhase);
     return idx >= 0 ? idx : 0;
   }, [data, activePhase]);
 
+  // Fallback to highest unlocked phase if current activePhase becomes locked
+  useEffect(() => {
+    if (!data?.phases || data.phases.length === 0) return;
+    const currentIdx = data.phases.findIndex((p) => p.id === activePhase);
+    if (currentIdx > 0 && !isPhaseUnlocked(currentIdx)) {
+      for (let i = currentIdx - 1; i >= 0; i--) {
+        if (isPhaseUnlocked(i)) {
+          setActivePhase(data.phases[i].id);
+          break;
+        }
+      }
+    }
+  }, [data, activePhase, isPhaseUnlocked, setActivePhase]);
+
   const activePhaseData = useMemo(() => {
     if (!data) return null;
     return data.phases[activePhaseIndex] || data.phases[0] || null;
   }, [data, activePhaseIndex]);
+
+  // Active phase's mandatory checkpoint
+  const activeCheckpoint = useMemo(() => {
+    if (!activePhaseData) return null;
+    return (
+      activePhaseData.tasks.find(
+        (t) => t.isCheckpoint || t.title?.toLowerCase().includes("checkpoint")
+      ) || activePhaseData.tasks[activePhaseData.tasks.length - 1]
+    );
+  }, [activePhaseData]);
+
+  const handleApproveCheckpoint = (checkpointId: string) => {
+    const next = { ...taskStatus, [checkpointId]: "done" as ColumnId };
+    updateTaskStatusLocally(next);
+
+    const combinedTasks: Record<string, any> = { ...next };
+    Object.keys(checkpointNotes).forEach((k) => {
+      combinedTasks[`${k}_notes`] = checkpointNotes[k];
+    });
+    if (projectId) {
+      apiClient.projects.update({ projectId, checkedTasks: combinedTasks });
+    }
+
+    toast.success(`Checkpoint ${activePhaseData?.name} berhasil disetujui!`);
+
+    if (data?.phases && activePhaseIndex < data.phases.length - 1) {
+      const nextPhase = data.phases[activePhaseIndex + 1];
+      setTimeout(() => {
+        setActivePhase(nextPhase.id);
+        toast.info(`Beralih ke ${nextPhase.name}`);
+      }, 400);
+    }
+  };
+
+  const handleOpenRevisionModal = (taskId: string, currentNotes?: string) => {
+    setRevisionTargetTaskId(taskId);
+    setRevisionNotesInput(currentNotes || checkpointNotes[taskId] || "");
+    setIsRevisionModalOpen(true);
+  };
+
+  const handleSaveRevisionModal = () => {
+    if (!revisionTargetTaskId) return;
+    const notesText = revisionNotesInput.trim() || "Perlu perbaikan hasil implementasi.";
+
+    const nextNotes = { ...checkpointNotes, [revisionTargetTaskId]: notesText };
+    setCheckpointNotes(nextNotes);
+    latestNotesRef.current = nextNotes;
+
+    const next = { ...taskStatus, [revisionTargetTaskId]: "error" as ColumnId };
+    updateTaskStatusLocally(next);
+
+    const combinedTasks: Record<string, any> = { ...next };
+    Object.keys(nextNotes).forEach((k) => {
+      combinedTasks[`${k}_notes`] = nextNotes[k];
+    });
+    if (projectId) {
+      apiClient.projects.update({ projectId, checkedTasks: combinedTasks });
+    }
+
+    setIsRevisionModalOpen(false);
+    toast.warning("Status checkpoint: Perlu Perbaikan. Harap lakukan perbaikan sebelum menyetujui.");
+  };
 
   // Filter tasks in active phase by priority if priorityFilter is active
   const filteredPhaseTasks = useMemo(() => {
@@ -614,9 +786,10 @@ function TaskPageContent() {
   const handleFinish = async () => {
     if (!projectId || !data || isFinishing) return;
     setIsFinishing(true);
-    const checkedMap: Record<string, boolean> = {};
+    // Pass string statuses directly; server accepts both true (bool) and "done" (string)
+    const checkedMap: Record<string, string | boolean> = {};
     Object.keys(taskStatus).forEach((id) => {
-      checkedMap[id] = taskStatus[id] === "done";
+      checkedMap[id] = taskStatus[id]; // "done" | "todo" | "in_progress" | "error"
     });
 
     try {
@@ -669,6 +842,72 @@ function TaskPageContent() {
           appName={data?.phases?.[0]?.name}
           onClose={() => setShowMcpModal(false)}
         />
+      )}
+
+      {/* ── Revision Notes Modal ── */}
+      {isRevisionModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-xl max-w-lg w-full p-6 animate-in zoom-in-95 duration-150">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
+                  <ShieldAlert size={20} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neutral-900">
+                    {t.task.requestRevision || "Minta Perbaikan Hasil Implementasi"}
+                  </h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    {activePhaseData?.name || "Fase Implementasi"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsRevisionModalOpen(false)}
+                className="p-1 rounded-lg text-neutral-400 hover:text-neutral-600 hover:bg-neutral-100 transition cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="text-xs text-neutral-600 leading-relaxed mb-3">
+              {t.task.revisionModalDesc ||
+                "Tuliskan catatan perbaikan atau hal-hal yang belum sesuai spesifikasi. Status checkpoint akan ditandai 'Perlu Perbaikan' dan fase berikutnya akan tetap terkunci hingga perbaikan selesai."}
+            </p>
+
+            <div className="mb-4">
+              <label className="block text-[11px] font-bold text-neutral-700 uppercase tracking-wider mb-1.5 font-mono">
+                {t.task.revisionNotesLabel || "Catatan Perbaikan / Kendala"}
+              </label>
+              <textarea
+                value={revisionNotesInput}
+                onChange={(e) => setRevisionNotesInput(e.target.value)}
+                placeholder="Contoh: Endpoint /api/users mengembalikan response 500 saat validasi form gagal, perbaiki error handling..."
+                rows={4}
+                className="w-full text-xs p-3 rounded-xl border border-neutral-300 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 outline-none transition resize-none placeholder:text-neutral-400"
+                autoFocus
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsRevisionModalOpen(false)}
+                className="px-4 py-2 rounded-xl border border-neutral-200 bg-white text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition cursor-pointer"
+              >
+                {t.task.cancel || "Batal"}
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveRevisionModal}
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition shadow-xs cursor-pointer inline-flex items-center gap-1.5"
+              >
+                <MessageSquareWarning size={13} />
+                <span>{t.task.saveRevisionNotes || "Simpan & Tandai Perlu Perbaikan"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Topbar (Preserved exactly as requested) ── */}
@@ -798,6 +1037,7 @@ function TaskPageContent() {
                 ) : (
                   data?.phases.map((phase, idx) => {
                     const isActive = activePhase === phase.id;
+                    const isUnlocked = isPhaseUnlocked(idx);
                     const phaseTaskCount = phase.tasks.length;
                     const rawName = phase.name.replace(/^\d+[\.\)]\s*/, "");
                     const displayName = `${idx + 1}. ${rawName}`;
@@ -805,18 +1045,45 @@ function TaskPageContent() {
                     return (
                       <button
                         key={phase.id}
-                        onClick={() => setActivePhase(phase.id)}
+                        onClick={() => {
+                          if (!isUnlocked) {
+                            const prevPhaseName = data?.phases[idx - 1]?.name || `Fase ${idx}`;
+                            toast.error(
+                              t.task.phaseLockedMsg
+                                ? t.task.phaseLockedMsg(prevPhaseName)
+                                : `Fase ini terkunci. Harap selesaikan dan setujui checkpoint pada ${prevPhaseName} terlebih dahulu.`
+                            );
+                            return;
+                          }
+                          setActivePhase(phase.id);
+                        }}
+                        title={!isUnlocked ? `Fase terkunci — selesaikan checkpoint fase sebelumnya` : displayName}
                         className={`w-full text-left px-3 py-2 rounded-lg flex items-center justify-between transition-all duration-150 text-[12px] select-none ${
                           isActive
-                            ? "bg-[#e15b39]/8 border border-[#e15b39]/25 text-[#e15b39] font-semibold shadow-xs"
-                            : "text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/60 border border-transparent font-medium"
+                            ? "bg-[#e15b39]/8 border border-[#e15b39]/25 text-[#e15b39] font-semibold shadow-xs cursor-pointer"
+                            : !isUnlocked
+                            ? "opacity-60 text-neutral-400 bg-neutral-100/40 border border-transparent cursor-not-allowed"
+                            : "text-neutral-700 hover:text-neutral-900 hover:bg-neutral-100/60 border border-transparent font-medium cursor-pointer"
                         }`}
                       >
-                        <span className="truncate pr-2">{displayName}</span>
+                        <div className="flex items-center gap-1.5 min-w-0 pr-1">
+                          {!isUnlocked ? (
+                            <Lock size={12} className="text-neutral-400 shrink-0" />
+                          ) : (
+                            <div
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                                isActive ? "bg-[#e15b39]" : "bg-emerald-500"
+                              }`}
+                            />
+                          )}
+                          <span className="truncate">{displayName}</span>
+                        </div>
                         <span
                           className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                             isActive
                               ? "bg-[#e15b39]/15 text-[#e15b39] font-bold"
+                              : !isUnlocked
+                              ? "bg-neutral-200/50 text-neutral-400"
                               : "bg-neutral-100 text-neutral-500"
                           }`}
                         >
@@ -944,6 +1211,162 @@ function TaskPageContent() {
               </p>
             </div>
           )}
+
+          {/* ── PHASE IMPLEMENTATION CHECKPOINT GATE ── */}
+          {activePhaseData && activeCheckpoint && (() => {
+            const cpStatus = (taskStatus[activeCheckpoint.id] || "todo").toLowerCase();
+            const cpDone = cpStatus === "done";
+            const cpNeedsRevision = cpStatus === "needs_revision" || cpStatus === "error";
+            const cpNotes = checkpointNotes[activeCheckpoint.id] || "";
+
+            return (
+              <div
+                className={`mb-4 p-3.5 sm:p-4 rounded-2xl border transition-all duration-200 shadow-2xs shrink-0 ${
+                  cpDone
+                    ? "bg-emerald-50/60 border-emerald-200/90"
+                    : cpNeedsRevision
+                    ? "bg-rose-50/60 border-rose-200/90"
+                    : "bg-amber-50/50 border-amber-200/90"
+                }`}
+              >
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div
+                      className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                        cpDone
+                          ? "bg-emerald-100 text-emerald-700"
+                          : cpNeedsRevision
+                          ? "bg-rose-100 text-rose-700"
+                          : "bg-amber-100 text-amber-700"
+                      }`}
+                    >
+                      {cpDone ? (
+                        <ShieldCheck size={18} />
+                      ) : cpNeedsRevision ? (
+                        <ShieldAlert size={18} />
+                      ) : (
+                        <ShieldAlert size={18} />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span
+                          className={`font-mono text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded tracking-wide ${
+                            cpDone
+                              ? "bg-emerald-200/70 text-emerald-800"
+                              : cpNeedsRevision
+                              ? "bg-rose-200/70 text-rose-800"
+                              : "bg-amber-200/70 text-amber-800"
+                          }`}
+                        >
+                          MANDATORY CHECKPOINT
+                        </span>
+                        <span
+                          className={`text-[9.5px] font-bold px-2 py-0.5 rounded-full ${
+                            cpDone
+                              ? "bg-emerald-600 text-white"
+                              : cpNeedsRevision
+                              ? "bg-rose-600 text-white"
+                              : "bg-amber-500 text-white"
+                          }`}
+                        >
+                          {cpDone
+                            ? t.task.checkpointApproved || "DISETUJUI"
+                            : cpNeedsRevision
+                            ? t.task.checkpointNeedsRevision || "PERLU PERBAIKAN"
+                            : t.task.checkpointPending || "MENUNGGU VERIFIKASI"}
+                        </span>
+                      </div>
+
+                      <h3 className="text-xs sm:text-sm font-bold text-neutral-900 leading-snug">
+                        {activeCheckpoint.title.replace(/^\[CHECKPOINT\]\s*/i, "")}
+                      </h3>
+                      <p className="text-[11px] text-neutral-600 mt-0.5 max-w-2xl leading-relaxed">
+                        {cpDone
+                          ? "Hasil implementasi fase ini telah diverifikasi dan disetujui. Fase berikutnya telah terbuka."
+                          : cpNeedsRevision
+                          ? "Hasil belum sesuai spesifikasi. Silakan lakukan perbaikan terlebih dahulu sebelum menyetujui checkpoint."
+                          : t.task.checkpointDesc ||
+                            "Verifikasi hasil implementasi fase ini sebelum melanjutkan ke fase berikutnya. Jika hasil belum sesuai, Anda dapat melakukan perbaikan terlebih dahulu."}
+                      </p>
+
+                      {cpNeedsRevision && cpNotes && (
+                        <div className="mt-2 p-2 rounded-lg bg-rose-100/70 border border-rose-200 text-xs text-rose-800">
+                          <span className="font-bold mr-1">Catatan Perbaikan:</span>
+                          <span>{cpNotes}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-2 shrink-0 self-end md:self-center">
+                    {cpDone ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenRevisionModal(activeCheckpoint.id, cpNotes)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-neutral-200 bg-white hover:bg-neutral-50 text-neutral-600 transition shadow-2xs cursor-pointer"
+                        >
+                          <RotateCcw size={12} />
+                          <span>Tinjau Ulang</span>
+                        </button>
+                        {activePhaseIndex < (data?.phases?.length || 0) - 1 && (
+                          <button
+                            onClick={() => {
+                              const nextPhase = data?.phases[activePhaseIndex + 1];
+                              if (nextPhase) setActivePhase(nextPhase.id);
+                            }}
+                            className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-xl bg-[#e15b39] text-white hover:bg-[#d04e2d] transition shadow-xs cursor-pointer"
+                          >
+                            <span>Fase Berikutnya</span>
+                            <ArrowRight size={13} />
+                          </button>
+                        )}
+                      </div>
+                    ) : cpNeedsRevision ? (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenRevisionModal(activeCheckpoint.id, cpNotes)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-100/60 text-rose-700 hover:bg-rose-100 transition cursor-pointer"
+                        >
+                          <MessageSquareWarning size={12} />
+                          <span>Ubah Catatan</span>
+                        </button>
+                        <button
+                          onClick={() => handleApproveCheckpoint(activeCheckpoint.id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-xs cursor-pointer"
+                        >
+                          <Check size={13} strokeWidth={2.8} />
+                          <span>Tandai Selesai & Setujui</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handleOpenRevisionModal(activeCheckpoint.id, cpNotes)}
+                          className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl border border-neutral-300/80 bg-white hover:bg-neutral-50 text-neutral-700 transition shadow-2xs cursor-pointer"
+                        >
+                          <MessageSquareWarning size={12} className="text-amber-600" />
+                          <span>Perlu Perbaikan</span>
+                        </button>
+                        <button
+                          onClick={() => handleApproveCheckpoint(activeCheckpoint.id)}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold px-4 py-1.5 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 transition shadow-xs cursor-pointer"
+                        >
+                          <Check size={13} strokeWidth={2.8} />
+                          <span>
+                            {activePhaseIndex < (data?.phases?.length || 0) - 1
+                              ? "Setujui & Buka Fase Berikutnya"
+                              : "Setujui Checkpoint"}
+                          </span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 4-Column Drag & Drop Board (Full Width, Zero Page Scroll) */}
           {activePhaseData && (

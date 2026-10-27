@@ -218,6 +218,7 @@ function StrukturPageContent() {
               phaseName: phase.name || "",
               definitionOfDone: t.definitionOfDone,
               status: checkedStatuses[t.id] || "todo",
+              notes: checkedStatuses[`${t.id}_notes`] || "",
             });
           });
         });
@@ -227,6 +228,93 @@ function StrukturPageContent() {
       return [];
     }
   };
+
+  // Checkpoint verification & revision handler
+  const handleVerifyCheckpoint = useCallback(
+    async (checkpointTaskId: string, newStatus: string, notes?: string) => {
+      // 1. Update tasksList in local state
+      setTasksList((prev) =>
+        prev.map((t) =>
+          t.id === checkpointTaskId
+            ? { ...t, status: newStatus, notes: notes !== undefined ? notes : t.notes }
+            : t
+        )
+      );
+
+      // 2. Update nodes in React Flow canvas
+      setNodes((nds) =>
+        nds.map((n) => {
+          const nodeData = n.data as any;
+          if (n.type === "tasks" && Array.isArray(nodeData?.tasks)) {
+            const updatedTasks = nodeData.tasks.map((t: TaskItem) =>
+              t.id === checkpointTaskId
+                ? { ...t, status: newStatus, notes: notes !== undefined ? notes : t.notes }
+                : t
+            );
+            return {
+              ...n,
+              data: {
+                ...nodeData,
+                tasks: updatedTasks,
+                checkpointNotes: {
+                  ...(nodeData.checkpointNotes || {}),
+                  ...(notes !== undefined ? { [checkpointTaskId]: notes } : {}),
+                },
+              },
+            };
+          }
+          return n;
+        })
+      );
+
+      // 3. Persist to database & Redis via apiClient
+      if (projectId) {
+        try {
+          const detailRes = await apiClient.projects.getDetail(projectId);
+          let checkedStatuses: Record<string, string> = {};
+          if (detailRes?.project?.checkedTasks) {
+            try {
+              checkedStatuses = JSON.parse(detailRes.project.checkedTasks);
+            } catch {}
+          }
+          checkedStatuses[checkpointTaskId] = newStatus;
+          if (notes !== undefined) {
+            checkedStatuses[`${checkpointTaskId}_notes`] = notes;
+          }
+          await apiClient.projects.update({
+            projectId,
+            checkedTasks: JSON.stringify(checkedStatuses),
+          });
+          if (newStatus === "done") {
+            toast.success("Checkpoint disetujui! Hasil implementasi terverifikasi.");
+          } else if (newStatus === "needs_revision") {
+            toast.warning("Status checkpoint: Perlu Perbaikan. Harap lakukan perbaikan sebelum melanjutkan.");
+          }
+        } catch (err) {
+          console.warn("Failed to persist checkpoint status:", err);
+        }
+      }
+    },
+    [projectId, setNodes]
+  );
+
+  const attachTasksCallbacks = useCallback(
+    (nodesList: Node[]) => {
+      return nodesList.map((n) => {
+        if (n.type === "tasks") {
+          return {
+            ...n,
+            data: {
+              ...n.data,
+              onVerifyCheckpoint: handleVerifyCheckpoint,
+            },
+          };
+        }
+        return n;
+      });
+    },
+    [handleVerifyCheckpoint]
+  );
 
   // Initial Load: Fetch structure & project tasks
   useEffect(() => {
@@ -258,7 +346,7 @@ function StrukturPageContent() {
         }
 
         const { nodes: n, edges: e } = buildGraph(json, allTasksList);
-        setNodes(n);
+        setNodes(attachTasksCallbacks(n));
         setEdges(e);
 
         // Smoothly adjust viewport to frame newly loaded architecture
@@ -273,7 +361,7 @@ function StrukturPageContent() {
     };
 
     initData();
-  }, [hasStarted, projectId, setNodes, setEdges]);
+  }, [hasStarted, projectId, setNodes, setEdges, attachTasksCallbacks]);
 
   // Real-Time Live Sync Polling (Smart adaptive polling to prevent log flooding)
   useEffect(() => {
@@ -298,7 +386,7 @@ function StrukturPageContent() {
             setNodes((prevNodes) => {
               const prevPosMap = new Map(prevNodes.map((n) => [n.id, n.position]));
               const { nodes: newNodes } = buildGraph(rawDataRef.current!, newTasks);
-              return newNodes.map((n) => ({
+              return attachTasksCallbacks(newNodes).map((n) => ({
                 ...n,
                 position: prevPosMap.get(n.id) || n.position,
               }));
@@ -399,7 +487,7 @@ function StrukturPageContent() {
         const prevPosMap = new Map(prevNodes.map((pn) => [pn.id, pn.position]));
         const { nodes: n, edges: e } = buildGraph(parsedData, tasksList);
         setEdges(e);
-        return n.map((item) => ({
+        return attachTasksCallbacks(n).map((item) => ({
           ...item,
           position: prevPosMap.get(item.id) || item.position,
         }));

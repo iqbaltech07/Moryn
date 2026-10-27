@@ -23,8 +23,9 @@ export interface TaskItem {
   description?: string;
   estimasi?: string;
   tags?: string[];
-  status?: string; // "todo" | "in_progress" | "done"
+  status?: string; // "todo" | "in_progress" | "done" | "needs_revision" | "error"
   definitionOfDone?: string;
   isCheckpoint?: boolean;
   phaseName?: string;
+  notes?: string;
 }

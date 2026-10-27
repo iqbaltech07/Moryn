@@ -66,11 +66,10 @@ export function matchTasksToCategories(
 
   const assignedTaskIds = new Set<string>();
 
-  // Pass 1: Semantic keyword score matching
+  // Pass 1: Semantic keyword score matching (for non-checkpoint tasks)
   const scoredPairs: Array<{ task: TaskItem; catKey: string; score: number }> = [];
 
   for (const task of allTasks) {
-    // Skip generic checkpoint / root token review tasks unless matched
     if (task.isCheckpoint) continue;
 
     categories.forEach((cat, idx) => {
@@ -92,7 +91,7 @@ export function matchTasksToCategories(
     }
   }
 
-  // Pass 2: Distribute remaining feature tasks (Phase 3 UI, Phase 4 API) if any category is empty
+  // Pass 2: Distribute remaining feature tasks if any category is empty
   const unassignedFeatureTasks = allTasks.filter(
     (t) =>
       !assignedTaskIds.has(t.id) &&
@@ -108,6 +107,37 @@ export function matchTasksToCategories(
       result[catKey].push(unassignedFeatureTasks[unassignedIdx]);
       assignedTaskIds.add(unassignedFeatureTasks[unassignedIdx].id);
       unassignedIdx++;
+    }
+  });
+
+  // Pass 3: Ensure a Verification Checkpoint task is positioned at the very END of each task group
+  categories.forEach((cat, idx) => {
+    const catKey = cat.id || `cat-${idx}`;
+    const groupTasks = result[catKey];
+    if (groupTasks.length > 0) {
+      // Check if a checkpoint task already exists for this category/phase
+      let existingCp = allTasks.find(
+        (t) =>
+          t.isCheckpoint &&
+          (t.id === `cp-${catKey}` ||
+            t.title.toLowerCase().includes(cat.label.toLowerCase()) ||
+            (cat.phase && t.phaseName?.includes(String(cat.phase))))
+      );
+
+      // Separate any existing checkpoint from groupTasks
+      const nonCpTasks = groupTasks.filter((t) => !t.isCheckpoint && !t.title.toLowerCase().includes("checkpoint"));
+      const cpTaskFromGroup = groupTasks.find((t) => t.isCheckpoint || t.title.toLowerCase().includes("checkpoint"));
+
+      const finalCp: TaskItem = existingCp || cpTaskFromGroup || {
+        id: `cp-${catKey}`,
+        title: `[CHECKPOINT] Verifikasi Hasil Implementasi: ${cat.label}`,
+        description: `Verifikasi hasil implementasi ${cat.label} sebelum melanjutkan ke fase berikutnya. Jika hasil belum sesuai, lakukan perbaikan terlebih dahulu sebelum menyetujui.`,
+        isCheckpoint: true,
+        status: "todo",
+        phaseName: `Fase ${cat.phase || idx + 1}`,
+      };
+
+      result[catKey] = [...nonCpTasks, finalCp];
     }
   });
 

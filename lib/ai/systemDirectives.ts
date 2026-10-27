@@ -47,7 +47,7 @@ export const SYSTEM_DIRECTIVES = {
         },
         {
           id: "AH-008",
-          rule: "ZERO DUMMY DATA IN PRODUCTION: Replace all mock/dummy static arrays with real API and database seed data in Phase 6.",
+          rule: "ZERO DUMMY DATA IN PRODUCTION: Replace all mock/dummy static arrays with real API and database seed data in Phase 5 (API Integration).",
           validation: "Ensure frontend components bind to real backend data contracts.",
           failure_consequence: "Application displays fake static data in production."
         },

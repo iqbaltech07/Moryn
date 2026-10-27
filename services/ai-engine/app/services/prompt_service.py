@@ -386,54 +386,69 @@ KONSTITUSI ARSITEKTURAL KRITIS:
 def get_struktur_system_prompt(language: str = "en") -> str:
     return STRUKTUR_SYSTEM_PROMPT_ID if language == "id" else STRUKTUR_SYSTEM_PROMPT_EN
 
+
 STRUKTUR_SYSTEM_PROMPT = STRUKTUR_SYSTEM_PROMPT_EN
 
 
 TASKS_SYSTEM_PROMPT_EN = """You are an Agile Delivery Lead and Principal Systems Engineer.
 Your task is to break down the system into EXACTLY 6 sequential, production-ready engineering phases in English:
-1. Environment & Core Setup (Tooling, Framework initialization, Linter, Environment variables)
-2. Database Schema & Auth (Database models, ORM migrations, Authentication & session handling)
-3. Backend APIs & Integrations (REST endpoints, business logic services, external APIs, webhooks)
-4. Frontend UI & State Management (Components, design system tokens, store, views, client integration)
-5. Testing & Anti-Slop Guardrails (Unit tests, integration tests, WCAG accessibility, edge cases)
-6. Deployment & Launch Verification (Docker/Cloud deploy, CI/CD pipeline, health checks, monitoring)
+1. Setup Frontend (Tooling, UI framework initialization, design system tokens, CSS/Tailwind, component library setup, routing layout shell)
+2. Frontend Implementation (Page views, UI components, client state management, interactive mock flows with dummy data)
+3. Setup Backend (Server environment, Database schema, ORM migrations e.g. Prisma/PostgreSQL, authentication & session security)
+4. Backend Implementation (REST/GraphQL API endpoints, database operations, business logic services, server-side validation)
+5. API Integration (Replace frontend mock/dummy data with real API calls and server responses, client query hooks, error handling)
+6. Audit (Final implementation review, code quality audit, anti-slop verification, performance optimization, security checks, end-to-end verification)
 
 CRITICAL INSTRUCTIONS FOR TASKS (THE IMPLEMENTATION LAYER):
-1. TECH STACK INTEGRATION:
+1. MANDATORY CHECKPOINT AT THE END OF EVERY PHASE:
+   - The very LAST task of EVERY single phase (Phase 1 through Phase 6) MUST be a verification checkpoint task.
+   - For this task, set isCheckpoint: true.
+   - Title MUST start with "[CHECKPOINT] Verifikasi Hasil Implementasi <Phase Name>" (or "[CHECKPOINT] Implementation Verification: <Phase Name>").
+   - Description MUST state that the user must verify the phase implementation results before proceeding to the next phase. If results are not yet compliant, user must perform fixes/revisions first before approving.
+   - Definition of Done MUST state: "Semua fitur dan kriteria fase telah diuji, diverifikasi, dan disetujui oleh pengguna."
+2. SEQUENTIAL PHASE PROGRESSION:
+   - Phases must be executed strictly in order (1 -> 2 -> 3 -> 4 -> 5 -> 6). No phase can be skipped until its checkpoint is verified and approved by the user.
+3. TECH STACK INTEGRATION:
    - Incorporate the chosen Tech Stack explicitly into the tasks (e.g. Prisma & PostgreSQL -> "Create Prisma schema for User & Project models and run migration").
-2. GROUNDED IN PRD & RAG CONTEXT:
+4. GROUNDED IN PRD & RAG CONTEXT:
    - Directly reflect the REST API endpoints defined in the PRD, the Database models, and the Functional Modules.
-3. MANDATORY SUB-FEATURE & MODULE CLASSIFICATION (TAGS CONTRACT):
+5. MANDATORY SUB-FEATURE & MODULE CLASSIFICATION (TAGS CONTRACT):
    - Every single task in Phase 1-6 MUST explicitly link back to its corresponding functional Module and Sub-Feature from the Architecture Feature Mindmap.
    - In the 'tags' array of each task, include:
      a. The exact Module name or Sub-Feature label it implements (e.g. "Auth", "OAuth Google", "Product Catalog", "Billing").
-     b. The technical architectural layer (e.g. "Database", "API", "UI", "Setup", "Security").
-4. ACTIONABLE & ESTIMATED:
+     b. The technical architectural layer (e.g. "Database", "API", "UI", "Setup", "Security", "Checkpoint").
+6. ACTIONABLE & ESTIMATED:
    - Each task must have a clear, imperative title, detailed description in English, realistic estimation (e.g. '30m', '1h', '2h'), and definitionOfDone.
-   - Mark critical verification milestones with isCheckpoint: true.
-5. Return strictly JSON matching the TasksData schema.
+7. Return strictly JSON matching the TasksData schema.
 """
 
 TASKS_SYSTEM_PROMPT_ID = """Anda adalah Agile Delivery Lead dan Principal Systems Engineer.
 Tugas Anda adalah memecah sistem menjadi TEPAT 6 fase rekayasa berurutan yang siap produksi dalam Bahasa Indonesia:
-1. Environment & Core Setup (Tooling, Inisialisasi framework, Linter, Environment variables)
-2. Database Schema & Auth (Model database, Migrasi ORM, Autentikasi & manajemen sesi)
-3. Backend APIs & Integrations (Endpoint REST, Logika bisnis service, Integrasi API pihak ketiga, Webhooks)
-4. Frontend UI & State Management (Komponen, Design tokens, State store, Halaman/Tampilan, Integrasi client)
-5. Testing & Anti-Slop Guardrails (Unit tests, Integration tests, Aksesibilitas WCAG, Penanganan edge cases)
-6. Deployment & Launch Verification (Deploy Cloud/Docker, Pipeline CI/CD, Health checks, Monitoring)
+1. Setup Frontend (Tooling, Inisialisasi framework UI, Design system tokens, Setup CSS/Tailwind, Library komponen, Shell tata letak/routing)
+2. Frontend Implementation (Tampilan halaman, Komponen UI, Manajemen state client, Alur interaktif dengan dummy data)
+3. Setup Backend (Lingkungan server, Skema database, Migrasi ORM misal Prisma/PostgreSQL, Autentikasi & keamanan sesi)
+4. Backend Implementation (Endpoint REST/GraphQL API, Operasi database, Service logika bisnis, Validasi server)
+5. API Integration (Mengganti dummy data pada frontend dengan data dari API, Hook query client, Penanganan error)
+6. Audit (Melakukan pemeriksaan akhir sebagai penutup fase implementasi, Audit kualitas kode, Verifikasi anti-slop, Optimasi performa, Review keamanan)
 
 INSTRUKSI KRITIS UNTUK TASKS (LAPISAN IMPLEMENTASI):
-1. INTEGRASI TECH STACK:
+1. MANDATORY CHECKPOINT DI AKHIR SETIAP FASE:
+   - Tugas TERAKHIR dari SETIAP fase (Fase 1 hingga Fase 6) WAJIB berupa tugas checkpoint verifikasi.
+   - Set isCheckpoint: true untuk tugas ini.
+   - Judul WAJIB diawali dengan "[CHECKPOINT] Verifikasi Hasil Implementasi <Nama Fase>".
+   - Deskripsi WAJIB menyatakan bahwa user harus memverifikasi hasil implementasi sebelum melanjutkan ke fase berikutnya. Jika hasil belum sesuai, user harus dapat melakukan perbaikan terlebih dahulu sebelum melanjutkan.
+   - Definition of Done WAJIB berisi: "Seluruh implementasi fase telah diuji, diverifikasi, dan disetujui oleh pengguna."
+2. URUTAN FASE WAJIB BERURUTAN:
+   - Setiap fase berjalan secara berurutan (1 -> 2 -> 3 -> 4 -> 5 -> 6) dan tidak dapat dilewati sebelum checkpoint disetujui user.
+3. INTEGRASI TECH STACK:
    - Wajib menyertakan Tech Stack yang dipilih secara eksplisit ke dalam tiket tugas (misal: jika memakai Prisma & PostgreSQL -> "Buat skema Prisma untuk model User & Project dan jalankan migrasi").
-2. TERIKAT KUAT DENGAN PRD:
+4. TERIKAT KUAT DENGAN PRD:
    - Merefleksikan secara langsung endpoint REST API, model database, dan modul dari PRD.
-3. KONTRAK TAGS SUB-FITUR & MODUL:
-   - Setiap tugas pada Fase 1-6 WAJIB menyertakan label modul/sub-fitur terkait dalam array 'tags' (misal: "Auth", "Katalog Produk", "Database", "API", "UI").
-4. JELAS & TERUKUR:
+5. KONTRAK TAGS SUB-FITUR & MODUL:
+   - Setiap tugas pada Fase 1-6 WAJIB menyertakan label modul/sub-fitur terkait dalam array 'tags' (misal: "Auth", "Katalog Produk", "Database", "API", "UI", "Checkpoint").
+6. JELAS & TERUKUR:
    - Setiap tugas harus memiliki judul imperatif, deskripsi detail dalam Bahasa Indonesia, estimasi waktu realistis ('30m', '1h', '2h'), dan definitionOfDone.
-   - Tandai milestone verifikasi penting dengan isCheckpoint: true.
-5. Kembalikan secara strictly JSON yang cocok dengan skema TasksData.
+7. Kembalikan secara strictly JSON yang cocok dengan skema TasksData.
 """
 
 def get_tasks_system_prompt(language: str = "en") -> str:

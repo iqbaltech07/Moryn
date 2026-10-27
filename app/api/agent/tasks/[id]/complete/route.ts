@@ -24,7 +24,7 @@ export async function POST(
 
     const project = await prisma.project.findUnique({
       where: { id_userId: { id: projectId, userId: authResult.user.id } },
-      select: { id: true, checkedTasks: true },
+      select: { id: true, checkedTasks: true, taskData: true },
     });
 
     if (!project) {
@@ -37,6 +37,34 @@ export async function POST(
     }
 
     const previousStatus = savedStatuses[taskId] || "todo";
+
+    // Validate checkpoint verification: checkpoints must be approved by user
+    if (project.taskData && !force) {
+      try {
+        const parsed = JSON.parse(project.taskData);
+        let allTasks: any[] = [];
+        if (parsed && Array.isArray(parsed.phases)) {
+          allTasks = parsed.phases.flatMap((p: any) => p.tasks || []);
+        } else if (Array.isArray(parsed)) {
+          allTasks = parsed;
+        } else if (parsed && Array.isArray(parsed.tasks)) {
+          allTasks = parsed.tasks;
+        }
+        const currentTask = allTasks.find((t: any) => String(t.id) === String(taskId));
+        const isCp = currentTask?.isCheckpoint || (currentTask?.title && currentTask.title.toLowerCase().includes("checkpoint"));
+        if (isCp) {
+          return NextResponse.json({
+            success: false,
+            error: {
+              code: "CHECKPOINT_REQUIRES_USER_APPROVAL",
+              message: `Task ${taskId} adalah checkpoint verifikasi implementasi yang wajib diverifikasi dan disetujui langsung oleh user pada antarmuka Moryn.`,
+            },
+          }, { status: 403 });
+        }
+      } catch (err) {
+        console.warn("Failed to parse taskData in complete route:", err);
+      }
+    }
 
     // Validate state transition
     if (previousStatus === "todo" && !force) {

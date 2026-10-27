@@ -35,18 +35,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Project not found or unauthorized" }, { status: 404 });
     }
 
-    let tasks: any[] = [];
+    let phases: any[] = [];
     let savedStatuses: Record<string, string> = {};
 
     if (project.taskData) {
       try {
         const parsed = JSON.parse(project.taskData);
-        if (Array.isArray(parsed)) {
-          tasks = parsed;
-        } else if (parsed && Array.isArray(parsed.phases)) {
-          tasks = parsed.phases.flatMap((p: any) => p.tasks || []);
+        if (parsed && Array.isArray(parsed.phases)) {
+          phases = parsed.phases;
+        } else if (Array.isArray(parsed)) {
+          // If flat array, group into single phase or treat as flat
+          phases = [{ id: "phase-1", name: "Implementation", tasks: parsed }];
         } else if (parsed && Array.isArray(parsed.tasks)) {
-          tasks = parsed.tasks;
+          phases = [{ id: "phase-1", name: "Implementation", tasks: parsed.tasks }];
         }
       } catch {}
     }
@@ -54,15 +55,72 @@ export async function GET(req: NextRequest) {
       try { savedStatuses = JSON.parse(project.checkedTasks); } catch {}
     }
 
-    const annotatedTasks = tasks.map((task: any) => ({
-      ...task,
-      status: savedStatuses[task.id] || "todo",
-    }));
+    // Process phases sequentially
+    let currentTask: any = null;
+    let lockedPhaseName: string | null = null;
 
-    // Find current task: priority 1 = in_progress, priority 2 = first todo
-    let currentTask = annotatedTasks.find((t: any) => t.status === "in_progress");
-    if (!currentTask) {
-      currentTask = annotatedTasks.find((t: any) => t.status === "todo");
+    for (let pIdx = 0; pIdx < phases.length; pIdx++) {
+      const phase = phases[pIdx];
+      const phaseTasks: any[] = phase.tasks || [];
+      if (phaseTasks.length === 0) continue;
+
+      const cpIndex = phaseTasks.findIndex((t: any) =>
+        t.isCheckpoint || (t.title && t.title.toLowerCase().includes("checkpoint"))
+      );
+      const checkpointTask = cpIndex >= 0 ? phaseTasks[cpIndex] : null;
+      const regularTasks = cpIndex >= 0
+        ? phaseTasks.filter((_, idx) => idx !== cpIndex)
+        : phaseTasks;
+
+      // Check regular tasks status
+      const inProgressTask = regularTasks.find((t: any) => savedStatuses[t.id] === "in_progress");
+      if (inProgressTask) {
+        currentTask = {
+          ...inProgressTask,
+          phaseId: phase.id,
+          phaseName: phase.name,
+          phaseIndex: pIdx,
+          status: "in_progress",
+        };
+        break;
+      }
+
+      const todoTask = regularTasks.find((t: any) => {
+        const s = savedStatuses[t.id] || "todo";
+        return s === "todo" || s === "needs_revision" || s === "error";
+      });
+      if (todoTask) {
+        currentTask = {
+          ...todoTask,
+          phaseId: phase.id,
+          phaseName: phase.name,
+          phaseIndex: pIdx,
+          status: savedStatuses[todoTask.id] || "todo",
+          notes: savedStatuses[`${todoTask.id}_notes`] || undefined,
+        };
+        break;
+      }
+
+      // If all regular tasks are done, check phase checkpoint
+      if (checkpointTask) {
+        const cpStatus = savedStatuses[checkpointTask.id] || "todo";
+        if (cpStatus !== "done") {
+          currentTask = {
+            ...checkpointTask,
+            isCheckpoint: true,
+            phaseId: phase.id,
+            phaseName: phase.name,
+            phaseIndex: pIdx,
+            status: cpStatus,
+            notes: savedStatuses[`${checkpointTask.id}_notes`] || undefined,
+            checkpointRequired: true,
+            message: cpStatus === "needs_revision" || cpStatus === "error"
+              ? "Checkpoint memerlukan perbaikan spesifikasi dari user sebelum fase berikutnya dapat dibuka."
+              : "Semua task dalam fase ini telah selesai. Menunggu verifikasi dan persetujuan checkpoint oleh user.",
+          };
+          break;
+        }
+      }
     }
 
     if (!currentTask) {
@@ -70,7 +128,7 @@ export async function GET(req: NextRequest) {
         success: true,
         projectId: project.id,
         appName: project.appName,
-        message: "No active or pending tasks found in project.",
+        message: "No active or pending tasks found in project. All phases and checkpoints completed.",
         task: null,
       });
     }

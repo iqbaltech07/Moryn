@@ -30,6 +30,14 @@ import {
   FileText,
   Minimize2,
   Sparkles,
+  BookOpen,
+  X,
+  Target,
+  MessageSquarePlus,
+  ScanText,
+  ChevronLeft,
+  HelpCircle,
+  Crosshair,
 } from "lucide-react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/utils/apiClient";
@@ -122,6 +130,239 @@ function parseTocSubItem(rawText: string): { phaseBadge: string | null; title: s
     title: clean,
   };
 }
+
+// ── Interactive Tutorial Component ──────────────────────────────────────────
+const TUTORIAL_STEPS = [
+  {
+    title: "Welcome to PRD",
+    icon: <FileText size={22} className="text-[#e15b39]" />,
+    body: "This is your Product Requirements Document. It was auto-generated based on your architecture blueprint and personalization answers.",
+    highlight: "sidebar-toc",
+  },
+  {
+    title: "Navigate with Table of Contents",
+    icon: <BookOpen size={22} className="text-[#e15b39]" />,
+    body: "Use the left sidebar to jump to any PRD section. The TOC is synced with your structure blueprint — sections expand to show sub-features.",
+    highlight: "sidebar-toc",
+  },
+  {
+    title: "AI Chat: Ask & Refine",
+    icon: <Bot size={22} className="text-[#e15b39]" />,
+    body: "The AI chat panel on the right lets you refine specific sections, add edge cases, brainstorm features, or restructure your PRD using natural language instructions.",
+    highlight: "chat-panel",
+  },
+  {
+    title: "Planning Mode: Contextual Comments",
+    icon: <Crosshair size={22} className="text-[#e15b39]" />,
+    body: "Enable Planning Mode to select a specific PRD section from the sidebar, then write a targeted instruction. Only that section's content is sent to the AI — saving tokens and getting more precise results.",
+    highlight: "planning-mode",
+  },
+  {
+    title: "Edit Mode & Next Step",
+    icon: <Pencil size={22} className="text-[#e15b39]" />,
+    body: "Use 'Edit Mode' to directly edit PRD markdown. When you're satisfied, click 'Next Step' in the topbar to proceed to the Design System page.",
+    highlight: "topbar",
+  },
+];
+
+function PrdTutorial({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState(0);
+  const current = TUTORIAL_STEPS[step];
+  const isLast = step === TUTORIAL_STEPS.length - 1;
+
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 999,
+        background: "rgba(15, 15, 20, 0.72)",
+        backdropFilter: "blur(4px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div
+        style={{
+          background: "#ffffff",
+          borderRadius: 16,
+          boxShadow: "0 32px 64px rgba(0,0,0,0.2), 0 4px 16px rgba(0,0,0,0.08)",
+          maxWidth: 460,
+          width: "100%",
+          overflow: "hidden",
+          animation: "tutorialSlideIn 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      >
+        {/* Progress bar */}
+        <div style={{ height: 3, background: "#f4f4f5", position: "relative", overflow: "hidden" }}>
+          <div
+            style={{
+              position: "absolute",
+              left: 0, top: 0, bottom: 0,
+              width: `${((step + 1) / TUTORIAL_STEPS.length) * 100}%`,
+              background: "#e15b39",
+              transition: "width 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+            }}
+          />
+        </div>
+
+        <div style={{ padding: "28px 28px 24px" }}>
+          {/* Step badge */}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+            <span
+              style={{
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                fontWeight: 700,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "#e15b39",
+                background: "rgba(225, 91, 57, 0.1)",
+                padding: "3px 8px",
+                borderRadius: 4,
+              }}
+            >
+              STEP {step + 1} / {TUTORIAL_STEPS.length}
+            </span>
+            <button
+              onClick={onClose}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 28, height: 28, borderRadius: 6,
+                border: "1px solid var(--border-hairline, #e5e7eb)",
+                background: "transparent",
+                color: "var(--fg-muted, #9ca3af)",
+                cursor: "pointer",
+                transition: "all 0.12s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#f4f4f5"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+            >
+              <X size={14} />
+            </button>
+          </div>
+
+          {/* Icon + Title */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            <div
+              style={{
+                width: 48, height: 48,
+                borderRadius: 12,
+                background: "rgba(225, 91, 57, 0.1)",
+                border: "1px solid rgba(225, 91, 57, 0.2)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                flexShrink: 0,
+              }}
+            >
+              {current.icon}
+            </div>
+            <h3
+              style={{
+                fontFamily: "var(--font-body)",
+                fontSize: 18,
+                fontWeight: 800,
+                color: "var(--fg-primary, #18181b)",
+                margin: 0,
+                lineHeight: 1.25,
+              }}
+            >
+              {current.title}
+            </h3>
+          </div>
+
+          {/* Body */}
+          <p
+            style={{
+              fontFamily: "var(--font-body)",
+              fontSize: 13,
+              color: "var(--fg-secondary, #4b5563)",
+              lineHeight: 1.65,
+              margin: 0,
+              marginBottom: 28,
+            }}
+          >
+            {current.body}
+          </p>
+
+          {/* Step dots */}
+          <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 20 }}>
+            {TUTORIAL_STEPS.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: i === step ? 18 : 6,
+                  height: 6,
+                  borderRadius: 3,
+                  background: i === step ? "#e15b39" : "#e4e4e7",
+                  transition: "all 0.22s cubic-bezier(0.16, 1, 0.3, 1)",
+                  cursor: "pointer",
+                }}
+                onClick={() => setStep(i)}
+              />
+            ))}
+          </div>
+
+          {/* Navigation buttons */}
+          <div style={{ display: "flex", gap: 8 }}>
+            {step > 0 && (
+              <button
+                onClick={() => setStep(step - 1)}
+                style={{
+                  flex: 1,
+                  display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                  padding: "10px 16px",
+                  borderRadius: 10,
+                  border: "1px solid var(--border-hairline, #e5e7eb)",
+                  background: "var(--bg-elevated, #ffffff)",
+                  color: "var(--fg-secondary, #4b5563)",
+                  fontFamily: "var(--font-body)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.12s",
+                }}
+              >
+                <ChevronLeft size={15} />
+                Back
+              </button>
+            )}
+            <button
+              onClick={() => { if (isLast) { onClose(); } else { setStep(step + 1); } }}
+              style={{
+                flex: 2,
+                display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6,
+                padding: "10px 16px",
+                borderRadius: 10,
+                border: "none",
+                background: "#e15b39",
+                color: "#ffffff",
+                fontFamily: "var(--font-body)",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "opacity 0.15s",
+                boxShadow: "0 2px 6px rgba(225, 91, 57, 0.3)",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.opacity = "0.9"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+            >
+              {isLast ? (
+                <><Check size={15} strokeWidth={2.5} /> Done</>
+              ) : (
+                <>Next <ChevronRight size={15} /></>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 
 function PrdTocSkeleton() {
   const skeletonRows = [
@@ -369,6 +610,44 @@ function PreviewPageContent() {
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(true);
 
+  // ── Tutorial state ──────────────────────────────────────────────────────
+  const [showTutorial, setShowTutorial] = useState(false);
+
+  // ── Planning Mode (Contextual Commenting) ───────────────────────────────
+  // When planning mode is active, user selects a PRD section from TOC, writes
+  // a comment, and only that section's markdown is sent to AI.
+  const [isPlanningMode, setIsPlanningMode] = useState(false);
+  const [planningSection, setPlanningSection] = useState<{ id: string; title: string; content: string } | null>(null);
+
+  // Extracts the markdown content for a given heading id from the full markdown
+  const extractSectionContent = useCallback((headingId: string, fullMarkdown: string, allTocItems: TocItem[]): string => {
+    const tocItem = allTocItems.find((t) => t.id === headingId);
+    if (!tocItem) return fullMarkdown;
+    const headingText = tocItem.text.trim();
+    // Find the heading in markdown
+    const lines = fullMarkdown.split("\n");
+    let startIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (line.replace(/^#+\s*/, "").trim() === headingText.replace(/^#+\s*/, "").trim()) {
+        startIdx = i;
+        break;
+      }
+    }
+    if (startIdx === -1) return fullMarkdown.slice(0, 1200);
+    const headingLevel = (lines[startIdx].match(/^#+/) || [""])[0].length;
+    // Collect lines until next heading of same or higher level
+    let endIdx = lines.length;
+    for (let i = startIdx + 1; i < lines.length; i++) {
+      const m = lines[i].match(/^(#+)/);
+      if (m && m[1].length <= headingLevel) {
+        endIdx = i;
+        break;
+      }
+    }
+    return lines.slice(startIdx, endIdx).join("\n").slice(0, 3000);
+  }, []);
+
   // ── Combo Architecture: Undo & Visual Highlight state ──
   const [previousMarkdown, setPreviousMarkdown] = useState<string | null>(null);
   const [highlightedSectionId, setHighlightedSectionId] = useState<string | null>(null);
@@ -450,6 +729,16 @@ function PreviewPageContent() {
     }
   }, [projectId, setCurrentProjectId]);
 
+  // Auto-launch interactive tutorial for first-time visitors
+  useEffect(() => {
+    try {
+      const done = localStorage.getItem("moryn_prd_tutorial_done");
+      if (!done) {
+        setShowTutorial(true);
+      }
+    } catch {}
+  }, []);
+
   useEffect(() => {
     // 1. Dynamic fetch Gemini models from API (same pattern as settings)
     setIsGeminiLoading(true);
@@ -510,6 +799,15 @@ function PreviewPageContent() {
     if (!promptText) setAiPrompt("");
     const ts = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
+    // ── Planning Mode: inject section context if active ──────────────────
+    let finalQuery = query;
+    if (isPlanningMode && planningSection) {
+      finalQuery = `[PLANNING MODE — Konteks: Section "${planningSection.title}"]\n\nInstruksi user: ${query}\n\n--- Isi Section (hanya bagian ini yang perlu dimodifikasi) ---\n${planningSection.content}\n\n[Akhir konteks section. Jangan sentuh bagian PRD lain yang tidak disebutkan.]`;
+      // Auto-exit planning mode after submit
+      setPlanningSection(null);
+      setIsPlanningMode(false);
+    }
+
     // Multi-turn conversation context: extract recent turns before appending the new query
     const history = chatMessages.slice(-10).map((m) => ({
       role: m.role,
@@ -522,7 +820,7 @@ function PreviewPageContent() {
       const data = await apiClient.generate.editPrd({
         projectId,
         currentPrd: markdown,
-        prompt: query,
+        prompt: finalQuery,
         selectedModel,
         history,
       });
@@ -1000,7 +1298,106 @@ function PreviewPageContent() {
             </div>
           </div>
 
-          {/* CONTENTS Header with Structure Sync Indicator & Dropdown Controls */}
+          {/* Planning Mode Toggle */}
+          <div style={{ padding: "0 14px 12px" }}>
+            <button
+              type="button"
+              id="planning-mode-toggle"
+              onClick={() => {
+                const next = !isPlanningMode;
+                setIsPlanningMode(next);
+                if (!next) setPlanningSection(null);
+                toast.info(next
+                  ? "Planning Mode aktif. Pilih section PRD dari TOC untuk memberi instruksi tersasar."
+                  : "Planning Mode dinonaktifkan."
+                );
+              }}
+              style={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "9px 12px",
+                borderRadius: 8,
+                border: isPlanningMode
+                  ? "1px solid rgba(225, 91, 57, 0.4)"
+                  : "1px solid var(--border-hairline, #e5e7eb)",
+                background: isPlanningMode ? "rgba(225, 91, 57, 0.06)" : "var(--bg-elevated, #ffffff)",
+                color: isPlanningMode ? "#e15b39" : "var(--fg-secondary, #4b5563)",
+                fontFamily: "var(--font-body)",
+                fontSize: "11px",
+                fontWeight: 700,
+                cursor: "pointer",
+                transition: "all 0.15s",
+                letterSpacing: "0.01em",
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                <Crosshair size={13} />
+                <span>Planning Mode</span>
+              </span>
+              <span
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: 9,
+                  fontWeight: 700,
+                  padding: "1.5px 6px",
+                  borderRadius: 3,
+                  background: isPlanningMode ? "rgba(225, 91, 57, 0.15)" : "rgba(0,0,0,0.05)",
+                  color: isPlanningMode ? "#e15b39" : "var(--fg-muted)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {isPlanningMode ? "ON" : "OFF"}
+              </span>
+            </button>
+
+            {/* Planning mode: selected section indicator */}
+            {isPlanningMode && planningSection && (
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: "7px 10px",
+                  borderRadius: 7,
+                  background: "rgba(225, 91, 57, 0.08)",
+                  border: "1px solid rgba(225, 91, 57, 0.22)",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 7,
+                }}
+              >
+                <Crosshair size={11} style={{ color: "#e15b39", flexShrink: 0, marginTop: 1 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, fontWeight: 700, color: "#e15b39", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 2 }}>Active Context</div>
+                  <div style={{ fontFamily: "var(--font-body)", fontSize: 10.5, fontWeight: 600, color: "var(--fg-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{planningSection.title}</div>
+                </div>
+                <button
+                  onClick={() => setPlanningSection(null)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg-muted)", padding: 0, display: "flex", alignItems: "center" }}
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            )}
+
+            {/* Planning mode: instruction when no section selected */}
+            {isPlanningMode && !planningSection && (
+              <div
+                style={{
+                  marginTop: 6,
+                  padding: "6px 10px",
+                  borderRadius: 7,
+                  background: "rgba(225, 91, 57, 0.04)",
+                  border: "1px dashed rgba(225, 91, 57, 0.25)",
+                }}
+              >
+                <p style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted)", margin: 0, lineHeight: 1.5 }}>
+                  ↑ Klik section di TOC untuk set context. Instruksi AI kamu akan difokuskan hanya pada section tersebut.
+                </p>
+              </div>
+            )}
+          </div>
+
           <div style={{
             padding: "8px 14px 6px",
             display: "flex",
@@ -1333,21 +1730,54 @@ function PreviewPageContent() {
             )}
           </div>
 
-          {/* Sidebar Footer Info */}
+          {/* Sidebar Footer Info + Tutorial Button */}
           <div style={{
-            padding: "12px 16px",
+            padding: "10px 14px",
             borderTop: "1px solid var(--border-hairline, #e5e7eb)",
             fontFamily: "var(--font-body)",
             fontSize: "10px",
             color: "var(--fg-muted, #9ca3af)",
             display: "flex",
             alignItems: "center",
-            gap: 6,
+            justifyContent: "space-between",
             flexShrink: 0,
           }}>
-            <span>{isGenerating ? "Loading..." : `${groupedSections.length} sections`}</span>
-            <span>•</span>
-            <span>{isGenerating ? "Generating..." : `${wordCount.toLocaleString()} words`}</span>
+            <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span>{isGenerating ? "Loading..." : `${groupedSections.length} sections`}</span>
+              <span>•</span>
+              <span>{isGenerating ? "Generating..." : `${wordCount.toLocaleString()} words`}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowTutorial(true)}
+              title="Show interactive tutorial"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                padding: "3px 7px",
+                borderRadius: 5,
+                border: "1px solid var(--border-hairline)",
+                background: "transparent",
+                color: "var(--fg-muted)",
+                cursor: "pointer",
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: "var(--font-body)",
+                transition: "all 0.12s",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "#e15b39";
+                (e.currentTarget as HTMLElement).style.borderColor = "rgba(225, 91, 57, 0.3)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.color = "var(--fg-muted)";
+                (e.currentTarget as HTMLElement).style.borderColor = "var(--border-hairline)";
+              }}
+            >
+              <HelpCircle size={11} />
+              <span>Tutorial</span>
+            </button>
           </div>
         </aside>
 
@@ -1640,7 +2070,7 @@ function PreviewPageContent() {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Input area */}
+            {/* Input area */}
           <div style={{ padding: "10px 14px 12px", borderTop: "1px solid var(--border-hairline, #e5e7eb)", flexShrink: 0, display: "flex", flexDirection: "column", gap: 7 }}>
             {/* Model selector dropdown */}
             <ModelSelectorDropdown
@@ -1653,6 +2083,32 @@ function PreviewPageContent() {
               isOpenRouterLoading={isOpenRouterLoading}
               disabled={isAiEditing}
             />
+
+            {/* Planning Mode active context banner inside input area */}
+            {isPlanningMode && planningSection && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 7,
+                  padding: "5px 10px",
+                  borderRadius: 8,
+                  background: "rgba(225, 91, 57, 0.08)",
+                  border: "1px solid rgba(225, 91, 57, 0.22)",
+                }}
+              >
+                <Crosshair size={11} style={{ color: "#e15b39", flexShrink: 0 }} />
+                <span style={{ fontFamily: "var(--font-body)", fontSize: 10.5, color: "#e15b39", fontWeight: 600, flex: 1, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
+                  Context: <span style={{ fontWeight: 700 }}>{planningSection.title}</span>
+                </span>
+                <button
+                  onClick={() => setPlanningSection(null)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--fg-muted)", padding: 0, display: "flex" }}
+                >
+                  <X size={11} />
+                </button>
+              </div>
+            )}
 
             {/* Symmetrical Auto-expanding Input Box */}
             {(() => {
@@ -1746,11 +2202,17 @@ function PreviewPageContent() {
               );
             })()}
 
-            {/* Helper footer text without Attach Context */}
+            {/* Helper footer text with Planning Mode hint */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 2px" }}>
               <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "var(--fg-muted, #9ca3af)", letterSpacing: "0.02em" }}>
                 Shift + Enter for new line
               </span>
+              {isPlanningMode && !planningSection && (
+                <span style={{ fontFamily: "var(--font-body)", fontSize: 10, color: "#e15b39", fontWeight: 600, display: "flex", alignItems: "center", gap: 4 }}>
+                  <Crosshair size={10} />
+                  Select a TOC section first
+                </span>
+              )}
             </div>
           </div>
         </aside>
@@ -1822,6 +2284,10 @@ function PreviewPageContent() {
           50% { transform: translateX(0%); }
           100% { transform: translateX(100%); }
         }
+        @keyframes tutorialSlideIn {
+          from { opacity: 0; transform: scale(0.95) translateY(6px); }
+          to { opacity: 1; transform: scale(1) translateY(0); }
+        }
         .prd-buffering-shimmer {
           background: linear-gradient(
             90deg,
@@ -1838,12 +2304,23 @@ function PreviewPageContent() {
           background: linear-gradient(90deg, transparent, #e15b39, transparent);
           animation: prdBufferLineMove 1.8s ease-in-out infinite;
         }
+        .prd-planning-toc-btn:hover {
+          background: rgba(225, 91, 57, 0.07) !important;
+        }
         aside::-webkit-scrollbar { width: 4px; }
         aside::-webkit-scrollbar-thumb { background: var(--border-hairline); border-radius: 3px; }
         select option, select optgroup { background: var(--bg-elevated); color: var(--fg-primary); }
       `}</style>
-      {/* Pro Upgrade Modal */}
+      {/* Upgrade Modal */}
       <UpgradeModal />
+
+      {/* Interactive Tutorial Overlay */}
+      {showTutorial && (
+        <PrdTutorial onClose={() => {
+          setShowTutorial(false);
+          try { localStorage.setItem("moryn_prd_tutorial_done", "1"); } catch {}
+        }} />
+      )}
     </div>
   );
 }
@@ -1855,5 +2332,4 @@ export default function PreviewPage() {
     </Suspense>
   );
 }
-
 
