@@ -37,7 +37,7 @@ export async function authenticateAgentRequest(req: NextRequest): Promise<AgentA
 
   const hashed = hashApiKey(token);
 
-  let user = await prisma.user.findFirst({
+  const user = await prisma.user.findFirst({
     where: {
       OR: [
         { apiKey: token },

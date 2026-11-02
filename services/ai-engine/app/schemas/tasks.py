@@ -1,11 +1,13 @@
 from typing import List, Optional, Literal
 from pydantic import BaseModel, Field
+from app.schemas.contract import InvariantContract, ContractCompliance
 
 class KanbanTask(BaseModel):
     id: str = Field(description="Unique task ID, e.g. T-1.1")
     title: str = Field(description="Imperative task title, e.g. Setup Prisma schema and connection")
     description: Optional[str] = Field(default=None, description="Detailed technical instructions")
     estimasi: Optional[str] = Field(default="15m", description="Estimated completion time")
+    priority: Optional[str] = Field(default=None, description="Task priority (LOW, MEDIUM, HIGH, CRITICAL)")
     tags: List[str] = Field(default_factory=list, description="Categorization tags")
     isCheckpoint: bool = Field(default=False, description="Whether this task is a critical verification milestone")
     definitionOfDone: Optional[str] = Field(default=None, description="Criteria for task completion")
@@ -34,3 +36,5 @@ class TasksGenerateRequest(BaseModel):
 
 class TasksGenerateResponse(BaseModel):
     data: TasksData
+    contract: Optional[InvariantContract] = None
+    compliance: Optional[ContractCompliance] = None

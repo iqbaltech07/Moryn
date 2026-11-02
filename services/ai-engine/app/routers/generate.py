@@ -4,7 +4,6 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from fastapi.responses import StreamingResponse
 from app.core.security import verify_internal_secret
 from app.schemas import (
-    BaseResponse,
     QuestionsGenerateRequest,
     QuestionsGenerateResponse,
     RecommendStackRequest,
@@ -23,13 +22,14 @@ from app.schemas import (
     EmbeddingRequest,
     EmbeddingResponse,
 )
+from app.services.contract_service import (
+    extract_system_contract,
+    format_contract_for_prompt,
+    reconcile_tasks_with_contract,
+)
 from app.services.gemini_client import gemini_service
 from app.services.prompt_service import (
-    QUESTIONS_SYSTEM_PROMPT,
     RECOMMEND_STACK_SYSTEM_PROMPT,
-    PRD_SYSTEM_PROMPT,
-    STRUKTUR_SYSTEM_PROMPT,
-    TASKS_SYSTEM_PROMPT,
     get_questions_system_prompt,
     get_prd_system_prompt,
     get_struktur_system_prompt,
@@ -428,7 +428,19 @@ async def generate_tasks(payload: TasksGenerateRequest):
         user_prompt_parts.append(
             f"=== ARCHITECTURE FEATURE MINDMAP & MODULES ===\n{payload.strukturSummary}\nCRITICAL: In each task's 'tags' array, explicitly include the exact Module or Sub-Feature label from above so the Visual Mindmap can cleanly cluster them."
         )
+
+    contract = None
+    compliance = None
+
     if payload.prdMarkdown:
+        # Extract deterministic Invariant Contract
+        try:
+            contract = extract_system_contract(payload.prdMarkdown)
+            if contract.api_endpoints or contract.database_entities:
+                user_prompt_parts.append(format_contract_for_prompt(contract))
+        except Exception as err:
+            logger.warning(f"Failed to extract invariant contract: {err}")
+
         # Full PRD without truncation so API endpoints, Database schema, and data contracts are 100% visible
         user_prompt_parts.append(
             f"=== FULL PRD SPECIFICATIONS & ARCHITECTURE BLUEPRINT ===\n{payload.prdMarkdown}"
@@ -447,7 +459,15 @@ async def generate_tasks(payload: TasksGenerateRequest):
             user_prompt=user_prompt,
             schema_class=TasksData,
         )
-        return TasksGenerateResponse(data=data)
+
+        # Deterministic reconciliation & auto-healing
+        if contract and (contract.api_endpoints or contract.database_entities):
+            try:
+                data, compliance = reconcile_tasks_with_contract(data, contract)
+            except Exception as rec_err:
+                logger.warning(f"Task reconciliation failed: {rec_err}")
+
+        return TasksGenerateResponse(data=data, contract=contract, compliance=compliance)
     except Exception as e:
         logger.error(f"Tasks generation failed: {e}", exc_info=True)
         raise HTTPException(

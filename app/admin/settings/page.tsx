@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Navbar } from "@/app/components/layout";
-import { Settings, Save, Server, Cpu, Loader2, AlertCircle, Activity } from "lucide-react";
+import { Settings, Save, Server, Loader2, AlertCircle, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { apiClient, ApiError } from "@/lib/utils/apiClient";
@@ -26,13 +26,6 @@ export default function AdminSettingsPage() {
 
   const [geminiModels, setGeminiModels] = useState<Array<{ id: string; name: string }>>([]);
   const [geminiModelsLoading, setGeminiModelsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchSettings();
-    fetchGeminiModels();
-    fetchOpenRouterModels();
-    fetchUsages();
-  }, []);
 
   const fetchSettings = async () => {
     try {
@@ -92,6 +85,13 @@ export default function AdminSettingsPage() {
       setUsagesLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchSettings();
+    fetchGeminiModels();
+    fetchOpenRouterModels();
+    fetchUsages();
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);

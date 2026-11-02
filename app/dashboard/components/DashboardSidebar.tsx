@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutGrid, Folder, Layers, Settings, HelpCircle, LogOut, X, Loader2 } from "lucide-react";
+import { LayoutGrid, Folder, Settings, HelpCircle, LogOut, X, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { signOut } from "@/lib/auth/auth-client";
 import { useTranslation } from "@/lib/i18n";

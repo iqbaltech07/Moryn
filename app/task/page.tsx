@@ -13,9 +13,8 @@ import {
   Sprout, Compass, PenLine, LayoutList, Lightbulb,
   Map, Timer, Telescope, Trophy, Wrench,
   CheckCircle2, PartyPopper, Award, ArrowRight, Check,
-  Plus, MoreHorizontal, LayoutGrid, List, Cpu, RefreshCw, RotateCw, Download,
-  Terminal, PanelsTopLeft, Server, Layers, ShieldCheck, AlertCircle, X, ChevronRight,
-  Database
+  Plus, MoreHorizontal, Cpu, RefreshCw, RotateCw, Download,
+  AlertCircle
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { toast } from "sonner";
@@ -663,6 +662,7 @@ function TaskPageContent() {
   return (
     <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-[#FCFBF8] text-neutral-900 flex flex-col font-sans">
       {celebration && <CelebrationModal result={celebration} onClose={() => setCelebration(null)} />}
+      <UpgradeModal />
       {showMcpModal && projectId && (
         <McpConnectModal
           projectId={projectId}

@@ -1,3 +1,4 @@
+import React from "react";
 export interface DataRow {
     id: string;
     name: string;
@@ -13,5 +14,5 @@ export interface DataTableProps {
 /**
  * DataTable - Utilitarian Data Table (Anti-Slop Compliant)
  */
-export declare function DataTable({ title, data, }: DataTableProps): import("react/jsx-runtime").JSX.Element;
+export declare function DataTable({ title, data, }: DataTableProps): React.JSX.Element;
 export default DataTable;

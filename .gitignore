@@ -9,6 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+package-lock.json
 
 # testing
 /coverage
@@ -46,6 +47,7 @@ next-env.d.ts
 
 certificates
 *.tgz
+graphify-out/
 
 # python
 .venv/

@@ -147,7 +147,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to generate tasks from AI Engine" }, { status: 500 });
     }
 
-    const parsed = tasksRes.data;
+    const parsed = {
+      ...tasksRes.data,
+      contract: tasksRes.contract || null,
+      compliance: tasksRes.compliance || null,
+    };
 
     // Save to Database
     const updateData: { taskData: string; formInputs?: string } = { taskData: JSON.stringify(parsed) };

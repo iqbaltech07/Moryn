@@ -7,14 +7,7 @@ import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
 import { ArrowRight } from "lucide-react";
 import { McpConnectModal } from "../components/modals";
 import { ProjectDetailSkeleton } from "../components/shared";
-import { ProjectDetailData } from "./types";
-import {
-  parseMarkdownSections,
-  parseColorTokens,
-  parseOrSynthesizeDesignData,
-  DEFAULT_COLOR_TOKENS,
-  DEFAULT_ACCORDION_SECTIONS,
-} from "./utils/parser";
+import { parseOrSynthesizeDesignData } from "./utils/parser";
 import type { PaletteInfo } from "./utils/parser";
 import ProjectHeaderCard from "./components/ProjectHeaderCard";
 import ColorTokensTable from "./components/ColorTokensTable";

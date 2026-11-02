@@ -131,6 +131,12 @@ export function serializeContextToHybrid(data: ContextInput): string {
   // 7. Active Task Window & Roadmap
   parts.push(renderTaskList(data.tasks, data.taskStatuses));
 
+  // 8. System Invariant Contract (Locked Models & Endpoints)
+  const taskObj = data.tasks as { contract?: any } | null;
+  if (taskObj?.contract && (taskObj.contract.api_endpoints?.length || taskObj.contract.database_entities?.length)) {
+    parts.push(renderInvariantContract(taskObj.contract));
+  }
+
   return parts.join("\n\n");
 }
 
@@ -309,4 +315,28 @@ function renderTaskList(tasks: unknown, taskStatuses: Record<string, string>): s
   return `<task_list>
 ${cdata(compactJson(payload))}
 </task_list>`;
+}
+
+function renderInvariantContract(contract: any): string {
+  const models = (contract.database_entities || [])
+    .map((ent: any) => {
+      const fields = (ent.fields || []).map((f: any) => f.name).join(", ");
+      return `    <model name="${escapeXml(ent.name)}" fields="${escapeXml(fields)}" />`;
+    })
+    .join("\n");
+
+  const endpoints = (contract.api_endpoints || [])
+    .map((ep: any) => {
+      return `    <endpoint method="${escapeXml(ep.method)}" path="${escapeXml(ep.path)}" payload="${escapeXml(ep.request_payload || '')}" response="${escapeXml(ep.response_schema || '')}" />`;
+    })
+    .join("\n");
+
+  return `<system_invariant_contract version="${escapeXml(contract.version || '1.0.0')}">
+  <locked_models>
+${models}
+  </locked_models>
+  <locked_endpoints>
+${endpoints}
+  </locked_endpoints>
+</system_invariant_contract>`;
 }

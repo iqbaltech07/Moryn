@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import { getProjectConfig } from "../config/store.js";
 
 interface ValidationIssue {
   type: "error" | "warning";

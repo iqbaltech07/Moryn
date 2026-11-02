@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Trophy, FileText, Zap, Award, Star, User } from "lucide-react";
+import { Trophy, Award, Star, User } from "lucide-react";
 import { apiClient } from "@/lib/utils/apiClient";
 
 const DUMMY_DATA = [
