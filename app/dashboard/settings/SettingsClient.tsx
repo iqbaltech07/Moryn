@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -101,6 +101,23 @@ interface SettingsClientProps {
   user: UserProfileData;
 }
 
+function updateGeminiModelsState(
+  models: AiModelOption[],
+  isGeminiProvider: boolean,
+  setGeminiModels: (models: AiModelOption[]) => void,
+  setNewModel: (updater: (prev: string) => string) => void
+) {
+  const filtered = models.filter(isTextGenerationModel);
+  if (filtered.length === 0) return;
+  setGeminiModels(filtered);
+  if (isGeminiProvider) {
+    setNewModel((prev) => {
+      if (filtered.some((m) => m.id === prev)) return prev;
+      return filtered.find((m) => m.id === "gemini-2.5-flash")?.id || filtered[0].id;
+    });
+  }
+}
+
 export default function SettingsClient({ user }: SettingsClientProps) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
@@ -149,6 +166,10 @@ export default function SettingsClient({ user }: SettingsClientProps) {
 
   // Form State for Adding Custom Key
   const [newProvider, setNewProvider] = useState<"gemini" | "openrouter">("gemini");
+  const providerRef = useRef<"gemini" | "openrouter">(newProvider);
+  useEffect(() => {
+    providerRef.current = newProvider;
+  }, [newProvider]);
   const [newLabel, setNewLabel] = useState("");
   const [newKeyValue, setNewKeyValue] = useState("");
   const [newModel, setNewModel] = useState("gemini-2.5-flash");
@@ -178,12 +199,17 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   }, []);
 
   // Fetch Google Gemini Models from API
-  async function fetchGeminiModels() {
+  async function fetchGeminiModels(customApiKey?: string) {
     try {
       setIsGeminiLoading(true);
-      const res = await apiClient.gemini.getModels();
+      const res = await apiClient.gemini.getModels(customApiKey);
       if (res.models && res.models.length > 0) {
-        setGeminiModels(res.models.filter(isTextGenerationModel));
+        updateGeminiModelsState(
+          res.models,
+          providerRef.current === "gemini",
+          setGeminiModels,
+          setNewModel
+        );
       }
     } catch (err: unknown) {
       console.warn("Failed to fetch Gemini models:", err);
@@ -337,6 +363,13 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       });
 
       if (res.success) {
+        if (newProvider === "gemini") {
+          if (res.models && res.models.length > 0) {
+            updateGeminiModelsState(res.models, true, setGeminiModels, setNewModel);
+          } else {
+            await fetchGeminiModels(trimmed);
+          }
+        }
         setModalTestResult({
           tested: true,
           success: true,
@@ -371,23 +404,29 @@ export default function SettingsClient({ user }: SettingsClientProps) {
   // Handle Add Custom AI Key
   async function handleAddCustomKey(e: React.FormEvent) {
     e.preventDefault();
-    if (!newKeyValue.trim()) {
+    const trimmedKey = newKeyValue.trim();
+    if (!trimmedKey) {
       toast.error("Please enter an API Key");
       return;
     }
 
+    const addedProvider = newProvider;
+
     try {
       setIsSavingKey(true);
       await apiClient.user.addCustomAiKey({
-        provider: newProvider,
-        label: newLabel.trim() || `${newProvider === "gemini" ? "Google Gemini" : "OpenRouter"} Key`,
-        apiKey: newKeyValue.trim(),
+        provider: addedProvider,
+        label: newLabel.trim() || `${addedProvider === "gemini" ? "Google Gemini" : "OpenRouter"} Key`,
+        apiKey: trimmedKey,
         preferredModel: newModel,
       });
 
       toast.success("Custom AI key saved successfully");
       closeAddModal();
       fetchCustomAiKeys();
+      if (addedProvider === "gemini" && geminiModels.length === 0) {
+        fetchGeminiModels(trimmedKey);
+      }
     } catch (err: unknown) {
       const error = err as { message?: string };
       toast.error(error.message || "Failed to save key");
@@ -473,6 +512,14 @@ export default function SettingsClient({ user }: SettingsClientProps) {
       setTestingId(id);
       const res = await apiClient.user.testCustomAiKey({ keyId: id });
       if (res.success) {
+        if (res.models && res.models.length > 0) {
+          updateGeminiModelsState(
+            res.models,
+            providerRef.current === "gemini",
+            setGeminiModels,
+            setNewModel
+          );
+        }
         toast.success(res.message || "Connection verified successfully!");
       } else {
         toast.error(res.message || "Key verification failed");
