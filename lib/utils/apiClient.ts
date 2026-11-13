@@ -102,7 +102,7 @@ export const apiClient = {
         { cache: "no-store" }
       ),
 
-    finish: (payload: { projectId: string; checkedTasks: Record<string, boolean> }) =>
+    finish: (payload: { projectId: string; checkedTasks: Record<string, boolean | string> }) =>
       request<{
         success: boolean;
         message: string;

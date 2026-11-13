@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { projectId, checkedTasks } = body as {
       projectId: string;
-      checkedTasks: Record<string, boolean>;
+      checkedTasks: Record<string, boolean | string>;
     };
 
     if (!projectId || !checkedTasks) {
@@ -63,32 +63,42 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    let taskData: { phases: { tasks: { id: string }[] }[] };
+    let taskData: { phases: { tasks: { id: string; isCheckpoint?: boolean; title?: string }[] }[] };
     try {
       taskData = JSON.parse(project.taskData);
     } catch {
       return NextResponse.json({ error: "Task data is corrupted." }, { status: 500 });
     }
 
-    // Collect all task IDs from the authoritative server-side data
-    const allTaskIds = taskData.phases.flatMap((phase) =>
-      phase.tasks.map((t) => t.id)
+    // Collect all regular task IDs (exclude checkpoint tasks from mandatory completion check;
+    // checkpoints are user-approved gates, not implementation tasks)
+    const allRegularTaskIds = taskData.phases.flatMap((phase) =>
+      phase.tasks
+        .filter((t) => !t.isCheckpoint && !t.title?.toLowerCase().includes("checkpoint"))
+        .map((t) => t.id)
     );
 
-    if (allTaskIds.length === 0) {
+    if (allRegularTaskIds.length === 0) {
       return NextResponse.json(
         { error: "Project has no tasks." },
         { status: 400 }
       );
     }
 
-    // Every task must be checked true in the client submission
-    const allDone = allTaskIds.every((id) => checkedTasks[id] === true);
+    // Helper: a task is done if status is boolean true OR string "done"
+    const isDone = (id: string) => {
+      const v = checkedTasks[id];
+      return v === true || v === "done";
+    };
+
+    // Every regular task must be done
+    const allDone = allRegularTaskIds.every(isDone);
 
     if (!allDone) {
+      const remaining = allRegularTaskIds.filter((id) => !isDone(id)).length;
       return NextResponse.json(
         {
-          error: `Not all tasks are completed. Complete ${allTaskIds.filter((id) => !checkedTasks[id]).length} more tasks.`,
+          error: `Not all tasks are completed. Complete ${remaining} more task(s) before claiming points.`,
         },
         { status: 422 }
       );

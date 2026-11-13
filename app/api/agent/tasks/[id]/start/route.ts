@@ -35,6 +35,68 @@ export async function POST(
       try { savedStatuses = JSON.parse(project.checkedTasks); } catch {}
     }
 
+    // Verify sequential phase locking and checkpoint approval
+    if (project.taskData) {
+      try {
+        const parsed = JSON.parse(project.taskData);
+        if (parsed && Array.isArray(parsed.phases)) {
+          const phases: any[] = parsed.phases;
+          const targetPhaseIdx = phases.findIndex((p: any) =>
+            p.tasks && p.tasks.some((t: any) => String(t.id) === String(taskId))
+          );
+
+          if (targetPhaseIdx > 0) {
+            // Check that all prior phases have their checkpoint completed ('done')
+            for (let i = 0; i < targetPhaseIdx; i++) {
+              const prevPhase = phases[i];
+              const prevTasks: any[] = prevPhase.tasks || [];
+              const prevCp =
+                prevTasks.find((t: any) => t.isCheckpoint || (t.title && t.title.toLowerCase().includes("checkpoint"))) ||
+                prevTasks[prevTasks.length - 1];
+
+              const prevCpId = prevCp ? prevCp.id : `cp-phase-${prevPhase.id || i + 1}`;
+              if (savedStatuses[prevCpId] !== "done") {
+                return NextResponse.json(
+                  {
+                    success: false,
+                    error: "PHASE_LOCKED",
+                    message: `Fase '${phases[targetPhaseIdx]?.name}' masih terkunci. Checkpoint fase '${prevPhase?.name}' harus diverifikasi dan disetujui terlebih dahulu.`,
+                  },
+                  { status: 403 }
+                );
+              }
+            }
+          }
+
+          // If the task itself is a checkpoint, make sure all other tasks in the phase are done
+          if (targetPhaseIdx >= 0) {
+            const currentPhase = phases[targetPhaseIdx];
+            const currentPhaseTasks: any[] = currentPhase.tasks || [];
+            const taskObj = currentPhaseTasks.find((t: any) => String(t.id) === String(taskId));
+            const isCp = taskObj?.isCheckpoint || (taskObj?.title && taskObj.title.toLowerCase().includes("checkpoint"));
+
+            if (isCp) {
+              const pendingRegularTasks = currentPhaseTasks.filter(
+                (t: any) => String(t.id) !== String(taskId) && savedStatuses[t.id] !== "done"
+              );
+              if (pendingRegularTasks.length > 0) {
+                return NextResponse.json(
+                  {
+                    success: false,
+                    error: "TASKS_INCOMPLETE",
+                    message: "Semua task dalam fase ini harus diselesaikan terlebih dahulu sebelum checkpoint verifikasi dapat dijalankan.",
+                  },
+                  { status: 400 }
+                );
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to check phase lock state:", err);
+      }
+    }
+
     const previousStatus = savedStatuses[taskId] || "todo";
     savedStatuses[taskId] = "in_progress";
 
