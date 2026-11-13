@@ -55,6 +55,7 @@ export async function POST(req: NextRequest) {
         message: "Connection successful!",
         latencyMs: result.latencyMs,
         details: result.details,
+        models: result.models,
       });
     } else {
       return NextResponse.json(

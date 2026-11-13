@@ -1,3 +1,4 @@
+import React from "react";
 export interface ConfigFormProps {
     title?: string;
     onSubmit?: (data: Record<string, string>) => void;
@@ -5,5 +6,5 @@ export interface ConfigFormProps {
 /**
  * ConfigForm - Accessible Input Form (Anti-Slop Compliant)
  */
-export declare function ConfigForm({ title, onSubmit, }: ConfigFormProps): import("react/jsx-runtime").JSX.Element;
+export declare function ConfigForm({ title, onSubmit, }: ConfigFormProps): React.JSX.Element;
 export default ConfigForm;

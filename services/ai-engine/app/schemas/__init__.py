@@ -5,6 +5,14 @@ from app.schemas.structure import ChildNode, StructureNode, StrukturData, Strukt
 from app.schemas.tasks import KanbanTask, PhaseGroup, TasksData, TasksGenerateRequest, TasksGenerateResponse
 from app.schemas.prd import PRDGenerateRequest, PRDGenerateResponse, EditPrdRequest, EditPrdResponse, ChatAction, ChatHistoryItem
 from app.schemas.embedding import EmbeddingRequest, EmbeddingResponse
+from app.schemas.contract import (
+    InvariantContract,
+    DatabaseEntity,
+    DatabaseField,
+    ApiEndpoint,
+    TechStackItem,
+    ContractCompliance,
+)
 
 __all__ = [
     "BaseResponse",
@@ -33,4 +41,10 @@ __all__ = [
     "ChatHistoryItem",
     "EmbeddingRequest",
     "EmbeddingResponse",
+    "InvariantContract",
+    "DatabaseEntity",
+    "DatabaseField",
+    "ApiEndpoint",
+    "TechStackItem",
+    "ContractCompliance",
 ]

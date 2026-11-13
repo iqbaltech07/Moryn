@@ -1,3 +1,4 @@
+import React from "react";
 export interface MetricCardsProps {
     title?: string;
     subtitle?: string;
@@ -11,5 +12,5 @@ export declare function formatCompactCurrency(amount: number): string;
 /**
  * MetricCards - Streamlined Metric KPI Cards (Anti-Slop Compliant)
  */
-export declare function MetricCards({ title, subtitle, metrics, }: MetricCardsProps): import("react/jsx-runtime").JSX.Element;
+export declare function MetricCards({ title, subtitle, metrics, }: MetricCardsProps): React.JSX.Element;
 export default MetricCards;

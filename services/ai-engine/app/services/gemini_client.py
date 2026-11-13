@@ -187,11 +187,13 @@ class GeminiClientService:
                         contents=batch,
                         config=config,
                     )
-                    if hasattr(res, "embeddings") and res.embeddings:
-                        for emb in res.embeddings:
-                            embeddings.append(emb.values)
-                    elif hasattr(res, "embedding") and res.embedding:
-                        embeddings.append(res.embedding.values)
+                    res_data: Any = res
+                    if hasattr(res_data, "embeddings") and res_data.embeddings:
+                        for emb in res_data.embeddings:
+                            if hasattr(emb, "values") and emb.values is not None:
+                                embeddings.append(list(emb.values))
+                    elif hasattr(res_data, "embedding") and res_data.embedding:
+                        embeddings.append(list(res_data.embedding.values))
                     else:
                         raise ValueError("No embedding vector returned by Gemini API")
                 return embeddings

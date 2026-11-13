@@ -303,7 +303,11 @@ export async function runSequentialGenerationPipeline(projectId: string): Promis
       });
 
       if (tasksRes?.data) {
-        taskData = tasksRes.data;
+        taskData = {
+          ...tasksRes.data,
+          contract: tasksRes.contract || null,
+          compliance: tasksRes.compliance || null,
+        };
         await prisma.project.update({
           where: { id: projectId },
           data: { taskData: JSON.stringify(taskData) },

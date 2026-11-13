@@ -1,5 +1,5 @@
 import React from "react";
-import { Upload, Sparkles, Layout, Globe, ShieldCheck } from "lucide-react";
+import { Upload, Sparkles } from "lucide-react";
 
 interface DesignDropzoneProps {
   isDragging: boolean;

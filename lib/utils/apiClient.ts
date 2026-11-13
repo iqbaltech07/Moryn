@@ -297,6 +297,7 @@ export const apiClient = {
           isFreeTier?: boolean;
           modelCount?: number;
         };
+        models?: Array<{ id: string; name: string; description?: string; inputTokenLimit?: number }>;
       }>("/api/user/custom-keys/test", {
         method: "POST",
         body: JSON.stringify(payload),

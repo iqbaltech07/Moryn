@@ -12,7 +12,6 @@ import {
   AlertCircle,
   FileText,
   X,
-  ExternalLink,
 } from "lucide-react";
 import { parseDesignMarkdown } from "@/lib/design/designParser";
 import { CustomDesignMeta } from "./types";

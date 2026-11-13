@@ -7,7 +7,6 @@ Tests the core `apply_section_patch` function to ensure:
 - New section insertion works
 - Edge cases are handled gracefully
 """
-import sys
 import os
 import unittest
 import importlib.util
@@ -15,6 +14,7 @@ import importlib.util
 # Load patcher module directly to avoid __init__.py side-effects (gemini_client dependency)
 _patcher_path = os.path.join(os.path.dirname(__file__), "..", "app", "services", "patcher.py")
 _spec = importlib.util.spec_from_file_location("patcher", _patcher_path)
+assert _spec is not None and _spec.loader is not None
 _patcher = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_patcher)
 

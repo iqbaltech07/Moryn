@@ -1,3 +1,4 @@
+import React from "react";
 export interface ConfirmModalProps {
     isOpen?: boolean;
     title?: string;
@@ -7,5 +8,5 @@ export interface ConfirmModalProps {
 /**
  * ConfirmModal - Elevated Dialog Modal (Anti-Slop Compliant)
  */
-export declare function ConfirmModal({ isOpen: defaultOpen, title, onClose, onConfirm, }: ConfirmModalProps): import("react/jsx-runtime").JSX.Element;
+export declare function ConfirmModal({ isOpen: defaultOpen, title, onClose, onConfirm, }: ConfirmModalProps): React.JSX.Element;
 export default ConfirmModal;

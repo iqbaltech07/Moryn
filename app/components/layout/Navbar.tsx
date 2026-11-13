@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, LogOut, Menu, X, Sparkles, LayoutGrid } from "lucide-react";
+import { User, LogOut, Menu, X, LayoutGrid } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth/auth-client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";

@@ -36,6 +36,19 @@ export async function taskCommand(
         if (t.definitionOfDone) {
           console.log(`Definition of Done : ${t.definitionOfDone}`);
         }
+        if (t.contractEndpoint) {
+          console.log(`Locked Endpoint    : ${t.contractEndpoint.method} ${t.contractEndpoint.path}`);
+          if (t.contractEndpoint.request_payload) {
+            console.log(`Endpoint Payload   : ${t.contractEndpoint.request_payload}`);
+          }
+          if (t.contractEndpoint.response_schema) {
+            console.log(`Endpoint Response  : ${t.contractEndpoint.response_schema}`);
+          }
+        }
+        if (t.contractEntity) {
+          const fieldNames = (t.contractEntity.fields || []).map((f: any) => f.name).join(", ");
+          console.log(`Locked DB Model    : ${t.contractEntity.name} (fields: ${fieldNames})`);
+        }
         if (t.acceptanceCriteria && Array.isArray(t.acceptanceCriteria)) {
           console.log("Acceptance Criteria:");
           t.acceptanceCriteria.forEach((ac: string) => console.log(`  - ${ac}`));

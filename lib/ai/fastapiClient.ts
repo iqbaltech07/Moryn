@@ -99,7 +99,45 @@ export class FastApiClient {
     strukturSummary?: string;
     stacks?: Record<string, unknown>;
     language?: "en" | "id";
-  }): Promise<{ data: { phases: Array<Record<string, unknown>> } }> {
+  }): Promise<{
+    data: { phases: Array<Record<string, unknown>> };
+    contract?: {
+      version: string;
+      database_entities: Array<{
+        name: string;
+        fields: Array<{
+          name: string;
+          type: string;
+          is_pk?: boolean;
+          is_fk?: boolean;
+          is_uk?: boolean;
+          comment?: string | null;
+        }>;
+        relationships: string[];
+      }>;
+      api_endpoints: Array<{
+        method: string;
+        path: string;
+        request_payload?: string | null;
+        response_schema?: string | null;
+        description?: string | null;
+      }>;
+      tech_stack: Array<{
+        category: string;
+        details: string;
+      }>;
+    } | null;
+    compliance?: {
+      is_compliant: boolean;
+      score: number;
+      covered_endpoints: string[];
+      missing_endpoints: string[];
+      covered_entities: string[];
+      missing_entities: string[];
+      auto_reconciled_count: number;
+      drift_notes: string[];
+    } | null;
+  }> {
     return this.request("/api/v1/generate/tasks", payload);
   }
 

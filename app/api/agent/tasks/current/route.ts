@@ -37,10 +37,14 @@ export async function GET(req: NextRequest) {
 
     let phases: any[] = [];
     let savedStatuses: Record<string, string> = {};
+    let contract: any = null;
 
     if (project.taskData) {
       try {
         const parsed = JSON.parse(project.taskData);
+        if (parsed?.contract) {
+          contract = parsed.contract;
+        }
         if (parsed && Array.isArray(parsed.phases)) {
           phases = parsed.phases;
         } else if (Array.isArray(parsed)) {
@@ -133,11 +137,30 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    // Enrich current task with contract specification if matched
+    if (contract) {
+      const taskText = `${currentTask.title || ""} ${currentTask.description || ""}`;
+      const matchedEndpoint = contract.api_endpoints?.find((ep: any) =>
+        ep.path && taskText.includes(ep.path)
+      );
+      if (matchedEndpoint) {
+        currentTask.contractEndpoint = matchedEndpoint;
+      }
+
+      const matchedEntity = contract.database_entities?.find((ent: any) =>
+        ent.name && new RegExp(`\\b${ent.name}\\b`, "i").test(taskText)
+      );
+      if (matchedEntity) {
+        currentTask.contractEntity = matchedEntity;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       projectId: project.id,
       appName: project.appName,
       task: currentTask,
+      contract: contract || undefined,
     });
   } catch (error: any) {
     console.error("Agent current task API error:", error);

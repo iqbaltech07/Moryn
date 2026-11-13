@@ -86,6 +86,10 @@ Before starting code modifications, update the Kanban status to `IN_PROGRESS`:
 - **MANDATORY SHADCN/UI MANDATE (AH-021)**: AI Agent WAJIB MUTLAK menggunakan `shadcn/ui` primitives (`@/components/ui/*`) untuk seluruh pembuatan dan pengeditan komponen UI (Button, Input, Dialog, Select, Card, Sheet, DropdownMenu, Table, Tabs, Tooltip, Popover, Avatar, Badge). Dilarang mengarang komponen raw HTML polos dari nol.
 - **MANDATORY RUNTIME FIDELITY GATE (AH-022)**: Seluruh tombol, link, form, dan modal WAJIB memiliki *runtime handler* aktif (state mutation, toast notification, modal dispatch, atau deep link). DILARANG MENINGGALKAN stub kosong (`onClick={() => {}}`), dead link (`href="#"`), atau `alert()` primitif.
 - **MANDATORY DEAD-CODE REFACTORING HYGIENE (AH-023)**: Saat merefaktor atau mengubah kode, AI Agent WAJIB menghapus tuntas kode mati, blok komentar usang, dan import yang tidak terpakai. Dilarang menumpuk kode baru di atas kode lama tanpa *pruning*.
+- **MANDATORY SYSTEM INVARIANT CONTRACT GATE (AH-024)**: Saat mengimplementasikan Database (Fase 2) atau Backend API (Fase 3):
+  1. Periksa `<system_invariant_contract>` di `.moryn/context.md` atau metadata `Locked Endpoint` / `Locked DB Model` dari `.moryn/sync current`.
+  2. Wajib menggunakan method dan route path yang sama persis (misal `POST /api/projects/create`) sesuai payload dan response schema yang terkunci.
+  3. Dilarang keras memodifikasi path URL atau membuat rute alternatif (Zero-Drift Invariant).
 - Inspect the codebase (`grep_search`, `list_dir`, `view_file`).
 - Write clean, production-ready code adhering strictly to the PRD specifications.
 - Do NOT invent unmentioned libraries, frameworks, or database schemas (**AH-001 Zero Invention**).

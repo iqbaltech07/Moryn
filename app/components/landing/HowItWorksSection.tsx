@@ -3,13 +3,9 @@
 import { motion } from "framer-motion";
 import {
   FileText,
-  BarChart3,
-  CheckCircle2,
   Clock,
   Check,
   TrendingUp,
-  Sparkles,
-  Layers,
 } from "lucide-react";
 
 export default function HowItWorksSection() {

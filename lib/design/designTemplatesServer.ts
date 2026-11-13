@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { DESIGN_TEMPLATES_METADATA, DesignTemplateMetadata } from "@/lib/design/designTemplates";
+import { DESIGN_TEMPLATES_METADATA } from "@/lib/design/designTemplates";
 
 /**
  * Loads the 100% authentic, unmodified markdown content from public/design templates.

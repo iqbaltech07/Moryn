@@ -1,3 +1,4 @@
+import React from "react";
 export interface HeroSectionProps {
     eyebrow?: string;
     title?: string;
@@ -7,5 +8,5 @@ export interface HeroSectionProps {
     onPrimaryClick?: () => void;
     onSecondaryClick?: () => void;
 }
-export declare function HeroSection({ eyebrow, title, subtitle, primaryCtaText, secondaryCtaText, onPrimaryClick, onSecondaryClick, }: HeroSectionProps): import("react/jsx-runtime").JSX.Element;
+export declare function HeroSection({ eyebrow, title, subtitle, primaryCtaText, secondaryCtaText, onPrimaryClick, onSecondaryClick, }: HeroSectionProps): React.JSX.Element;
 export default HeroSection;

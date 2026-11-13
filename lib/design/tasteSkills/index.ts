@@ -6,7 +6,6 @@ import { gptTasteSkill } from "./gptTaste";
 import { stitchDesignTasteSkill } from "./stitchDesignTaste";
 import { fullOutputEnforcementSkill } from "./fullOutputEnforcement";
 import { findSkillsSkill } from "./findSkills";
-import { codeSkeletons } from "./codeSkeletons";
 
 export const ALL_TASTE_SKILLS = {
   designTasteFrontend: designTasteFrontendSkill,

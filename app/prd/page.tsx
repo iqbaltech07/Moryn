@@ -11,11 +11,9 @@ import { StepNavbar, ProjectHeaderBrand } from "../components/layout";
 import { UpgradeModal } from "../components/modals";
 import { PrdPreviewSkeleton } from "../components/shared";
 import {
-  Send,
   Bot,
   Loader2,
   Lightbulb,
-  Scale,
   PenLine,
   Database,
   Trash2,

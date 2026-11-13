@@ -1,6 +1,11 @@
 import { prisma } from "@/lib/db/prisma";
 import { redis } from "@/lib/db/redis";
 import { decryptText } from "@/lib/utils/encryption";
+import {
+  type AiModelOption,
+  extractGeminiTextModels,
+  REDIS_GEMINI_CACHE_KEY,
+} from "@/lib/ai/models";
 
 export type AIKeyProvider = "gemini" | "openrouter";
 
@@ -220,6 +225,7 @@ export interface TestApiKeyResult {
   success: boolean;
   error?: string;
   latencyMs?: number;
+  models?: AiModelOption[];
   details?: {
     label?: string;
     usage?: number;
@@ -245,17 +251,39 @@ export async function testApiKey(
 
   if (provider === "gemini") {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${trimmedKey}`, {
-        signal: AbortSignal.timeout(6000),
-      });
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(trimmedKey)}`,
+        {
+          signal: AbortSignal.timeout(6000),
+        }
+      );
       const latencyMs = Date.now() - startTime;
       if (res.ok) {
         const data = await res.json().catch(() => ({}));
+        const textModels = extractGeminiTextModels(Array.isArray(data.models) ? data.models : []);
+
+        if (textModels.length > 0) {
+          try {
+            await redis.set(
+              REDIS_GEMINI_CACHE_KEY,
+              JSON.stringify({
+                models: textModels,
+                count: textModels.length,
+                isFallback: false,
+              }),
+              { ex: 86400 }
+            );
+          } catch (redisErr) {
+            console.warn("[KeyManager] Failed to cache Gemini models in Redis:", redisErr);
+          }
+        }
+
         return {
           success: true,
           latencyMs,
+          models: textModels,
           details: {
-            modelCount: Array.isArray(data.models) ? data.models.length : undefined,
+            modelCount: textModels.length,
           },
         };
       }

@@ -836,6 +836,7 @@ function TaskPageContent() {
   return (
     <div className="h-[100dvh] max-h-[100dvh] overflow-hidden bg-[#FCFBF8] text-neutral-900 flex flex-col font-sans">
       {celebration && <CelebrationModal result={celebration} onClose={() => setCelebration(null)} />}
+      <UpgradeModal />
       {showMcpModal && projectId && (
         <McpConnectModal
           projectId={projectId}

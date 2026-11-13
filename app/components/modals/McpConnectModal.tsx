@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Check, Terminal, X, Lock, FileCode2 } from "lucide-react";
+import { Copy, Check, Terminal, X, Lock } from "lucide-react";
 import { apiClient } from "@/lib/utils/apiClient";
 
 interface McpConnectModalProps {
